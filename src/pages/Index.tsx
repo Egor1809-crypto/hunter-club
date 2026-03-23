@@ -1,5 +1,6 @@
 import HunterNav from "@/components/HunterNav";
 import HeroSection from "@/components/HeroSection";
+import BookingSection from "@/components/BookingSection";
 import ServicesSection from "@/components/ServicesSection";
 import AboutSection from "@/components/AboutSection";
 import ContactSection from "@/components/ContactSection";
@@ -10,6 +11,7 @@ const Index = () => {
     <div className="bg-background text-foreground min-h-screen">
       <HunterNav />
       <HeroSection />
+      <BookingSection />
       <ServicesSection />
       <AboutSection />
       <ContactSection />

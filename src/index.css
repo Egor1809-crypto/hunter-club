@@ -80,6 +80,23 @@
   }
 }
 
+/* Booking calendar day modifiers */
+.booking-day-available:not([aria-selected="true"]) {
+  background-color: hsl(142 71% 30% / 0.25) !important;
+  color: hsl(142 71% 60%) !important;
+}
+.booking-day-available:not([aria-selected="true"]):hover {
+  background-color: hsl(142 71% 30% / 0.45) !important;
+}
+.booking-day-busy:not([aria-selected="true"]) {
+  background-color: hsl(0 72% 35% / 0.25) !important;
+  color: hsl(0 72% 60%) !important;
+  cursor: not-allowed;
+}
+.booking-day-busy:not([aria-selected="true"]):hover {
+  background-color: hsl(0 72% 35% / 0.35) !important;
+}
+
 /* Smooth scrolling */
 html {
   scroll-behavior: smooth;
