@@ -1,19 +1,10 @@
 import { motion } from "framer-motion";
-import heroImage from "@/assets/hero-barber.jpg";
 
 const HeroSection = () => {
   return (
     <section className="relative h-screen flex items-end overflow-hidden">
-      {/* Background image */}
-      <div className="absolute inset-0">
-        <img
-          src={heroImage}
-          alt="Интерьер барбершопа Hunter"
-          className="w-full h-full object-cover"
-          loading="eager"
-        />
-        <div className="absolute inset-0 bg-background/50" />
-      </div>
+      {/* Pure black background — no image */}
+      <div className="absolute inset-0 bg-background" />
 
       {/* Content */}
       <div className="relative z-10 w-full max-w-7xl mx-auto px-6 md:px-12 pb-16 md:pb-24">
