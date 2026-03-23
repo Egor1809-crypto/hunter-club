@@ -6,53 +6,53 @@
 
 @layer base {
   :root {
-    /* Anthracite-cream monochrome palette */
-    --background: 30 5% 7%;
-    --foreground: 40 20% 90%;
+    /* Craft black & white palette */
+    --background: 0 0% 4%;
+    --foreground: 0 0% 92%;
 
-    --card: 30 4% 11%;
-    --card-foreground: 40 20% 90%;
+    --card: 0 0% 8%;
+    --card-foreground: 0 0% 92%;
 
-    --popover: 30 4% 11%;
-    --popover-foreground: 40 20% 90%;
+    --popover: 0 0% 8%;
+    --popover-foreground: 0 0% 92%;
 
-    --primary: 40 20% 90%;
-    --primary-foreground: 30 5% 7%;
+    --primary: 0 0% 92%;
+    --primary-foreground: 0 0% 4%;
 
-    --secondary: 30 4% 15%;
-    --secondary-foreground: 40 15% 75%;
+    --secondary: 0 0% 14%;
+    --secondary-foreground: 0 0% 70%;
 
-    --muted: 30 3% 18%;
-    --muted-foreground: 40 8% 55%;
+    --muted: 0 0% 18%;
+    --muted-foreground: 0 0% 50%;
 
-    --accent: 42 18% 38%;
-    --accent-foreground: 40 20% 90%;
+    --accent: 0 0% 35%;
+    --accent-foreground: 0 0% 92%;
 
     --destructive: 0 84.2% 60.2%;
-    --destructive-foreground: 210 40% 98%;
+    --destructive-foreground: 0 0% 98%;
 
-    --border: 30 5% 18%;
-    --input: 30 5% 18%;
-    --ring: 42 18% 38%;
+    --border: 0 0% 16%;
+    --input: 0 0% 16%;
+    --ring: 0 0% 35%;
 
     --radius: 0px;
 
-    --sidebar-background: 30 5% 7%;
-    --sidebar-foreground: 40 20% 90%;
-    --sidebar-primary: 40 20% 90%;
-    --sidebar-primary-foreground: 30 5% 7%;
-    --sidebar-accent: 30 4% 15%;
-    --sidebar-accent-foreground: 40 20% 90%;
-    --sidebar-border: 30 5% 18%;
-    --sidebar-ring: 42 18% 38%;
+    --sidebar-background: 0 0% 4%;
+    --sidebar-foreground: 0 0% 92%;
+    --sidebar-primary: 0 0% 92%;
+    --sidebar-primary-foreground: 0 0% 4%;
+    --sidebar-accent: 0 0% 14%;
+    --sidebar-accent-foreground: 0 0% 92%;
+    --sidebar-border: 0 0% 16%;
+    --sidebar-ring: 0 0% 35%;
 
     /* Custom tokens */
     --font-display: 'Cormorant Garamond', Georgia, serif;
     --font-body: 'Inter', system-ui, sans-serif;
-    --gold: 42 18% 38%;
-    --cream: 40 20% 90%;
-    --charcoal: 30 5% 7%;
-    --warm-gray: 30 4% 25%;
+    --gold: 0 0% 35%;
+    --cream: 0 0% 92%;
+    --charcoal: 0 0% 4%;
+    --warm-gray: 0 0% 22%;
   }
 }
 

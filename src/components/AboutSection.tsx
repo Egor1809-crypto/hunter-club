@@ -1,25 +1,21 @@
 import { motion } from "framer-motion";
-import aboutImage from "@/assets/about-barber.jpg";
 
 const AboutSection = () => {
   return (
     <section id="about" className="py-24 md:py-40 bg-background">
       <div className="max-w-7xl mx-auto px-6 md:px-12">
         <div className="grid grid-cols-1 md:grid-cols-2 gap-12 md:gap-24 items-center">
-          {/* Image */}
+          {/* Left — decorative line element instead of image */}
           <motion.div
             initial={{ opacity: 0, x: -30 }}
             whileInView={{ opacity: 1, x: 0 }}
             viewport={{ once: true, margin: "-100px" }}
             transition={{ duration: 0.8 }}
-            className="aspect-[3/4] overflow-hidden"
+            className="aspect-[3/4] flex items-center justify-center border border-border"
           >
-            <img
-              src={aboutImage}
-              alt="Мастер за работой"
-              className="w-full h-full object-cover grayscale hover:grayscale-0 transition-all duration-700"
-              loading="lazy"
-            />
+            <span className="font-display text-8xl md:text-9xl font-light text-foreground/10 select-none">
+              H
+            </span>
           </motion.div>
 
           {/* Text */}
