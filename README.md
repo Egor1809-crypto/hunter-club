@@ -6,6 +6,14 @@
 
 Веб-сайт для онлайн-бронирования стрижек с внутренней CRM-системой для мастеров. Позиционирование — дерзкая мужская философия «На охоту с охотой».
 
+## Сайт
+
+**URL:** https://slava-hunter.ru/
+
+**Админ-панель:** https://slava-hunter.ru/admin
+
+**Хостинг:** Timeweb
+
 ## Технологический стек
 
 | Компонент | Технология |
@@ -61,38 +69,14 @@ hunter-club/
 - Отзывы и их модерация
 - Аналитика
 
-## Требования
+## Обновление сайта
 
-- **Node.js** 18+
-- **Bun** (рекомендуется) или npm/yarn
-- **PostgreSQL** 14+
+Код хранится на GitHub: https://github.com/Egor1809-crypto/hunter-club
 
-## Установка
-
-### Backend
-
-```bash
-cd backend
-cp .env.example .env
-# Настройте переменные окружения в .env
-bun install
-bunx prisma generate
-bun run dev
-```
-
-### Frontend
-
-```bash
-cd frontend
-bun install
-bun run dev
-```
-
-## Docker
-
-```bash
-docker-compose up -d
-```
+Для обновления сайта на сервере:
+1. Сделайте изменения в коде локально
+2. Запушьте в GitHub
+3. На сервере выполните `git pull`
 
 ## Лицензия
 
