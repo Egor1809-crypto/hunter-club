@@ -1,16 +1,90 @@
 import { motion } from "framer-motion";
+import { useQuery } from "@tanstack/react-query";
+import { useLanguage } from "@/context/LanguageContext";
 
-const services = [
-  { name: "Стрижка", price: "от 3 000 ₽", duration: "60 мин", description: "Классическая или современная стрижка с консультацией мастера" },
-  { name: "Бритьё опасной бритвой", price: "от 2 500 ₽", duration: "45 мин", description: "Королевское бритьё с горячими полотенцами и маслами" },
-  { name: "Стрижка + борода", price: "от 4 500 ₽", duration: "90 мин", description: "Комплексный уход: стрижка и моделирование бороды" },
-  { name: "Моделирование бороды", price: "от 2 000 ₽", duration: "40 мин", description: "Придание формы и уход за бородой" },
-  { name: "Камуфляж седины", price: "от 2 000 ₽", duration: "30 мин", description: "Естественная тонировка без резких переходов" },
-];
+type Service = {
+  id: string;
+  name: string;
+  description: string | null;
+  price: string | number | null;
+  duration_min: number;
+  is_active: boolean;
+};
+
+const fallbackServices = {
+  ru: [
+    { name: "Стрижка", price: "от 3 000 ₽", duration: "60 мин", description: "Классическая или современная стрижка с консультацией мастера" },
+    { name: "Бритьё опасной бритвой", price: "от 2 500 ₽", duration: "45 мин", description: "Королевское бритьё с горячими полотенцами и маслами" },
+    { name: "Стрижка + борода", price: "от 4 500 ₽", duration: "90 мин", description: "Комплексный уход: стрижка и моделирование бороды" },
+    { name: "Моделирование бороды", price: "от 2 000 ₽", duration: "40 мин", description: "Придание формы и уход за бородой" },
+    { name: "Камуфляж седины", price: "от 2 000 ₽", duration: "30 мин", description: "Естественная тонировка без резких переходов" },
+  ],
+  en: [
+    { name: "Haircut", price: "from 3,000 RUB", duration: "60 min", description: "Classic or modern haircut with a barber consultation" },
+    { name: "Straight Razor Shave", price: "from 2,500 RUB", duration: "45 min", description: "A royal shave with hot towels and oils" },
+    { name: "Haircut + Beard", price: "from 4,500 RUB", duration: "90 min", description: "Complete care: haircut and beard shaping" },
+    { name: "Beard Shaping", price: "from 2,000 RUB", duration: "40 min", description: "Clean contouring and beard care" },
+    { name: "Gray Blending", price: "from 2,000 RUB", duration: "30 min", description: "Natural tone correction without harsh transitions" },
+  ],
+};
+
+const formatPrice = (value: string | number | null, language: "ru" | "en") => {
+  if (value === null || value === undefined) {
+    return language === "ru" ? "По запросу" : "On request";
+  }
+
+  const numeric = Number(value);
+  if (Number.isNaN(numeric)) {
+    return String(value);
+  }
+
+  return new Intl.NumberFormat(language === "ru" ? "ru-RU" : "en-US", {
+    style: "currency",
+    currency: "RUB",
+    maximumFractionDigits: 0,
+  }).format(numeric);
+};
 
 const ServicesSection = () => {
+  const { language } = useLanguage();
+  const copy = {
+    ru: {
+      eyebrow: "Что мы делаем",
+      title: "Услуги",
+      loading: "Загружаем актуальные услуги...",
+    },
+    en: {
+      eyebrow: "What we do",
+      title: "Services",
+      loading: "Loading current services...",
+    },
+  }[language];
+
+  const servicesQuery = useQuery({
+    queryKey: ["services"],
+    queryFn: async () => {
+      const response = await fetch("/api/services");
+      const result = await response.json();
+
+      if (!response.ok || !result.success) {
+        throw new Error(result.error ?? "Failed to fetch services");
+      }
+
+      return (result.data as Service[]).filter((service) => service.is_active);
+    },
+  });
+
+  const services = servicesQuery.data?.length
+    ? servicesQuery.data.map((service) => ({
+        name: service.name,
+        price: formatPrice(service.price, language),
+        duration: `${service.duration_min} ${language === "ru" ? "мин" : "min"}`,
+        description: service.description ?? "",
+      }))
+    : fallbackServices[language];
+
   return (
-    <section id="services" className="py-24 md:py-40 bg-card">
+    <section id="services" className="section-golden-tight bg-card">
       <div className="max-w-7xl mx-auto px-6 md:px-12">
         <motion.div
           initial={{ opacity: 0, y: 30 }}
@@ -19,17 +93,22 @@ const ServicesSection = () => {
           transition={{ duration: 0.8 }}
         >
           <p className="font-body text-xs tracking-[0.25em] uppercase text-muted-foreground mb-4">
-            Что мы делаем
+            {copy.eyebrow}
           </p>
-          <h2 className="font-display text-4xl md:text-6xl font-light text-foreground mb-16 md:mb-24">
-            Услуги
+          <h2 className="font-display text-4xl md:text-6xl font-light text-foreground golden-stack">
+            {copy.title}
           </h2>
+          {servicesQuery.isLoading ? (
+            <p className="font-body text-sm text-muted-foreground -mt-6 golden-stack">
+              {copy.loading}
+            </p>
+          ) : null}
         </motion.div>
 
         <div className="space-y-0">
           {services.map((service, i) => (
             <motion.div
-              key={service.name}
+              key={`${service.name}-${i}`}
               initial={{ opacity: 0, y: 20 }}
               whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: true, margin: "-50px" }}

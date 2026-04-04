@@ -6,7 +6,7 @@
 
 @layer base {
   :root {
-    /* Craft black & white palette */
+    /* Dark theme */
     --background: 0 0% 4%;
     --foreground: 0 0% 92%;
 
@@ -53,7 +53,14 @@
     --cream: 0 0% 92%;
     --charcoal: 0 0% 4%;
     --warm-gray: 0 0% 22%;
+
+    /* Golden-ratio rhythm */
+    --phi-1: 34px;
+    --phi-2: 55px;
+    --phi-3: 89px;
+    --phi-4: 144px;
   }
+
 }
 
 @layer base {
@@ -64,6 +71,9 @@
   body {
     @apply bg-background text-foreground antialiased;
     font-family: var(--font-body);
+    transition:
+      background-color 300ms ease,
+      color 300ms ease;
   }
 
   h1, h2, h3, h4, h5, h6 {
@@ -81,25 +91,153 @@
 }
 
 /* Booking calendar day modifiers */
-.booking-day-available:not([aria-selected="true"]) {
-  background-color: hsl(142 71% 30% / 0.25) !important;
-  color: hsl(142 71% 60%) !important;
+.booking-day-available {
+  background-color: hsl(142 71% 30% / 0.35) !important;
+  color: hsl(142 71% 65%) !important;
 }
-.booking-day-available:not([aria-selected="true"]):hover {
-  background-color: hsl(142 71% 30% / 0.45) !important;
+.booking-day-available:hover {
+  background-color: hsl(142 71% 30% / 0.55) !important;
 }
-.booking-day-busy:not([aria-selected="true"]) {
-  background-color: hsl(0 72% 35% / 0.25) !important;
-  color: hsl(0 72% 60%) !important;
+.booking-day-busy {
+  background-color: hsl(0 72% 35% / 0.35) !important;
+  color: hsl(0 72% 65%) !important;
   cursor: not-allowed;
 }
-.booking-day-busy:not([aria-selected="true"]):hover {
-  background-color: hsl(0 72% 35% / 0.35) !important;
+.booking-day-busy:hover {
+  background-color: hsl(0 72% 35% / 0.55) !important;
 }
 
 /* Smooth scrolling */
 html {
   scroll-behavior: smooth;
+}
+
+/* Hero: large background grid overlay */
+.hero-grid {
+  background-image: linear-gradient(
+      to right,
+      hsl(var(--border) / 0.35) 1px,
+      transparent 1px
+    ),
+    linear-gradient(to bottom, hsl(var(--border) / 0.35) 1px, transparent 1px);
+  background-size: 88px 88px;
+  background-position: center;
+  opacity: 0.52;
+}
+
+.section-golden {
+  padding-top: var(--phi-2);
+  padding-bottom: var(--phi-3);
+}
+
+.section-golden-tight {
+  padding-top: var(--phi-1);
+  padding-bottom: var(--phi-3);
+}
+
+.golden-stack {
+  margin-bottom: var(--phi-2);
+}
+
+.contact-socials {
+  list-style: none;
+  display: flex;
+  align-items: center;
+  gap: 20px;
+  padding: 0;
+  margin: 0;
+}
+
+.contact-socials .icon-content {
+  position: relative;
+}
+
+.contact-socials .tooltip {
+  position: absolute;
+  right: 50%;
+  bottom: calc(100% + 10px);
+  transform: translateX(50%);
+  color: hsl(var(--foreground));
+  background: hsl(var(--background));
+  border: 1px solid hsl(var(--border));
+  padding: 6px 10px;
+  opacity: 0;
+  visibility: hidden;
+  font-size: 12px;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  transition: all 0.3s ease;
+  white-space: nowrap;
+}
+
+.contact-socials .icon-content:hover .tooltip {
+  opacity: 1;
+  visibility: visible;
+  transform: translateX(50%) translateY(-6px);
+}
+
+.contact-socials .icon-content a {
+  position: relative;
+  overflow: hidden;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  width: 50px;
+  height: 50px;
+  border-radius: 9999px;
+  color: hsl(var(--charcoal));
+  background-color: hsl(var(--foreground));
+  transition: all 0.3s ease-in-out;
+}
+
+.contact-socials .icon-content a:hover {
+  color: hsl(var(--foreground));
+  box-shadow: 0 10px 30px rgb(0 0 0 / 20%);
+}
+
+.contact-socials .icon-content a svg {
+  position: relative;
+  z-index: 1;
+  width: 24px;
+  height: 24px;
+}
+
+.contact-socials .icon-content a .filled {
+  position: absolute;
+  inset: auto 0 0 0;
+  width: 100%;
+  height: 0;
+  transition: all 0.3s ease-in-out;
+}
+
+.contact-socials .icon-content a:hover .filled {
+  height: 100%;
+}
+
+.contact-socials .icon-content a[data-social="telegram"] .filled,
+.contact-socials .icon-content a[data-social="telegram"] + .tooltip {
+  background: linear-gradient(180deg, #f5f5f5, #8d8d8d 55%, #111111);
+}
+
+.contact-socials .icon-content a[data-social="instagram"] .filled,
+.contact-socials .icon-content a[data-social="instagram"] + .tooltip {
+  background: linear-gradient(180deg, #ffffff, #9a9a9a 52%, #0b0b0b);
+}
+
+@media (min-width: 768px) {
+  .section-golden {
+    padding-top: var(--phi-3);
+    padding-bottom: var(--phi-4);
+  }
+
+  .section-golden-tight {
+    padding-top: var(--phi-2);
+    padding-bottom: var(--phi-4);
+  }
+
+  .golden-stack {
+    margin-bottom: var(--phi-3);
+  }
 }
 
 /* Custom scrollbar */
