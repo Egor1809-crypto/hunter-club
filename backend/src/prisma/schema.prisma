@@ -1,0 +1,240 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum booking_status {
+  scheduled
+  confirmed
+  in_progress
+  completed
+  cancelled
+  no_show
+}
+
+enum booking_source {
+  phone
+  walk_in
+  website
+  admin
+}
+
+enum notification_type {
+  reminder_24h
+  reminder_2h
+  loyalty_reward
+  custom
+}
+
+enum notification_channel {
+  sms
+  push
+}
+
+enum notification_status {
+  pending
+  sent
+  delivered
+  failed
+}
+
+model services {
+  id                String           @id @default(dbgenerated("uuid_generate_v4()")) @db.Uuid
+  slug              String           @unique @db.VarChar(50)
+  name              String           @db.VarChar(100)
+  description       String?
+  price             Decimal?         @db.Decimal(10, 2)
+  duration_min      Int              @default(60)
+  is_dawn_hunt      Boolean          @default(false)
+  is_active         Boolean          @default(true)
+  sort_order        Int              @default(0)
+  created_at        DateTime         @default(now()) @db.Timestamptz(6)
+  updated_at        DateTime         @default(now()) @db.Timestamptz(6)
+  bookings          bookings[]
+  loyalty_rules     loyalty_rules[]
+
+  @@map("services")
+}
+
+model clients {
+  id                String            @id @default(dbgenerated("uuid_generate_v4()")) @db.Uuid
+  phone             String            @unique @db.VarChar(20)
+  first_name        String            @db.VarChar(100)
+  last_name         String?           @db.VarChar(100)
+  notes             String?
+  is_vip            Boolean           @default(false)
+  total_visits      Int               @default(0)
+  total_spent       Decimal           @default(0) @db.Decimal(12, 2)
+  first_visit_at    DateTime?         @db.Timestamptz(6)
+  last_visit_at     DateTime?         @db.Timestamptz(6)
+  created_at        DateTime          @default(now()) @db.Timestamptz(6)
+  updated_at        DateTime          @default(now()) @db.Timestamptz(6)
+  bookings          bookings[]
+  loyalty_rewards   loyalty_rewards[]
+  notifications     notifications[]
+
+  @@index([last_visit_at(sort: Desc)])
+  @@map("clients")
+}
+
+model bookings {
+  id                  String            @id @default(dbgenerated("uuid_generate_v4()")) @db.Uuid
+  client_id           String            @db.Uuid
+  service_id          String            @db.Uuid
+  scheduled_at        DateTime          @db.Timestamptz(6)
+  duration_min        Int
+  ended_at            DateTime?         @db.Timestamptz(6)
+  status              booking_status    @default(scheduled)
+  source              booking_source    @default(phone)
+  price               Decimal?          @db.Decimal(10, 2)
+  is_dawn_hunt        Boolean           @default(false)
+  notes               String?
+  reminder_sent       Boolean           @default(false)
+  created_at          DateTime          @default(now()) @db.Timestamptz(6)
+  updated_at          DateTime          @default(now()) @db.Timestamptz(6)
+  client              clients           @relation(fields: [client_id], references: [id], onDelete: Restrict)
+  service             services          @relation(fields: [service_id], references: [id], onDelete: Restrict)
+  loyalty_rewards     loyalty_rewards[] @relation("reward_booking")
+  loyalty_redeems     loyalty_rewards[] @relation("redeemed_booking")
+  notifications       notifications[]
+
+  @@index([client_id])
+  @@index([scheduled_at])
+  @@index([status])
+  @@map("bookings")
+}
+
+model loyalty_rules {
+  id                  String            @id @default(dbgenerated("uuid_generate_v4()")) @db.Uuid
+  name                String            @db.VarChar(100)
+  description         String?
+  visits_required     Int
+  reward_type         String            @db.VarChar(50)
+  reward_value        Decimal           @db.Decimal(10, 2)
+  reward_service_id   String?           @db.Uuid
+  is_recurring        Boolean           @default(true)
+  is_active           Boolean           @default(true)
+  created_at          DateTime          @default(now()) @db.Timestamptz(6)
+  reward_service      services?         @relation(fields: [reward_service_id], references: [id])
+  loyalty_rewards     loyalty_rewards[]
+
+  @@map("loyalty_rules")
+}
+
+model loyalty_rewards {
+  id                  String          @id @default(dbgenerated("uuid_generate_v4()")) @db.Uuid
+  client_id           String          @db.Uuid
+  rule_id             String          @db.Uuid
+  booking_id          String?         @db.Uuid
+  description         String
+  is_redeemed         Boolean         @default(false)
+  redeemed_at         DateTime?       @db.Timestamptz(6)
+  redeemed_booking_id String?         @db.Uuid
+  expires_at          DateTime?       @db.Timestamptz(6)
+  created_at          DateTime        @default(now()) @db.Timestamptz(6)
+  client              clients         @relation(fields: [client_id], references: [id], onDelete: Cascade)
+  rule                loyalty_rules   @relation(fields: [rule_id], references: [id], onDelete: Restrict)
+  booking             bookings?       @relation("reward_booking", fields: [booking_id], references: [id])
+  redeemed_booking    bookings?       @relation("redeemed_booking", fields: [redeemed_booking_id], references: [id])
+
+  @@map("loyalty_rewards")
+}
+
+model notifications {
+  id                  String                @id @default(dbgenerated("uuid_generate_v4()")) @db.Uuid
+  client_id           String                @db.Uuid
+  booking_id          String?               @db.Uuid
+  type                notification_type
+  channel             notification_channel  @default(sms)
+  status              notification_status   @default(pending)
+  message             String
+  scheduled_for       DateTime              @db.Timestamptz(6)
+  sent_at             DateTime?             @db.Timestamptz(6)
+  error_details       String?
+  created_at          DateTime              @default(now()) @db.Timestamptz(6)
+  client              clients               @relation(fields: [client_id], references: [id], onDelete: Cascade)
+  booking             bookings?             @relation(fields: [booking_id], references: [id])
+
+  @@map("notifications")
+}
+
+model work_schedule {
+  id                String    @id @default(dbgenerated("uuid_generate_v4()")) @db.Uuid
+  day_of_week       Int
+  start_time        DateTime  @db.Time(6)
+  end_time          DateTime  @db.Time(6)
+  is_dawn_hunt      Boolean   @default(false)
+  is_active         Boolean   @default(true)
+
+  @@map("work_schedule")
+}
+
+model schedule_exceptions {
+  id                String    @id @default(dbgenerated("uuid_generate_v4()")) @db.Uuid
+  exception_date    DateTime  @unique @db.Date
+  is_day_off        Boolean   @default(true)
+  start_time        DateTime? @db.Time(6)
+  end_time          DateTime? @db.Time(6)
+  reason            String?   @db.VarChar(200)
+  created_at        DateTime  @default(now()) @db.Timestamptz(6)
+
+  @@map("schedule_exceptions")
+}
+
+model analytics_daily {
+  id                String    @id @default(dbgenerated("uuid_generate_v4()")) @db.Uuid
+  report_date       DateTime  @unique @db.Date
+  total_bookings    Int       @default(0)
+  completed         Int       @default(0)
+  cancelled         Int       @default(0)
+  no_shows          Int       @default(0)
+  dawn_hunts        Int       @default(0)
+  revenue           Decimal   @default(0) @db.Decimal(12, 2)
+  new_clients       Int       @default(0)
+  avg_service_min   Decimal?  @db.Decimal(6, 2)
+  created_at        DateTime  @default(now()) @db.Timestamptz(6)
+  updated_at        DateTime  @default(now()) @db.Timestamptz(6)
+
+  @@map("analytics_daily")
+}
+
+model admin_users {
+  id                String    @id @default(dbgenerated("uuid_generate_v4()")) @db.Uuid
+  username          String    @unique @db.VarChar(50)
+  password_hash     String    @db.VarChar(255)
+  display_name      String    @db.VarChar(100)
+  role              String    @default("owner") @db.VarChar(20)
+  is_active         Boolean   @default(true)
+  last_login_at     DateTime? @db.Timestamptz(6)
+  created_at        DateTime  @default(now()) @db.Timestamptz(6)
+
+  @@map("admin_users")
+}
+
+model settings {
+  key               String    @id @db.VarChar(100)
+  value             Json
+  description       String?   @db.VarChar(255)
+  updated_at        DateTime  @default(now()) @db.Timestamptz(6)
+
+  @@map("settings")
+}
+
+model reviews {
+  id                String    @id @default(dbgenerated("uuid_generate_v4()")) @db.Uuid
+  customer_name     String    @db.VarChar(100)
+  service_label     String?   @db.VarChar(100)
+  rating            Int
+  message           String
+  status            String    @default("new") @db.VarChar(20)
+  created_at        DateTime  @default(now()) @db.Timestamptz(6)
+  updated_at        DateTime  @default(now()) @db.Timestamptz(6)
+
+  @@index([status])
+  @@index([created_at(sort: Desc)])
+  @@map("reviews")
+}

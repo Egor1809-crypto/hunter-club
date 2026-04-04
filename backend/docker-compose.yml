@@ -1,0 +1,43 @@
+version: "3.9"
+
+services:
+  db:
+    image: postgres:16-alpine
+    container_name: hunter-backend-db
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB:-hunter}
+      POSTGRES_USER: ${POSTGRES_USER:-hunter_admin}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-hunter_secret_2024}
+    ports:
+      - "${DB_PORT:-5432}:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./database/init.sql:/docker-entrypoint-initdb.d/01-init.sql:ro
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-hunter_admin} -d ${POSTGRES_DB:-hunter}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: hunter-backend-app
+    restart: unless-stopped
+    environment:
+      DATABASE_URL: postgresql://${POSTGRES_USER:-hunter_admin}:${POSTGRES_PASSWORD:-hunter_secret_2024}@db:5432/${POSTGRES_DB:-hunter}
+      NEXTAUTH_SECRET: ${NEXTAUTH_SECRET:-change-me-in-production}
+      NEXTAUTH_URL: ${NEXTAUTH_URL:-http://localhost:3000}
+      NODE_ENV: ${NODE_ENV:-development}
+      SMS_PROVIDER: ${SMS_PROVIDER:-none}
+      SMS_API_KEY: ${SMS_API_KEY:-}
+    ports:
+      - "${APP_PORT:-3000}:3000"
+    depends_on:
+      db:
+        condition: service_healthy
+
+volumes:
+  postgres_data:
