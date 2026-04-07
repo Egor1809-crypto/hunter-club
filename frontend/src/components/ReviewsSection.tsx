@@ -1,4 +1,4 @@
-import { FormEvent, useCallback, useEffect, useState } from "react";
+import { FormEvent, useCallback, useEffect, useMemo, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { ChevronLeft, ChevronRight } from "lucide-react";
 import { useLanguage } from "@/context/LanguageContext";
@@ -81,22 +81,22 @@ const ReviewCard = ({
   language: "ru" | "en";
   guestLabel: string;
 }) => (
-  <div className="flex-shrink-0 w-full h-full border border-white/20 bg-card backdrop-blur-md p-5 md:p-6 flex flex-col justify-between min-h-[280px]">
-    <div className="space-y-4">
-      <div className="flex items-start justify-between gap-4">
+  <div className="flex-shrink-0 w-full h-[24rem] md:h-[26rem] border border-white/20 bg-card backdrop-blur-md p-5 md:p-6 flex flex-col justify-between overflow-hidden">
+    <div className="flex min-h-0 flex-1 flex-col">
+      <div className="flex min-h-[2.75rem] items-start justify-between gap-4">
         <span className="font-body text-[11px] tracking-[0.18em] uppercase text-muted-foreground">
           {language === "ru" ? review.service : review.serviceEn}
         </span>
         <span className="font-body text-sm text-foreground whitespace-nowrap">{review.rating}</span>
       </div>
-      <div className="space-y-3">
+      <div className="mt-4 flex min-h-0 flex-1 flex-col">
         <p className="font-display text-4xl leading-none text-white/18">"</p>
-        <p className="font-body text-sm leading-relaxed text-foreground">
+        <p className="mt-3 font-body text-sm leading-relaxed text-foreground">
           {language === "ru" ? review.quote : review.quoteEn}
         </p>
       </div>
     </div>
-    <div className="pt-6 space-y-2">
+    <div className="flex min-h-[6.5rem] flex-col justify-end pt-6 space-y-2">
       <div className="h-px w-10 bg-white/20" />
       <p className="font-display text-2xl font-light text-foreground">
         {language === "ru" ? review.name : review.nameEn}
@@ -122,7 +122,6 @@ const ReviewsSection = () => {
     ru: {
       eyebrow: "Доверие гостей",
       title: "Славные отзывы",
-      description: "",
       guest: "Гость Hunter",
       prev: "Назад",
       next: "Вперёд",
@@ -143,7 +142,6 @@ const ReviewsSection = () => {
     en: {
       eyebrow: "Guest trust",
       title: "Glorious reviews",
-      description: "",
       guest: "Hunter guest",
       prev: "Previous",
       next: "Next",
@@ -162,6 +160,12 @@ const ReviewsSection = () => {
       errorDescription: "Please try again in a moment.",
     },
   }[language];
+
+  const desktopReviews = useMemo(
+    () =>
+      Array.from({ length: 3 }, (_, index) => reviews[(activeIndex + index) % reviews.length]),
+    [activeIndex],
+  );
 
   const handlePrev = useCallback(() => {
     setDirection(-1);
@@ -213,7 +217,7 @@ const ReviewsSection = () => {
           whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true, margin: "-100px" }}
           transition={{ duration: 0.8 }}
-          className="flex flex-col md:flex-row md:items-end md:justify-between gap-8 mb-12 md:mb-16"
+          className="flex flex-col md:flex-row md:items-end md:justify-between gap-8 mb-12 md:mb-16 lg:mx-8"
         >
           <div>
             <p className="font-body text-xs tracking-[0.25em] uppercase text-muted-foreground mb-4">{copy.eyebrow}</p>
@@ -221,18 +225,56 @@ const ReviewsSection = () => {
           </div>
         </motion.div>
 
-        {/* Карусель отзывов */}
-        <div className="relative">
-          <button onClick={handlePrev} aria-label={copy.prev}
-            className="hidden lg:flex absolute left-0 top-1/2 z-20 -translate-y-1/2 lg:h-12 lg:w-12 items-center justify-center border border-border bg-background/90 text-foreground transition-colors hover:bg-card">
+        {/* Desktop: карусель из трех карточек */}
+        <div className="hidden lg:block relative">
+          <button
+            onClick={handlePrev}
+            aria-label={copy.prev}
+            className="absolute -left-5 top-1/2 z-20 -translate-y-1/2 flex h-11 w-11 items-center justify-center border border-border bg-background/90 text-foreground transition-colors hover:bg-card"
+          >
             <ChevronLeft className="h-5 w-5" />
           </button>
-          <button onClick={handleNext} aria-label={copy.next}
-            className="hidden lg:flex absolute right-0 top-1/2 z-20 -translate-y-1/2 lg:h-12 lg:w-12 items-center justify-center border border-border bg-background/90 text-foreground transition-colors hover:bg-card">
+          <button
+            onClick={handleNext}
+            aria-label={copy.next}
+            className="absolute -right-5 top-1/2 z-20 -translate-y-1/2 flex h-11 w-11 items-center justify-center border border-border bg-background/90 text-foreground transition-colors hover:bg-card"
+          >
             <ChevronRight className="h-5 w-5" />
           </button>
 
-          <div className="overflow-hidden mx-4 lg:mx-16">
+          <div className="mx-8 overflow-hidden">
+            <AnimatePresence mode="wait" custom={direction}>
+              <motion.div
+                key={activeIndex}
+                custom={direction}
+                initial={{ opacity: 0, x: direction >= 0 ? 120 : -120 }}
+                animate={{ opacity: 1, x: 0 }}
+                exit={{ opacity: 0, x: direction >= 0 ? -120 : 120 }}
+                transition={{ duration: 0.45, ease: [0.25, 0.8, 0.25, 1] }}
+                className="grid grid-cols-3 gap-4"
+              >
+                {desktopReviews.map((review) => (
+                  <div key={`${review.name}-${activeIndex}`} className="h-full">
+                    <ReviewCard review={review} language={language} guestLabel={copy.guest} />
+                  </div>
+                ))}
+              </motion.div>
+            </AnimatePresence>
+          </div>
+        </div>
+
+        {/* Mobile: плавная карусель */}
+        <div className="lg:hidden relative">
+          <button onClick={handlePrev} aria-label={copy.prev}
+            className="absolute left-0 top-1/2 z-20 -translate-y-1/2 flex h-11 w-11 items-center justify-center border border-border bg-background/90 text-foreground transition-colors hover:bg-card">
+            <ChevronLeft className="h-5 w-5" />
+          </button>
+          <button onClick={handleNext} aria-label={copy.next}
+            className="absolute right-0 top-1/2 z-20 -translate-y-1/2 flex h-11 w-11 items-center justify-center border border-border bg-background/90 text-foreground transition-colors hover:bg-card">
+            <ChevronRight className="h-5 w-5" />
+          </button>
+
+          <div className="overflow-hidden mx-12">
             <AnimatePresence mode="wait" custom={direction}>
               <motion.div
                 key={activeIndex}
@@ -264,7 +306,7 @@ const ReviewsSection = () => {
           whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true, margin: "-80px" }}
           transition={{ duration: 0.7, delay: 0.1 }}
-          className="mt-12 md:mt-16 border border-border bg-card/80 backdrop-blur-md p-6 md:p-8"
+          className="mt-12 md:mt-16 mx-8 border border-border bg-card/80 backdrop-blur-md p-6 md:p-8"
         >
           <div className="grid grid-cols-1 lg:grid-cols-[0.9fr_1.1fr] gap-8 md:gap-12">
             <div>

@@ -41,6 +41,7 @@ const AboutSection = () => {
             whileInView={{ opacity: 1, x: 0 }}
             viewport={{ once: true, margin: "-100px" }}
             transition={{ duration: 0.8 }}
+            className="lg:mx-8"
           >
             <div className="flex flex-col gap-6 md:gap-8">
               <div className="aspect-[3/4] flex items-center justify-center border border-border overflow-hidden">
