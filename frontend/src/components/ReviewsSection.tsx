@@ -81,7 +81,7 @@ const ReviewCard = ({
   language: "ru" | "en";
   guestLabel: string;
 }) => (
-  <div className="flex-shrink-0 w-full border border-white/20 bg-card backdrop-blur-md p-5 md:p-6 flex flex-col justify-between min-h-[20rem]">
+  <div className="flex-shrink-0 w-full h-full border border-white/20 bg-card backdrop-blur-md p-5 md:p-6 flex flex-col justify-between min-h-[280px]">
     <div className="space-y-4">
       <div className="flex items-start justify-between gap-4">
         <span className="font-body text-[11px] tracking-[0.18em] uppercase text-muted-foreground">
@@ -122,7 +122,7 @@ const ReviewsSection = () => {
     ru: {
       eyebrow: "Доверие гостей",
       title: "Славные отзывы",
-      description: "Лента отзывов: пролистывайте, чтобы увидеть все впечатления от Hunter.",
+      description: "",
       guest: "Гость Hunter",
       prev: "Назад",
       next: "Вперёд",
@@ -143,7 +143,7 @@ const ReviewsSection = () => {
     en: {
       eyebrow: "Guest trust",
       title: "Glorious reviews",
-      description: "A review feed: scroll through all the impressions from Hunter.",
+      description: "",
       guest: "Hunter guest",
       prev: "Previous",
       next: "Next",
@@ -219,36 +219,20 @@ const ReviewsSection = () => {
             <p className="font-body text-xs tracking-[0.25em] uppercase text-muted-foreground mb-4">{copy.eyebrow}</p>
             <h2 className="font-display text-4xl md:text-6xl font-light text-foreground leading-[0.95]">{copy.title}</h2>
           </div>
-          <p className="font-body text-sm md:text-base text-muted-foreground max-w-xl leading-relaxed">{copy.description}</p>
         </motion.div>
 
-        {/* Desktop: все 5 отзывов в сетке */}
-        <div className="hidden lg:grid grid-cols-5 gap-4">
-          {reviews.map((review, i) => (
-            <motion.div
-              key={review.name}
-              initial={{ opacity: 0, y: 30 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              viewport={{ once: true }}
-              transition={{ duration: 0.6, delay: i * 0.1 }}
-            >
-              <ReviewCard review={review} language={language} guestLabel={copy.guest} />
-            </motion.div>
-          ))}
-        </div>
-
-        {/* Mobile: плавная карусель */}
-        <div className="lg:hidden relative">
+        {/* Карусель отзывов */}
+        <div className="relative">
           <button onClick={handlePrev} aria-label={copy.prev}
-            className="absolute left-0 top-1/2 z-20 -translate-y-1/2 flex h-11 w-11 items-center justify-center border border-border bg-background/90 text-foreground transition-colors hover:bg-card">
+            className="hidden lg:flex absolute left-0 top-1/2 z-20 -translate-y-1/2 lg:h-12 lg:w-12 items-center justify-center border border-border bg-background/90 text-foreground transition-colors hover:bg-card">
             <ChevronLeft className="h-5 w-5" />
           </button>
           <button onClick={handleNext} aria-label={copy.next}
-            className="absolute right-0 top-1/2 z-20 -translate-y-1/2 flex h-11 w-11 items-center justify-center border border-border bg-background/90 text-foreground transition-colors hover:bg-card">
+            className="hidden lg:flex absolute right-0 top-1/2 z-20 -translate-y-1/2 lg:h-12 lg:w-12 items-center justify-center border border-border bg-background/90 text-foreground transition-colors hover:bg-card">
             <ChevronRight className="h-5 w-5" />
           </button>
 
-          <div className="overflow-hidden mx-12">
+          <div className="overflow-hidden mx-4 lg:mx-16">
             <AnimatePresence mode="wait" custom={direction}>
               <motion.div
                 key={activeIndex}
