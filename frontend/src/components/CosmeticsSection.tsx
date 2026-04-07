@@ -1,5 +1,5 @@
-import { FormEvent, useMemo, useState } from "react";
-import { motion } from "framer-motion";
+import { FormEvent, useEffect, useMemo, useState } from "react";
+import { motion, AnimatePresence } from "framer-motion";
 import { ChevronLeft, ChevronRight } from "lucide-react";
 import { useLanguage } from "@/context/LanguageContext";
 import { Input } from "@/components/ui/input";
@@ -250,31 +250,24 @@ const CosmeticsSection = () => {
           </button>
 
           <div className="relative h-[39rem] md:h-[42rem] overflow-hidden px-12 md:px-16">
-            <div className="absolute inset-0 perspective-[1800px]">
-              {visibleCards.map((card) => (
-                <motion.article
-                  key={card.key}
-                  layout
-                  initial={{
-                    opacity: 0,
-                    x: 100,
-                    scale: 0.9,
-                  }}
-                  animate={{
-                    opacity: card.opacity,
-                    left: card.x,
-                    scale: card.scale,
-                    zIndex: card.zIndex,
-                    x: "-50%",
-                    y: "-50%",
-                  }}
-                  transition={{
-                    duration: 0.5,
-                    ease: "easeInOut",
-                  }}
-                  className="absolute top-[42%] w-[15.5rem] md:w-[19rem]"
-                  style={{ zIndex: card.zIndex }}
-                >
+            <div className="absolute inset-0">
+              <AnimatePresence mode="popLayout">
+                {visibleCards.map((card) => (
+                  <motion.article
+                    key={card.key}
+                    initial={{ opacity: 0, x: card.offset > 0 ? 100 : -100, scale: 0.9 }}
+                    animate={{ 
+                      opacity: card.opacity, 
+                      left: card.x, 
+                      scale: card.scale,
+                      x: "-50%",
+                      y: "-50%",
+                    }}
+                    exit={{ opacity: 0, x: card.offset > 0 ? -100 : 100, scale: 0.9 }}
+                    transition={{ duration: 0.4, ease: "easeInOut" }}
+                    className="absolute top-[42%] left-[50%] w-[15.5rem] md:w-[19rem]"
+                    style={{ zIndex: card.zIndex }}
+                  >
                   <div
                     className="min-h-[24rem] border border-border bg-card shadow-[0_28px_90px_rgba(0,0,0,0.35)] backdrop-blur-md p-5 md:p-6 flex flex-col justify-between"
                   >
@@ -316,6 +309,7 @@ const CosmeticsSection = () => {
                   </div>
                 </motion.article>
               ))}
+            </AnimatePresence>
             </div>
           </div>
         </div>
