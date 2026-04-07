@@ -276,9 +276,14 @@ const CosmeticsSection = () => {
                         {copy.guest}
                       </p>
                       <div className="flex gap-1 text-xs pt-1">
-                        {renderStars(currentReview.rating)}
+                  {renderStars(currentReview.rating)}
                       </div>
                     </div>
+                  </div>
+                </motion.div>
+              </AnimatePresence>
+            </div>
+          </div>
                   </div>
                 </motion.div>
               </AnimatePresence>
