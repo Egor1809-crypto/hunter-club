@@ -269,40 +269,40 @@ const CosmeticsSection = () => {
                     style={{ zIndex: card.zIndex }}
                   >
                   <div
-                    className="min-h-[24rem] border border-border bg-card shadow-[0_28px_90px_rgba(0,0,0,0.35)] backdrop-blur-md p-5 md:p-6 flex flex-col justify-between"
+                    className="h-[22rem] border border-border bg-card shadow-[0_28px_90px_rgba(0,0,0,0.35)] backdrop-blur-md p-4 md:p-5 flex flex-col justify-between"
                   >
                     <div className="space-y-6">
                       <div className="flex items-start justify-between gap-4">
-                        <span className="font-body text-[11px] tracking-[0.18em] uppercase text-muted-foreground">
+                        <span className="font-body text-[10px] tracking-[0.18em] uppercase text-muted-foreground">
                           {language === "ru" ? card.review.service : card.review.serviceEn}
                         </span>
-                        <span className="font-body text-sm text-foreground whitespace-nowrap">
+                        <span className="font-body text-xs text-foreground whitespace-nowrap">
                           {card.review.rating}
                         </span>
                       </div>
 
-                      <div className="space-y-5">
-                        <p className="font-display text-5xl leading-none text-white/18">
+                      <div className="space-y-3">
+                        <p className="font-display text-4xl leading-none text-white/18">
                           "
                         </p>
-                        <p className="font-body text-sm text-foreground leading-relaxed">
+                        <p className="font-body text-xs text-foreground leading-relaxed line-clamp-4">
                           {language === "ru" ? card.review.quote : card.review.quoteEn}
                         </p>
                       </div>
                     </div>
 
-                    <div className="pt-8 space-y-3">
-                      <div className="h-px w-10 bg-white/20" />
-                      <p className="font-display text-2xl font-light leading-none text-foreground">
+                    <div className="pt-6 space-y-2">
+                      <div className="h-px w-8 bg-white/20" />
+                      <p className="font-display text-xl font-light leading-none text-foreground">
                         {language === "ru" ? card.review.name : card.review.nameEn}
                       </p>
-                      <p className="font-body text-[11px] uppercase tracking-[0.18em] text-foreground/60">
+                      <p className="font-body text-[10px] uppercase tracking-[0.18em] text-foreground/60">
                         {copy.guest}
                       </p>
-                      <p className="font-body text-[11px] tracking-[0.16em] uppercase text-foreground/70 pt-2">
+                      <p className="font-body text-[10px] tracking-[0.16em] uppercase text-foreground/70 pt-1">
                         {copy.result}
                       </p>
-                      <div className="flex gap-1 text-base">
+                      <div className="flex gap-1 text-sm">
                         {renderStars(card.review.rating)}
                       </div>
                     </div>
