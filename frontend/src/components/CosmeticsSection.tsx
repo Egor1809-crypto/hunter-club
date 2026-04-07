@@ -1,4 +1,4 @@
-import { FormEvent, useMemo, useRef, useState } from "react";
+import { FormEvent, useMemo, useState } from "react";
 import { motion } from "framer-motion";
 import { ChevronLeft, ChevronRight } from "lucide-react";
 import { useLanguage } from "@/context/LanguageContext";
@@ -158,15 +158,11 @@ const CosmeticsSection = () => {
     [activeIndex],
   );
 
-  const direction = useRef<"left" | "right" | null>(null);
-
   const handlePrev = () => {
-    direction.current = "left";
     setActiveIndex((current) => (current - 1 + reviews.length) % reviews.length);
   };
 
   const handleNext = () => {
-    direction.current = "right";
     setActiveIndex((current) => (current + 1) % reviews.length);
   };
 
@@ -254,29 +250,31 @@ const CosmeticsSection = () => {
           </button>
 
           <div className="relative h-[39rem] md:h-[42rem] overflow-hidden px-12 md:px-16">
-            <div className="absolute inset-0">
+            <div className="absolute inset-0 perspective-[1800px]">
               {visibleCards.map((card) => (
                 <motion.article
                   key={card.key}
+                  layout
                   initial={{
                     opacity: 0,
-                    x: direction.current === "right" ? 300 : -300,
+                    x: card.x,
+                    y: 10,
+                    scale: card.scale * 0.94,
                   }}
                   animate={{
                     opacity: card.opacity,
+                    left: card.x,
+                    scale: card.scale,
+                    rotateY: card.rotate,
+                    zIndex: card.zIndex,
                     x: "-50%",
                     y: "-50%",
-                    scale: card.scale,
-                  }}
-                  exit={{
-                    opacity: 0,
-                    x: direction.current === "right" ? -300 : 300,
                   }}
                   transition={{
-                    duration: 0.4,
-                    ease: "easeOut",
+                    duration: 0.7,
+                    ease: [0.25, 0.46, 0.45, 0.94],
                   }}
-                  className="absolute top-[42%] left-[50%] w-[15.5rem] md:w-[19rem]"
+                  className="absolute top-[42%] w-[15.5rem] md:w-[19rem] will-change-transform"
                   style={{ zIndex: card.zIndex }}
                 >
                   <div

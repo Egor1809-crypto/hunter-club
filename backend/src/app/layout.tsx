@@ -5,6 +5,9 @@ import type { ReactNode } from "react";
 export const metadata: Metadata = {
   title: "Hunter Backend",
   description: "API and CRM backend for Hunter Barbershop",
+  icons: {
+    icon: "/Хантер Лого.png",
+  },
 };
 
 type RootLayoutProps = {
