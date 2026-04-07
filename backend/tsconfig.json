@@ -20,5 +20,26 @@
     }
   },
   "include": ["next-env.d.ts", "**/*.ts", "**/*.tsx", ".next/types/**/*.ts"],
-  "exclude": ["node_modules"]
+  "exclude": [
+    "node_modules",
+    "playwright-fixture.ts",
+    "playwright.config.ts",
+    "vite.config.ts",
+    "vitest.config.ts",
+    "tsconfig.app.json",
+    "tsconfig.node.json",
+    "src/test/**/*",
+    "src/App.tsx",
+    "src/App.css",
+    "src/main.tsx",
+    "src/index.css",
+    "src/vite-env.d.ts",
+    "src/assets/**/*",
+    "src/components/**/*",
+    "src/context/**/*",
+    "src/hooks/**/*",
+    "src/pages/**/*"
+    ,
+    "src/lib/utils.ts"
+  ]
 }

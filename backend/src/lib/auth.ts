@@ -3,11 +3,10 @@ import { createHmac, timingSafeEqual } from "node:crypto";
 import { cookies } from "next/headers";
 import { compare } from "bcryptjs";
 import { prisma } from "@/lib/db";
+import { getSessionSecret, isProduction } from "@/lib/env";
 
 const SESSION_COOKIE_NAME = "hunter_admin_session";
 const SESSION_MAX_AGE = 60 * 60 * 24 * 7;
-
-const getSessionSecret = () => process.env.NEXTAUTH_SECRET || "change-me-in-production";
 
 const toBase64Url = (value: string) => Buffer.from(value, "utf8").toString("base64url");
 
@@ -72,8 +71,8 @@ export const verifySessionToken = (token: string) => {
 export const setAdminSessionCookie = (token: string) => {
   cookies().set(SESSION_COOKIE_NAME, token, {
     httpOnly: true,
-    sameSite: "lax",
-    secure: process.env.NODE_ENV === "production",
+    sameSite: "strict",
+    secure: isProduction,
     path: "/",
     maxAge: SESSION_MAX_AGE,
   });
@@ -82,8 +81,8 @@ export const setAdminSessionCookie = (token: string) => {
 export const clearAdminSessionCookie = () => {
   cookies().set(SESSION_COOKIE_NAME, "", {
     httpOnly: true,
-    sameSite: "lax",
-    secure: process.env.NODE_ENV === "production",
+    sameSite: "strict",
+    secure: isProduction,
     path: "/",
     expires: new Date(0),
   });
@@ -152,6 +151,10 @@ export const verifyAdminPassword = async ({
 }) => {
   if (storedHash.startsWith("$2a$") || storedHash.startsWith("$2b$") || storedHash.startsWith("$2y$")) {
     return compare(plainPassword, storedHash);
+  }
+
+  if (isProduction) {
+    return false;
   }
 
   return plainPassword === storedHash;

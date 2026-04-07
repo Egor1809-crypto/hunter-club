@@ -1,10 +1,26 @@
 import { apiError, apiSuccess, formatZodError } from "@/lib/api";
 import { createSessionToken, setAdminSessionCookie, verifyAdminPassword } from "@/lib/auth";
 import { prisma } from "@/lib/db";
+import { checkRateLimit } from "@/lib/rate-limit";
 import { adminLoginSchema } from "@/lib/validations";
 
 export const POST = async (request: Request) => {
   try {
+    const forwardedFor = request.headers.get("x-forwarded-for");
+    const clientIp = forwardedFor?.split(",")[0]?.trim() || "unknown";
+    const loginRateLimit = checkRateLimit({
+      key: `admin-login:${clientIp}`,
+      limit: 5,
+      windowMs: 15 * 60 * 1000,
+    });
+
+    if (!loginRateLimit.allowed) {
+      return apiError(
+        `Слишком много попыток входа. Попробуйте снова через ${loginRateLimit.retryAfterSec} сек.`,
+        429,
+      );
+    }
+
     const body = await request.json();
     const parsed = adminLoginSchema.safeParse(body);
 
