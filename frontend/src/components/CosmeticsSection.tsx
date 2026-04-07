@@ -66,11 +66,11 @@ const reviews = [
 ];
 
 const cardLayout = [
-  { offset: -2, x: "14%", scale: 0.56, opacity: 0.9, zIndex: 1, rotate: -18 },
-  { offset: -1, x: "27%", scale: 0.8, opacity: 0.96, zIndex: 2, rotate: -8 },
-  { offset: 0, x: "50%", scale: 1.18, opacity: 1, zIndex: 5, rotate: 0 },
-  { offset: 1, x: "73%", scale: 0.8, opacity: 0.96, zIndex: 2, rotate: 8 },
-  { offset: 2, x: "86%", scale: 0.56, opacity: 0.9, zIndex: 1, rotate: 18 },
+  { offset: -2, x: "12%", scale: 0.85, opacity: 0.7, zIndex: 1 },
+  { offset: -1, x: "27%", scale: 0.92, opacity: 0.85, zIndex: 2 },
+  { offset: 0, x: "50%", scale: 1, opacity: 1, zIndex: 5 },
+  { offset: 1, x: "73%", scale: 0.92, opacity: 0.85, zIndex: 2 },
+  { offset: 2, x: "88%", scale: 0.85, opacity: 0.7, zIndex: 1 },
 ];
 
 const renderStars = (rating: string) => {
@@ -236,7 +236,7 @@ const CosmeticsSection = () => {
           <button
             onClick={handlePrev}
             aria-label={copy.prev}
-            className="absolute left-0 top-1/2 z-20 -translate-y-1/2 flex h-11 w-11 items-center justify-center border border-border bg-background/90 text-foreground transition-colors duration-300 hover:bg-card"
+            className="absolute left-[-3rem] md:left-[-4rem] top-1/2 z-20 -translate-y-1/2 flex h-11 w-11 items-center justify-center border border-border bg-background/90 text-foreground transition-colors duration-300 hover:bg-card"
           >
             <ChevronLeft className="h-5 w-5" />
           </button>
@@ -244,7 +244,7 @@ const CosmeticsSection = () => {
           <button
             onClick={handleNext}
             aria-label={copy.next}
-            className="absolute right-0 top-1/2 z-20 -translate-y-1/2 flex h-11 w-11 items-center justify-center border border-border bg-background/90 text-foreground transition-colors duration-300 hover:bg-card"
+            className="absolute right-[-3rem] md:right-[-4rem] top-1/2 z-20 -translate-y-1/2 flex h-11 w-11 items-center justify-center border border-border bg-background/90 text-foreground transition-colors duration-300 hover:bg-card"
           >
             <ChevronRight className="h-5 w-5" />
           </button>
@@ -257,24 +257,22 @@ const CosmeticsSection = () => {
                   layout
                   initial={{
                     opacity: 0,
-                    x: card.x,
-                    y: 10,
-                    scale: card.scale * 0.94,
+                    x: 100,
+                    scale: 0.9,
                   }}
                   animate={{
                     opacity: card.opacity,
                     left: card.x,
                     scale: card.scale,
-                    rotateY: card.rotate,
                     zIndex: card.zIndex,
                     x: "-50%",
                     y: "-50%",
                   }}
                   transition={{
-                    duration: 0.7,
-                    ease: [0.25, 0.46, 0.45, 0.94],
+                    duration: 0.5,
+                    ease: "easeInOut",
                   }}
-                  className="absolute top-[42%] w-[15.5rem] md:w-[19rem] will-change-transform"
+                  className="absolute top-[42%] w-[15.5rem] md:w-[19rem]"
                   style={{ zIndex: card.zIndex }}
                 >
                   <div
