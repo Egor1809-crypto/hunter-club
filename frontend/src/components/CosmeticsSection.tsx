@@ -242,14 +242,14 @@ const CosmeticsSection = () => {
                   animate={{ opacity: 1, x: 0 }}
                   exit={{ opacity: 0, x: -300 }}
                   transition={{ duration: 0.4, ease: "easeInOut" }}
-                  className="w-[15.5rem] md:w-[19rem]"
+                  className="w-[15.5rem] md:w-[28rem]"
                 >
                   <div
-                    className="h-[20rem] border border-border bg-card shadow-[0_28px_90px_rgba(0,0,0,0.35)] backdrop-blur-md p-4 md:p-5 flex flex-col justify-between overflow-hidden"
+                    className="h-[20rem] md:h-[22rem] border border-border bg-card shadow-[0_28px_90px_rgba(0,0,0,0.35)] backdrop-blur-md p-4 md:p-6 flex flex-col justify-between overflow-hidden"
                   >
                     <div className="space-y-4">
                       <div className="flex items-start justify-between gap-2">
-                        <span className="font-body text-[9px] tracking-[0.18em] uppercase text-muted-foreground">
+                        <span className="font-body text-[9px] md:text-[11px] tracking-[0.18em] uppercase text-muted-foreground">
                           {language === "ru" ? currentReview.service : currentReview.serviceEn}
                         </span>
                         <span className="font-body text-xs text-foreground whitespace-nowrap">
@@ -258,25 +258,25 @@ const CosmeticsSection = () => {
                       </div>
 
                       <div className="space-y-2">
-                        <p className="font-display text-3xl leading-none text-white/18">
+                        <p className="font-display text-3xl md:text-5xl leading-none text-white/18">
                           "
                         </p>
-                        <p className="font-body text-[11px] text-foreground leading-relaxed line-clamp-5">
+                        <p className="font-body text-[11px] md:text-sm text-foreground leading-relaxed line-clamp-5 md:line-clamp-6">
                           {language === "ru" ? currentReview.quote : currentReview.quoteEn}
                         </p>
                       </div>
                     </div>
 
-                    <div className="pt-4 space-y-2">
-                      <div className="h-px w-6 bg-white/20" />
-                      <p className="font-display text-lg font-light leading-none text-foreground">
+                    <div className="pt-4 md:pt-6 space-y-2">
+                      <div className="h-px w-6 md:w-10 bg-white/20" />
+                      <p className="font-display text-lg md:text-2xl font-light leading-none text-foreground">
                         {language === "ru" ? currentReview.name : currentReview.nameEn}
                       </p>
-                      <p className="font-body text-[9px] uppercase tracking-[0.18em] text-foreground/60">
+                      <p className="font-body text-[9px] md:text-[11px] uppercase tracking-[0.18em] text-foreground/60">
                         {copy.guest}
                       </p>
-                      <div className="flex gap-1 text-xs pt-1">
-                  {renderStars(currentReview.rating)}
+                      <div className="flex gap-1 text-xs md:text-base pt-1">
+                        {renderStars(currentReview.rating)}
                       </div>
                     </div>
                   </div>
