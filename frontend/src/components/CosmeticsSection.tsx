@@ -141,18 +141,7 @@ const CosmeticsSection = () => {
     },
   }[language];
 
-  const visibleCards = useMemo(
-    () =>
-      cardLayout.map((layout) => {
-        const reviewIndex = (activeIndex + layout.offset + reviews.length) % reviews.length;
-        return {
-          ...layout,
-          review: reviews[reviewIndex],
-          key: `${reviews[reviewIndex].name}-${reviewIndex}-${layout.offset}`,
-        };
-      }),
-    [activeIndex],
-  );
+  const currentReview = reviews[activeIndex];
 
   const handlePrev = () => {
     setActiveIndex((current) => (current - 1 + reviews.length) % reviews.length);
@@ -245,28 +234,26 @@ const CosmeticsSection = () => {
             <ChevronRight className="h-5 w-5" />
           </button>
 
-          <div className="relative h-[39rem] md:h-[42rem] overflow-hidden px-12 md:px-16">
-            <div className="absolute inset-0 flex items-center justify-center">
+          <div className="relative h-[30rem] md:h-[32rem] overflow-hidden px-12 md:px-16 flex items-center justify-center">
               <AnimatePresence mode="wait">
-                {visibleCards.map((card) => (
-                  <motion.article
-                    key={card.key}
-                    initial={{ opacity: 0, x: 300 }}
-                    animate={{ opacity: 1, x: 0 }}
-                    exit={{ opacity: 0, x: -300 }}
-                    transition={{ duration: 0.4, ease: "easeInOut" }}
-                    className="absolute w-[15.5rem] md:w-[19rem]"
-                  >
+                <motion.div
+                  key={activeIndex}
+                  initial={{ opacity: 0, x: 300 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  exit={{ opacity: 0, x: -300 }}
+                  transition={{ duration: 0.4, ease: "easeInOut" }}
+                  className="w-[15.5rem] md:w-[19rem]"
+                >
                   <div
                     className="h-[20rem] border border-border bg-card shadow-[0_28px_90px_rgba(0,0,0,0.35)] backdrop-blur-md p-4 md:p-5 flex flex-col justify-between overflow-hidden"
                   >
                     <div className="space-y-4">
                       <div className="flex items-start justify-between gap-2">
                         <span className="font-body text-[9px] tracking-[0.18em] uppercase text-muted-foreground">
-                          {language === "ru" ? card.review.service : card.review.serviceEn}
+                          {language === "ru" ? currentReview.service : currentReview.serviceEn}
                         </span>
                         <span className="font-body text-xs text-foreground whitespace-nowrap">
-                          {card.review.rating}
+                          {currentReview.rating}
                         </span>
                       </div>
 
@@ -275,7 +262,7 @@ const CosmeticsSection = () => {
                           "
                         </p>
                         <p className="font-body text-[11px] text-foreground leading-relaxed line-clamp-5">
-                          {language === "ru" ? card.review.quote : card.review.quoteEn}
+                          {language === "ru" ? currentReview.quote : currentReview.quoteEn}
                         </p>
                       </div>
                     </div>
@@ -283,19 +270,18 @@ const CosmeticsSection = () => {
                     <div className="pt-4 space-y-2">
                       <div className="h-px w-6 bg-white/20" />
                       <p className="font-display text-lg font-light leading-none text-foreground">
-                        {language === "ru" ? card.review.name : card.review.nameEn}
+                        {language === "ru" ? currentReview.name : currentReview.nameEn}
                       </p>
                       <p className="font-body text-[9px] uppercase tracking-[0.18em] text-foreground/60">
                         {copy.guest}
                       </p>
                       <div className="flex gap-1 text-xs pt-1">
-                        {renderStars(card.review.rating)}
+                        {renderStars(currentReview.rating)}
                       </div>
                     </div>
                   </div>
-                </motion.article>
-              ))}
-            </AnimatePresence>
+                </motion.div>
+              </AnimatePresence>
             </div>
           </div>
         </div>
