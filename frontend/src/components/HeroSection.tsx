@@ -88,7 +88,7 @@ const HeroSection = () => {
   const servicesQuery = useQuery({
     queryKey: ["services"],
     queryFn: async () => {
-      const response = await fetch("/api/services");
+      const response = await fetch("/api/public/services");
       const result = await response.json();
 
       if (!response.ok || !result.success) {

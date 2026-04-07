@@ -158,7 +158,7 @@ export const BookingPanel = ({ initialServiceId }: BookingPanelProps) => {
   const servicesQuery = useQuery({
     queryKey: ["services"],
     queryFn: async () => {
-      const result = await fetchJson<{ success: boolean; data: Service[] }>("/api/services");
+      const result = await fetchJson<{ success: boolean; data: Service[] }>("/api/public/services");
       return result.data.filter((service) => service.is_active);
     },
   });
