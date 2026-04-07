@@ -254,6 +254,7 @@ const CosmeticsSection = () => {
               {visibleCards.map((card) => (
                 <motion.article
                   key={card.key}
+                  layout
                   initial={{
                     opacity: 0,
                     x: card.x,
@@ -270,8 +271,8 @@ const CosmeticsSection = () => {
                     y: "-50%",
                   }}
                   transition={{
-                    duration: 1.35,
-                    ease: [0.2, 0.85, 0.2, 1],
+                    duration: 0.8,
+                    ease: [0.25, 0.46, 0.45, 0.94],
                   }}
                   className="absolute top-[42%] w-[15.5rem] md:w-[19rem] will-change-transform"
                   style={{ zIndex: card.zIndex }}
