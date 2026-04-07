@@ -1,6 +1,5 @@
 {
   "compilerOptions": {
-<<<<<<< HEAD
     "target": "ES2022",
     "lib": ["dom", "dom.iterable", "es2022"],
     "allowJs": false,
@@ -23,27 +22,3 @@
   "include": ["next-env.d.ts", "**/*.ts", "**/*.tsx", ".next/types/**/*.ts"],
   "exclude": ["node_modules"]
 }
-=======
-    "allowJs": true,
-    "noImplicitAny": false,
-    "noUnusedLocals": false,
-    "noUnusedParameters": false,
-    "paths": {
-      "@/*": [
-        "./src/*"
-      ]
-    },
-    "skipLibCheck": true,
-    "strictNullChecks": false
-  },
-  "files": [],
-  "references": [
-    {
-      "path": "./tsconfig.app.json"
-    },
-    {
-      "path": "./tsconfig.node.json"
-    }
-  ]
-}
->>>>>>> 5bcbf57b409ddcd83dfa716828e96fec8c501e41
