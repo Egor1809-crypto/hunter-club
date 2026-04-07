@@ -278,11 +278,7 @@ const CosmeticsSection = () => {
                   style={{ zIndex: card.zIndex }}
                 >
                   <div
-                    className={`min-h-[24rem] border backdrop-blur-md p-5 md:p-6 flex flex-col justify-between ${
-                      card.offset === 0
-                        ? "border-white/40 bg-gradient-to-br from-neutral-900 via-neutral-950 to-black"
-                        : "border-white/24 bg-card shadow-[0_28px_90px_rgba(0,0,0,0.35)]"
-                    }`}
+                    className="min-h-[24rem] border border-border bg-card shadow-[0_28px_90px_rgba(0,0,0,0.35)] backdrop-blur-md p-5 md:p-6 flex flex-col justify-between"
                   >
                     <div className="space-y-6">
                       <div className="flex items-start justify-between gap-4">
@@ -298,13 +294,7 @@ const CosmeticsSection = () => {
                         <p className="font-display text-5xl leading-none text-white/18">
                           "
                         </p>
-                        <p
-                          className={`font-body leading-relaxed ${
-                            card.offset === 0
-                              ? "text-sm md:text-base text-white/92"
-                              : "text-sm text-foreground"
-                          }`}
-                        >
+                        <p className="font-body text-sm text-foreground leading-relaxed">
                           {language === "ru" ? card.review.quote : card.review.quoteEn}
                         </p>
                       </div>
@@ -312,13 +302,7 @@ const CosmeticsSection = () => {
 
                     <div className="pt-8 space-y-3">
                       <div className="h-px w-10 bg-white/20" />
-                      <p
-                        className={`font-display font-light leading-none ${
-                          card.offset === 0
-                            ? "text-3xl text-white"
-                            : "text-2xl text-foreground"
-                        }`}
-                      >
+                      <p className="font-display text-2xl font-light leading-none text-foreground">
                         {language === "ru" ? card.review.name : card.review.nameEn}
                       </p>
                       <p className="font-body text-[11px] uppercase tracking-[0.18em] text-foreground/60">
