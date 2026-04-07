@@ -2,6 +2,28 @@ import { apiError, apiSuccess, formatZodError } from "@/lib/api";
 import { prisma } from "@/lib/db";
 import { createPublicReviewSchema } from "@/lib/validations";
 
+export const GET = async () => {
+  try {
+    const reviews = await prisma.reviews.findMany({
+      where: { status: "published" },
+      orderBy: { created_at: "desc" },
+      take: 20,
+      select: {
+        id: true,
+        customer_name: true,
+        service_label: true,
+        rating: true,
+        message: true,
+        created_at: true,
+      },
+    });
+
+    return apiSuccess(reviews);
+  } catch (error) {
+    return apiError("Не удалось загрузить отзывы", 500);
+  }
+};
+
 export const POST = async (request: Request) => {
   try {
     const body = await request.json();
