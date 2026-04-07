@@ -158,11 +158,15 @@ const CosmeticsSection = () => {
     [activeIndex],
   );
 
+  const direction = useRef<"left" | "right" | null>(null);
+
   const handlePrev = () => {
+    direction.current = "left";
     setActiveIndex((current) => (current - 1 + reviews.length) % reviews.length);
   };
 
   const handleNext = () => {
+    direction.current = "right";
     setActiveIndex((current) => (current + 1) % reviews.length);
   };
 
@@ -250,31 +254,29 @@ const CosmeticsSection = () => {
           </button>
 
           <div className="relative h-[39rem] md:h-[42rem] overflow-hidden px-12 md:px-16">
-            <div className="absolute inset-0 perspective-[1800px]">
+            <div className="absolute inset-0">
               {visibleCards.map((card) => (
                 <motion.article
                   key={card.key}
-                  layout
                   initial={{
                     opacity: 0,
-                    x: card.x,
-                    y: 10,
-                    scale: card.scale * 0.94,
+                    x: direction.current === "right" ? 300 : -300,
                   }}
                   animate={{
                     opacity: card.opacity,
-                    left: card.x,
-                    scale: card.scale,
-                    rotateY: card.rotate,
-                    zIndex: card.zIndex,
                     x: "-50%",
                     y: "-50%",
+                    scale: card.scale,
+                  }}
+                  exit={{
+                    opacity: 0,
+                    x: direction.current === "right" ? -300 : 300,
                   }}
                   transition={{
-                    duration: 0.8,
-                    ease: [0.25, 0.46, 0.45, 0.94],
+                    duration: 0.4,
+                    ease: "easeOut",
                   }}
-                  className="absolute top-[42%] w-[15.5rem] md:w-[19rem] will-change-transform"
+                  className="absolute top-[42%] left-[50%] w-[15.5rem] md:w-[19rem]"
                   style={{ zIndex: card.zIndex }}
                 >
                   <div
