@@ -66,11 +66,7 @@ const reviews = [
 ];
 
 const cardLayout = [
-  { offset: -2, x: "12%", scale: 0.85, opacity: 0.7, zIndex: 1 },
-  { offset: -1, x: "27%", scale: 0.92, opacity: 0.85, zIndex: 2 },
   { offset: 0, x: "50%", scale: 1, opacity: 1, zIndex: 5 },
-  { offset: 1, x: "73%", scale: 0.92, opacity: 0.85, zIndex: 2 },
-  { offset: 2, x: "88%", scale: 0.85, opacity: 0.7, zIndex: 1 },
 ];
 
 const renderStars = (rating: string) => {
@@ -250,23 +246,16 @@ const CosmeticsSection = () => {
           </button>
 
           <div className="relative h-[39rem] md:h-[42rem] overflow-hidden px-12 md:px-16">
-            <div className="absolute inset-0">
-              <AnimatePresence mode="popLayout">
+            <div className="absolute inset-0 flex items-center justify-center">
+              <AnimatePresence mode="wait">
                 {visibleCards.map((card) => (
                   <motion.article
                     key={card.key}
-                    initial={{ opacity: 0, x: card.offset > 0 ? 100 : -100, scale: 0.9 }}
-                    animate={{ 
-                      opacity: card.opacity, 
-                      left: card.x, 
-                      scale: card.scale,
-                      x: "-50%",
-                      y: "-50%",
-                    }}
-                    exit={{ opacity: 0, x: card.offset > 0 ? -100 : 100, scale: 0.9 }}
+                    initial={{ opacity: 0, x: 300 }}
+                    animate={{ opacity: 1, x: 0 }}
+                    exit={{ opacity: 0, x: -300 }}
                     transition={{ duration: 0.4, ease: "easeInOut" }}
-                    className="absolute top-[42%] left-[50%] w-[15.5rem] md:w-[19rem]"
-                    style={{ zIndex: card.zIndex }}
+                    className="absolute w-[15.5rem] md:w-[19rem]"
                   >
                   <div
                     className="h-[20rem] border border-border bg-card shadow-[0_28px_90px_rgba(0,0,0,0.35)] backdrop-blur-md p-4 md:p-5 flex flex-col justify-between overflow-hidden"
