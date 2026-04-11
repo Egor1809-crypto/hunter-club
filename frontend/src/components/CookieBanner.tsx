@@ -44,27 +44,27 @@ const CookieBanner = () => {
   }
 
   return (
-    <div className="fixed bottom-4 left-4 right-4 z-50 md:left-8 md:right-8">
+    <div className="fixed bottom-3 left-3 right-3 z-50 md:bottom-4 md:left-8 md:right-8">
       <div className="mx-auto max-w-4xl border border-border bg-background/95 backdrop-blur-md shadow-[0_18px_60px_rgba(0,0,0,0.35)]">
-        <div className="flex flex-col gap-5 p-5 md:flex-row md:items-end md:justify-between md:p-6">
+        <div className="flex flex-col gap-4 p-4 md:flex-row md:items-end md:justify-between md:gap-5 md:p-6">
           <div className="max-w-2xl">
-            <p className="font-display text-2xl font-light text-foreground">
+            <p className="font-display text-xl md:text-2xl font-light text-foreground">
               {copy.title}
             </p>
-            <p className="mt-2 font-body text-sm leading-relaxed text-muted-foreground">
+            <p className="mt-2 font-body text-xs sm:text-sm leading-relaxed text-muted-foreground">
               {copy.description}
             </p>
           </div>
-          <div className="flex flex-col gap-3 sm:flex-row">
+          <div className="flex flex-col gap-2 sm:flex-row">
             <button
               onClick={handleDecline}
-              className="border border-border px-5 py-3 font-body text-xs tracking-[0.15em] uppercase text-foreground transition-colors duration-300 hover:bg-card"
+              className="border border-border px-4 py-3 font-body text-[10px] sm:text-xs tracking-[0.15em] uppercase text-foreground transition-colors duration-300 hover:bg-card"
             >
               {copy.decline}
             </button>
             <button
               onClick={handleAccept}
-              className="bg-foreground px-5 py-3 font-body text-xs tracking-[0.15em] uppercase text-background transition-colors duration-300 hover:bg-accent hover:text-foreground"
+              className="bg-foreground px-4 py-3 font-body text-[10px] sm:text-xs tracking-[0.15em] uppercase text-background transition-colors duration-300 hover:bg-accent hover:text-foreground"
             >
               {copy.accept}
             </button>

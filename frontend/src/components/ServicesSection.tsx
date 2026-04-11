@@ -85,7 +85,7 @@ const ServicesSection = () => {
 
   return (
     <section id="services" className="section-golden-tight bg-card">
-      <div className="max-w-7xl mx-auto px-6 md:px-12">
+      <div className="max-w-7xl mx-auto px-5 sm:px-6 md:px-12">
         <motion.div
           initial={{ opacity: 0, y: 30 }}
           whileInView={{ opacity: 1, y: 0 }}
@@ -113,7 +113,7 @@ const ServicesSection = () => {
               whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: true, margin: "-50px" }}
               transition={{ duration: 0.6, delay: i * 0.1 }}
-              className="group border-t border-border py-8 md:py-10 grid grid-cols-1 md:grid-cols-12 gap-4 md:gap-8 items-start cursor-default"
+              className="group border-t border-border py-7 md:py-10 grid grid-cols-1 md:grid-cols-12 gap-3 md:gap-8 items-start cursor-default"
             >
               <div className="md:col-span-5">
                 <h3 className="font-display text-2xl md:text-3xl font-light text-foreground group-hover:text-accent transition-colors duration-300">
@@ -125,12 +125,12 @@ const ServicesSection = () => {
                   {service.description}
                 </p>
               </div>
-              <div className="md:col-span-2 text-right">
+              <div className="md:col-span-2 md:text-right pt-1 md:pt-0">
                 <span className="font-body text-sm tracking-wide text-foreground">
                   {service.price}
                 </span>
               </div>
-              <div className="md:col-span-1 text-right">
+              <div className="md:col-span-1 md:text-right">
                 <span className="font-body text-xs text-muted-foreground">
                   {service.duration}
                 </span>

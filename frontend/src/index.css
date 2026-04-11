@@ -125,6 +125,13 @@ html {
   opacity: 0.52;
 }
 
+@media (max-width: 767px) {
+  .hero-grid {
+    background-size: 48px 48px;
+    opacity: 0.34;
+  }
+}
+
 .section-golden {
   padding-top: var(--phi-2);
   padding-bottom: var(--phi-3);
@@ -222,6 +229,22 @@ html {
 .contact-socials .icon-content a[data-social="instagram"] .filled,
 .contact-socials .icon-content a[data-social="instagram"] + .tooltip {
   background: linear-gradient(180deg, #ffffff, #9a9a9a 52%, #0b0b0b);
+}
+
+@media (max-width: 767px) {
+  .contact-socials {
+    gap: 14px;
+  }
+
+  .contact-socials .icon-content a {
+    width: 44px;
+    height: 44px;
+  }
+
+  .contact-socials .icon-content a svg {
+    width: 20px;
+    height: 20px;
+  }
 }
 
 @media (min-width: 768px) {

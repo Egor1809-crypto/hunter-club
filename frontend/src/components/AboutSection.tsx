@@ -33,8 +33,8 @@ const AboutSection = () => {
 
   return (
     <section id="about" className="section-golden bg-background">
-      <div className="max-w-7xl mx-auto px-6 md:px-12">
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-12 md:gap-24 items-center">
+      <div className="max-w-7xl mx-auto px-5 sm:px-6 md:px-12">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-10 md:gap-24 items-center">
           {/* Left — barber photo + short description */}
           <motion.div
             initial={{ opacity: 0, x: -30 }}
@@ -55,7 +55,7 @@ const AboutSection = () => {
 
               <div className="space-y-3">
                 <p className="font-display text-3xl md:text-4xl font-light text-foreground">Слава</p>
-                <p className="font-body text-sm md:text-base text-muted-foreground leading-relaxed max-w-sm">
+                <p className="font-body text-sm md:text-base text-muted-foreground leading-relaxed max-w-md">
                   {copy.short}
                 </p>
               </div>
@@ -72,7 +72,7 @@ const AboutSection = () => {
             <p className="font-body text-xs tracking-[0.25em] uppercase text-muted-foreground mb-4">
               {copy.eyebrow}
             </p>
-            <h2 className="font-display text-4xl md:text-5xl font-light text-foreground mb-[34px] md:mb-[55px] leading-tight">
+            <h2 className="font-display text-4xl md:text-5xl font-light text-foreground mb-[34px] md:mb-[55px] leading-tight max-w-[11ch]">
               {copy.titleMain}
               <br />
               <span className="italic">{copy.titleAccent}</span>
@@ -86,18 +86,18 @@ const AboutSection = () => {
               </p>
             </div>
             <div className="h-px bg-border w-16 my-[34px] md:my-[55px]" />
-            <div className="grid grid-cols-3 gap-8">
+            <div className="grid grid-cols-3 gap-4 sm:gap-8">
               <div>
                 <p className="font-display text-3xl md:text-4xl font-light text-foreground">7+</p>
-                <p className="font-body text-xs text-muted-foreground mt-1 tracking-wide uppercase">{copy.years}</p>
+                <p className="font-body text-[10px] sm:text-xs text-muted-foreground mt-1 tracking-wide uppercase">{copy.years}</p>
               </div>
               <div>
                 <p className="font-display text-3xl md:text-4xl font-light text-foreground">4</p>
-                <p className="font-body text-xs text-muted-foreground mt-1 tracking-wide uppercase">{copy.masters}</p>
+                <p className="font-body text-[10px] sm:text-xs text-muted-foreground mt-1 tracking-wide uppercase">{copy.masters}</p>
               </div>
               <div>
                 <p className="font-display text-3xl md:text-4xl font-light text-foreground">5K+</p>
-                <p className="font-body text-xs text-muted-foreground mt-1 tracking-wide uppercase">{copy.clients}</p>
+                <p className="font-body text-[10px] sm:text-xs text-muted-foreground mt-1 tracking-wide uppercase">{copy.clients}</p>
               </div>
             </div>
           </motion.div>

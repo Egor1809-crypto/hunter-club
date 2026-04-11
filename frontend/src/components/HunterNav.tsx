@@ -70,12 +70,12 @@ const HunterNav = () => {
   return (
     <nav className="fixed top-0 left-0 right-0 z-50 bg-background/80 backdrop-blur-md border-b border-border">
       <div className="max-w-[96rem] mx-auto px-4 md:px-8">
-        <div className="flex items-center justify-between h-16 md:h-20">
+        <div className="flex items-center justify-between h-16 md:h-20 gap-3">
         <a
           href="#"
-          className="flex items-center gap-3 font-display text-2xl md:text-3xl font-light tracking-[0.2em] text-foreground uppercase"
+          className="min-w-0 flex items-center gap-2.5 font-display text-xl sm:text-2xl md:text-3xl font-light tracking-[0.18em] text-foreground uppercase"
         >
-          <span className="relative w-10 h-10 md:w-12 md:h-12 rounded-full bg-white overflow-hidden shadow-[0_0_24px_rgba(255,255,255,0.12)] pointer-events-none select-none shrink-0 block">
+          <span className="relative w-9 h-9 sm:w-10 sm:h-10 md:w-12 md:h-12 rounded-full bg-white/90 overflow-hidden shadow-[0_0_24px_rgba(255,255,255,0.12)] opacity-70 pointer-events-none select-none shrink-0 block">
             <img
               src={navLogoUrl}
               alt=""
@@ -84,7 +84,7 @@ const HunterNav = () => {
               loading="lazy"
             />
           </span>
-          <span>Hunter</span>
+          <span className="truncate">Hunter</span>
         </a>
 
         {/* Desktop nav */}
@@ -133,7 +133,7 @@ const HunterNav = () => {
             transition={{ duration: 0.25 }}
             className="border-b border-border bg-background/95 backdrop-blur-md"
           >
-            <div className="max-w-[96rem] mx-auto px-6 md:px-10 py-8 md:py-10">
+            <div className="max-w-[96rem] mx-auto px-5 md:px-10 py-6 md:py-10">
               <div className="flex flex-col gap-5">
                 <p className="font-body text-xs tracking-[0.25em] uppercase text-muted-foreground">
                   {copy.navigation}

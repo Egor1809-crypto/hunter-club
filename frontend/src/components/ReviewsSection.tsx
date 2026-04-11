@@ -81,7 +81,7 @@ const ReviewCard = ({
   language: "ru" | "en";
   guestLabel: string;
 }) => (
-  <div className="flex-shrink-0 w-full h-[24rem] md:h-[26rem] border border-white/20 bg-card backdrop-blur-md p-5 md:p-6 flex flex-col justify-between overflow-hidden">
+  <div className="flex-shrink-0 w-full min-h-[25rem] md:h-[26rem] border border-white/20 bg-card backdrop-blur-md p-5 md:p-6 flex flex-col justify-between overflow-hidden">
     <div className="flex min-h-0 flex-1 flex-col">
       <div className="flex min-h-[2.75rem] items-start justify-between gap-4">
         <span className="font-body text-[11px] tracking-[0.18em] uppercase text-muted-foreground">
@@ -274,7 +274,7 @@ const ReviewsSection = () => {
             <ChevronRight className="h-5 w-5" />
           </button>
 
-          <div className="overflow-hidden mx-12">
+          <div className="overflow-hidden mx-0 px-12">
             <AnimatePresence mode="wait" custom={direction}>
               <motion.div
                 key={activeIndex}
@@ -306,7 +306,7 @@ const ReviewsSection = () => {
           whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true, margin: "-80px" }}
           transition={{ duration: 0.7, delay: 0.1 }}
-          className="mt-12 md:mt-16 mx-8 border border-border bg-card/80 backdrop-blur-md p-6 md:p-8"
+          className="mt-12 md:mt-16 mx-0 lg:mx-8 border border-border bg-card/80 backdrop-blur-md p-5 md:p-8"
         >
           <div className="grid grid-cols-1 lg:grid-cols-[0.9fr_1.1fr] gap-8 md:gap-12">
             <div>

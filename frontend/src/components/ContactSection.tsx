@@ -32,7 +32,7 @@ const ContactSection = () => {
   return (
     <section id="contact" className="section-golden bg-card">
       <div className="max-w-7xl mx-auto px-6 md:px-12">
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-16 md:gap-24">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-12 md:gap-24">
           {/* Left */}
           <motion.div
             initial={{ opacity: 0, y: 30 }}
@@ -43,7 +43,7 @@ const ContactSection = () => {
             <p className="font-body text-xs tracking-[0.25em] uppercase text-muted-foreground mb-4">
               {copy.eyebrow}
             </p>
-            <h2 className="font-display text-4xl md:text-6xl font-light text-foreground mb-[34px] md:mb-[55px]">
+            <h2 className="font-display text-4xl md:text-6xl font-light text-foreground mb-[34px] md:mb-[55px] max-w-[12ch]">
               {copy.title}
             </h2>
             <p className="font-body text-sm md:text-base text-muted-foreground leading-relaxed max-w-md mb-12">
@@ -70,13 +70,13 @@ const ContactSection = () => {
               <p className="font-body text-xs tracking-[0.2em] uppercase text-muted-foreground mb-3">
                 {copy.address}
               </p>
-              <p className="font-display text-xl md:text-2xl font-light text-foreground">
+              <p className="font-display text-xl md:text-2xl font-light text-foreground leading-snug pr-2">
                 {language === "ru" ? "г. Саратов, Сакко и Ванцетти, 14 корпус 1" : "14 корпус 1 Sakko i Vanzetti, Saratov"}
               </p>
               <p className="font-body text-sm text-muted-foreground mt-1">
                 {language === "ru" ? "Саратов" : "Saratov"}
               </p>
-              <div className="mt-6 max-w-md border border-border overflow-hidden bg-background">
+              <div className="mt-6 w-full max-w-md border border-border overflow-hidden bg-background">
                 <iframe
                   title={language === "ru" ? "Карта барбершопа Hunter" : "Hunter barbershop map"}
                   src="https://www.google.com/maps?q=%D0%A1%D0%B0%D1%80%D0%B0%D1%82%D0%BE%D0%B2%2C%20%D0%A1%D0%B0%D0%BA%D0%BA%D0%BE%20%D0%B8%20%D0%92%D0%B0%D0%BD%D1%86%D0%B5%D1%82%D1%82%D0%B8%2C%2014%20%D0%BA%D0%BE%D1%80%D0%BF%D1%83%D1%81%201&z=16&output=embed"
@@ -100,13 +100,13 @@ const ContactSection = () => {
                 {copy.hours}
               </p>
               <div className="space-y-1">
-                <div className="flex justify-between max-w-xs">
+                <div className="flex flex-col gap-1 sm:flex-row sm:items-center sm:justify-between max-w-xs">
                   <span className="font-body text-sm text-foreground">
                     {language === "ru" ? "Понедельник — Пятница" : "Monday — Friday"}
                   </span>
                   <span className="font-body text-sm text-muted-foreground">10:00 — 21:00</span>
                 </div>
-                <div className="flex justify-between max-w-xs">
+                <div className="flex flex-col gap-1 sm:flex-row sm:items-center sm:justify-between max-w-xs">
                   <span className="font-body text-sm text-foreground">
                     {language === "ru" ? "Суббота — Воскресенье" : "Saturday — Sunday"}
                   </span>
