@@ -39,7 +39,6 @@ const HeroSection = () => {
       titleAccent: "на славу",
       description: "Hunter — стрижки для тех, кто привык к лучшему.",
       tagline: "На охоту с охотой.",
-      widgetEyebrow: "Быстрый вход в запись",
       chooseService: "Выберите услугу",
       findTime: "Найти время",
       loadingServices: "Загружаем услуги...",
@@ -64,7 +63,6 @@ const HeroSection = () => {
       titleAccent: "with pride",
       description: "Hunter is grooming for those who expect the best.",
       tagline: "Step into the hunt with confidence.",
-      widgetEyebrow: "Quick booking access",
       chooseService: "Choose a service",
       findTime: "Find time",
       loadingServices: "Loading services...",
@@ -106,10 +104,14 @@ const HeroSection = () => {
       {/* Pure black background — no image */}
       <div className="absolute inset-0 bg-background z-0" />
       {/* Large grid overlay to avoid empty hero background */}
-      <div className="absolute inset-0 hero-grid pointer-events-none z-1" />
+      <div className="absolute inset-0 hero-grid pointer-events-none z-[1]" />
+      {/* Solid patch behind the logo so the grid does not cut through it */}
+      <div
+        className="absolute left-[66%] top-[6.5rem] -translate-x-1/2 z-[2] w-[17.5rem] sm:w-[20.5rem] md:left-[72%] md:top-[18%] md:w-[37rem] aspect-square rounded-full bg-background pointer-events-none select-none"
+      />
       {/* Logo placed under the text */}
       <div
-        className="absolute left-[66%] top-[6.5rem] -translate-x-1/2 z-0 w-[16rem] sm:w-[19rem] md:left-[72%] md:top-[18%] md:w-[34rem] aspect-square rounded-full bg-white/90 overflow-hidden shadow-[0_0_80px_rgba(255,255,255,0.12)] opacity-60 md:opacity-70 pointer-events-none select-none"
+        className="absolute left-[66%] top-[6.5rem] -translate-x-1/2 z-[3] w-[16rem] sm:w-[19rem] md:left-[72%] md:top-[18%] md:w-[34rem] aspect-square rounded-full bg-white/90 overflow-hidden shadow-[0_0_80px_rgba(255,255,255,0.12)] opacity-60 md:opacity-70 pointer-events-none select-none"
       >
         <img
           src={heroLogoUrl}
@@ -121,18 +123,19 @@ const HeroSection = () => {
       </div>
 
       {/* Content */}
-      <div className="relative z-10 w-full max-w-7xl mx-auto px-5 sm:px-6 md:px-12 pt-[17rem] sm:pt-[18.5rem] md:pt-[12.25rem] pb-12 md:pb-0">
+      <div className="relative z-10 w-full max-w-7xl mx-auto px-5 sm:px-6 md:px-12 pt-[15rem] sm:pt-[17rem] md:pt-[12.25rem] pb-12 md:pb-0">
         <motion.div
           initial={{ opacity: 0, y: 40 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 1, delay: 0.3, ease: "easeOut" }}
+          className="lg:ml-8"
         >
-          <h1 className="font-display text-[2.75rem] sm:text-5xl md:text-7xl lg:text-8xl font-light leading-[0.92] sm:leading-[0.95] text-foreground mb-6 md:mb-[55px] max-w-[11ch]">
+          <h1 className="font-display text-[2.75rem] sm:text-5xl md:text-7xl lg:text-8xl font-light leading-[0.92] sm:leading-[0.95] text-foreground mb-5 md:mb-[55px] max-w-[11ch]">
             {copy.titleMain}
             <br />
             <span className="italic">{copy.titleAccent}</span>
           </h1>
-          <p className="font-body text-[10px] sm:text-xs tracking-[0.25em] uppercase text-foreground/80 md:text-muted-foreground mb-4 -mt-1">
+          <p className="font-body text-[10px] sm:text-xs tracking-[0.25em] uppercase text-foreground/80 md:text-muted-foreground mb-3 -mt-1">
             {copy.eyebrow}
           </p>
           <p className="font-body text-sm md:text-base text-muted-foreground max-w-sm md:max-w-md leading-relaxed">
@@ -143,14 +146,11 @@ const HeroSection = () => {
           <button
             type="button"
             onClick={() => setIsManifestoOpen(true)}
-            className="mt-8 md:mt-10 font-body text-[10px] sm:text-xs tracking-[0.18em] uppercase text-foreground underline underline-offset-[10px] decoration-border hover:decoration-foreground transition-colors duration-300"
+            className="mt-7 md:mt-10 font-body text-[10px] sm:text-xs tracking-[0.18em] uppercase text-foreground underline underline-offset-[10px] decoration-border hover:decoration-foreground transition-colors duration-300"
           >
             {copy.manifestoLink}
           </button>
-          <div className="mt-10 sm:mt-14 md:mt-36 w-full max-w-xl border border-border bg-background/75 backdrop-blur-md p-4 md:p-5">
-            <p className="font-body text-[10px] sm:text-[11px] tracking-[0.22em] uppercase text-muted-foreground mb-4">
-              {copy.widgetEyebrow}
-            </p>
+          <div className="mt-24 sm:mt-20 md:mt-36 w-full max-w-[22rem] sm:max-w-xl border border-border bg-background/75 backdrop-blur-md p-4 md:p-5">
             <div className="grid grid-cols-1 md:grid-cols-[1fr_auto] gap-3">
               <Select value={selectedServiceId} onValueChange={setSelectedServiceId}>
                 <SelectTrigger className="h-12 w-full border-border bg-background px-4 font-body text-sm text-foreground">

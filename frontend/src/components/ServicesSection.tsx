@@ -4,6 +4,7 @@ import { useLanguage } from "@/context/LanguageContext";
 
 type Service = {
   id: string;
+  slug?: string;
   name: string;
   description: string | null;
   price: string | number | null;
@@ -13,7 +14,7 @@ type Service = {
 
 const fallbackServices = {
   ru: [
-    { name: "Стрижка", price: "от 3 000 ₽", duration: "60 мин", description: "Классическая или современная стрижка с консультацией мастера" },
+    { name: "Стрижка", price: "от 3 000 ₽", duration: "60 мин", description: "Точность, а не скорость." },
     { name: "Бритьё опасной бритвой", price: "от 2 500 ₽", duration: "45 мин", description: "Королевское бритьё с горячими полотенцами и маслами" },
     { name: "Стрижка + борода", price: "от 4 500 ₽", duration: "90 мин", description: "Комплексный уход: стрижка и моделирование бороды" },
     { name: "Моделирование бороды", price: "от 2 000 ₽", duration: "40 мин", description: "Придание формы и уход за бородой" },
@@ -76,10 +77,18 @@ const ServicesSection = () => {
 
   const services = servicesQuery.data?.length
     ? servicesQuery.data.map((service) => ({
-        name: service.name,
+        name:
+          language === "ru" && (service.slug === "shave" || service.name === "Бритьё опасной")
+            ? "Бритьё опасной бритвой"
+            : service.name,
         price: formatPrice(service.price, language),
         duration: `${service.duration_min} ${language === "ru" ? "мин" : "min"}`,
-        description: service.description ?? "",
+        description:
+          language === "ru" &&
+          service.slug === "haircut" &&
+          service.description?.includes("Мужская стрижка")
+            ? "Точность, а не скорость."
+            : service.description ?? "",
       }))
     : fallbackServices[language];
 
@@ -91,6 +100,7 @@ const ServicesSection = () => {
           whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true, margin: "-100px" }}
           transition={{ duration: 0.8 }}
+          className="lg:mx-8"
         >
           <p className="font-body text-xs tracking-[0.25em] uppercase text-muted-foreground mb-4">
             {copy.eyebrow}
@@ -105,7 +115,7 @@ const ServicesSection = () => {
           ) : null}
         </motion.div>
 
-        <div className="space-y-0">
+        <div className="space-y-0 lg:mx-8">
           {services.map((service, i) => (
             <motion.div
               key={`${service.name}-${i}`}

@@ -1,9 +1,16 @@
-import { FormEvent, useCallback, useEffect, useMemo, useState } from "react";
+import { FormEvent, TouchEvent, useCallback, useEffect, useMemo, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { ChevronLeft, ChevronRight } from "lucide-react";
+import { ChevronLeft, ChevronRight, Star } from "lucide-react";
 import { useLanguage } from "@/context/LanguageContext";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
 import { useToast } from "@/hooks/use-toast";
 import { cn } from "@/lib/utils";
 
@@ -117,15 +124,15 @@ const ReviewsSection = () => {
   const [message, setMessage] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [direction, setDirection] = useState(0);
+  const [touchStartX, setTouchStartX] = useState<number | null>(null);
+  const [isReviewOpen, setIsReviewOpen] = useState(false);
 
   const copy = {
     ru: {
-      eyebrow: "Доверие гостей",
       title: "Славные отзывы",
       guest: "Гость Hunter",
       prev: "Назад",
       next: "Вперёд",
-      formEyebrow: "Оставить отзыв",
       formTitle: "Поделитесь впечатлением",
       formDescription: "Коротко расскажите, как прошёл визит. Отзыв можно оставить прямо на сайте.",
       name: "Ваше имя",
@@ -138,14 +145,15 @@ const ReviewsSection = () => {
       successDescription: "Отзыв отправлен и уже доступен в CRM.",
       errorTitle: "Не удалось отправить отзыв",
       errorDescription: "Попробуйте ещё раз через пару секунд.",
+      widgetTitle: "Поделиться впечатлением",
+      widgetDescription: "Откройте компактное окно и оставьте отзыв без лишнего шума на странице.",
+      widgetButton: "Оставить отзыв",
     },
     en: {
-      eyebrow: "Guest trust",
       title: "Glorious reviews",
       guest: "Hunter guest",
       prev: "Previous",
       next: "Next",
-      formEyebrow: "Leave a review",
       formTitle: "Share your impression",
       formDescription: "Tell us briefly how your visit went. You can leave feedback right on the website.",
       name: "Your name",
@@ -158,6 +166,9 @@ const ReviewsSection = () => {
       successDescription: "Your review has been sent and is now available in the CRM.",
       errorTitle: "Could not send the review",
       errorDescription: "Please try again in a moment.",
+      widgetTitle: "Share your impression",
+      widgetDescription: "Open a compact panel and leave a review without taking up extra space on the page.",
+      widgetButton: "Leave a review",
     },
   }[language];
 
@@ -176,6 +187,29 @@ const ReviewsSection = () => {
     setDirection(1);
     setActiveIndex((c) => (c + 1) % reviews.length);
   }, []);
+
+  const handleTouchStart = (event: TouchEvent<HTMLDivElement>) => {
+    setTouchStartX(event.touches[0]?.clientX ?? null);
+  };
+
+  const handleTouchEnd = (event: TouchEvent<HTMLDivElement>) => {
+    if (touchStartX === null) {
+      return;
+    }
+
+    const touchEndX = event.changedTouches[0]?.clientX ?? touchStartX;
+    const deltaX = touchEndX - touchStartX;
+
+    if (Math.abs(deltaX) > 48) {
+      if (deltaX < 0) {
+        handleNext();
+      } else {
+        handlePrev();
+      }
+    }
+
+    setTouchStartX(null);
+  };
 
   useEffect(() => {
     const timer = setInterval(handleNext, 5000);
@@ -198,6 +232,7 @@ const ReviewsSection = () => {
       setService("");
       setMessage("");
       setRating(5);
+      setIsReviewOpen(false);
     } catch (error) {
       toast({
         title: copy.errorTitle,
@@ -210,7 +245,7 @@ const ReviewsSection = () => {
   };
 
   return (
-    <section id="reviews" className="section-golden bg-background overflow-hidden">
+    <section id="reviews" className="section-golden section-grid bg-background overflow-hidden">
       <div className="max-w-7xl mx-auto px-6 md:px-12">
         <motion.div
           initial={{ opacity: 0, y: 30 }}
@@ -220,7 +255,6 @@ const ReviewsSection = () => {
           className="flex flex-col md:flex-row md:items-end md:justify-between gap-8 mb-12 md:mb-16 lg:mx-8"
         >
           <div>
-            <p className="font-body text-xs tracking-[0.25em] uppercase text-muted-foreground mb-4">{copy.eyebrow}</p>
             <h2 className="font-display text-4xl md:text-6xl font-light text-foreground leading-[0.95]">{copy.title}</h2>
           </div>
         </motion.div>
@@ -265,16 +299,11 @@ const ReviewsSection = () => {
 
         {/* Mobile: плавная карусель */}
         <div className="lg:hidden relative">
-          <button onClick={handlePrev} aria-label={copy.prev}
-            className="absolute left-0 top-1/2 z-20 -translate-y-1/2 flex h-11 w-11 items-center justify-center border border-border bg-background/90 text-foreground transition-colors hover:bg-card">
-            <ChevronLeft className="h-5 w-5" />
-          </button>
-          <button onClick={handleNext} aria-label={copy.next}
-            className="absolute right-0 top-1/2 z-20 -translate-y-1/2 flex h-11 w-11 items-center justify-center border border-border bg-background/90 text-foreground transition-colors hover:bg-card">
-            <ChevronRight className="h-5 w-5" />
-          </button>
-
-          <div className="overflow-hidden mx-0 px-12">
+          <div
+            className="overflow-hidden mx-0 sm:mx-2"
+            onTouchStart={handleTouchStart}
+            onTouchEnd={handleTouchEnd}
+          >
             <AnimatePresence mode="wait" custom={direction}>
               <motion.div
                 key={activeIndex}
@@ -283,6 +312,7 @@ const ReviewsSection = () => {
                 animate={{ opacity: 1, x: 0 }}
                 exit={{ opacity: 0, x: direction >= 0 ? -200 : 200 }}
                 transition={{ duration: 0.4, ease: [0.25, 0.8, 0.25, 1] }}
+                className="touch-pan-y"
               >
                 <ReviewCard review={reviews[activeIndex]} language={language} guestLabel={copy.guest} />
               </motion.div>
@@ -300,7 +330,7 @@ const ReviewsSection = () => {
           </div>
         </div>
 
-        {/* Форма */}
+        {/* Compact review widget */}
         <motion.div
           initial={{ opacity: 0, y: 24 }}
           whileInView={{ opacity: 1, y: 0 }}
@@ -308,43 +338,83 @@ const ReviewsSection = () => {
           transition={{ duration: 0.7, delay: 0.1 }}
           className="mt-12 md:mt-16 mx-0 lg:mx-8 border border-border bg-card/80 backdrop-blur-md p-5 md:p-8"
         >
-          <div className="grid grid-cols-1 lg:grid-cols-[0.9fr_1.1fr] gap-8 md:gap-12">
-            <div>
-              <p className="font-body text-xs tracking-[0.25em] uppercase text-muted-foreground mb-4">{copy.formEyebrow}</p>
-              <h3 className="font-display text-3xl md:text-5xl font-light text-foreground leading-[0.96] mb-4">{copy.formTitle}</h3>
-              <p className="font-body text-sm md:text-base text-muted-foreground leading-relaxed max-w-md">{copy.formDescription}</p>
+          <div className="flex flex-col gap-6 md:flex-row md:items-end md:justify-between">
+            <div className="max-w-xl">
+              <h3 className="font-display text-3xl md:text-5xl font-light text-foreground leading-[0.96] mb-3">
+                {copy.widgetTitle}
+              </h3>
+              <p className="font-body text-sm md:text-base text-muted-foreground leading-relaxed">
+                {copy.widgetDescription}
+              </p>
             </div>
-            <form onSubmit={handleSubmit} className="grid gap-5">
+            <button
+              type="button"
+              onClick={() => setIsReviewOpen(true)}
+              className="w-full md:w-auto min-w-[220px] px-8 py-4 font-body text-xs tracking-[0.16em] uppercase bg-foreground text-background transition-colors duration-300 hover:bg-accent hover:text-foreground"
+            >
+              {copy.widgetButton}
+            </button>
+          </div>
+        </motion.div>
+
+        <Dialog open={isReviewOpen} onOpenChange={setIsReviewOpen}>
+          <DialogContent className="max-w-[92vw] border-border bg-background p-5 text-foreground sm:max-w-2xl sm:p-8">
+            <DialogHeader className="border-b border-border pb-5">
+              <DialogTitle className="font-display text-3xl md:text-5xl font-light leading-[0.96] text-foreground">
+                {copy.formTitle}
+              </DialogTitle>
+              <DialogDescription className="font-body text-sm md:text-base leading-relaxed text-muted-foreground">
+                {copy.formDescription}
+              </DialogDescription>
+            </DialogHeader>
+            <form onSubmit={handleSubmit} className="grid gap-5 pt-2">
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <Input value={name} onChange={(e) => setName(e.target.value)} placeholder={copy.name} aria-label={copy.name} required className="h-12 rounded-none border-border bg-background font-body text-sm" />
-                <Input value={service} onChange={(e) => setService(e.target.value)} placeholder={copy.service} aria-label={copy.service} required className="h-12 rounded-none border-border bg-background font-body text-sm" />
+                <Input value={name} onChange={(e) => setName(e.target.value)} placeholder={copy.name} aria-label={copy.name} required className="h-12 rounded-none border-border bg-card font-body text-sm" />
+                <Input value={service} onChange={(e) => setService(e.target.value)} placeholder={copy.service} aria-label={copy.service} required className="h-12 rounded-none border-border bg-card font-body text-sm" />
               </div>
               <div className="space-y-3">
                 <p className="font-body text-xs tracking-[0.18em] uppercase text-muted-foreground">{copy.rating}</p>
-                <div className="flex gap-2">
+                <div className="flex items-center gap-1">
                   {Array.from({ length: 5 }, (_, i) => {
                     const v = i + 1;
                     return (
-                      <button key={v} type="button" onClick={() => setRating(v)}
-                        className={cn("h-11 w-11 border text-xl transition-colors duration-200",
-                          v <= rating ? "border-amber-400/60 bg-amber-400/10 text-amber-400" : "border-border bg-background text-white/25 hover:text-white/60")}>
-                        ★
+                      <button
+                        key={v}
+                        type="button"
+                        onClick={() => setRating(v)}
+                        aria-label={`${copy.rating}: ${v}`}
+                        className={cn(
+                          "flex h-9 w-9 items-center justify-center transition-transform duration-200 hover:scale-[1.04]",
+                          v <= rating ? "text-[#c6a55a]" : "text-white/22 hover:text-white/50",
+                        )}
+                      >
+                        <Star
+                          className={cn(
+                            "h-[17px] w-[17px] stroke-[1.6]",
+                            v <= rating ? "fill-current" : "fill-transparent",
+                          )}
+                        />
                       </button>
                     );
                   })}
                 </div>
               </div>
-              <Textarea value={message} onChange={(e) => setMessage(e.target.value)} placeholder={copy.message} aria-label={copy.message} required className="min-h-[160px] rounded-none border-border bg-background font-body text-sm" />
+              <Textarea value={message} onChange={(e) => setMessage(e.target.value)} placeholder={copy.message} aria-label={copy.message} required className="min-h-[160px] rounded-none border-border bg-card font-body text-sm" />
               <div>
-                <button type="submit" disabled={isSubmitting}
-                  className={cn("min-w-[220px] px-8 py-4 font-body text-xs tracking-[0.16em] uppercase transition-colors duration-300",
-                    isSubmitting ? "bg-muted text-muted-foreground cursor-not-allowed" : "bg-foreground text-background hover:bg-accent hover:text-foreground")}>
+                <button
+                  type="submit"
+                  disabled={isSubmitting}
+                  className={cn(
+                    "min-w-[220px] px-8 py-4 font-body text-xs tracking-[0.16em] uppercase transition-colors duration-300",
+                    isSubmitting ? "bg-muted text-muted-foreground cursor-not-allowed" : "bg-foreground text-background hover:bg-accent hover:text-foreground",
+                  )}
+                >
                   {isSubmitting ? copy.submitting : copy.submit}
                 </button>
               </div>
             </form>
-          </div>
-        </motion.div>
+          </DialogContent>
+        </Dialog>
       </div>
     </section>
   );

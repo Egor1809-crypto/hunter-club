@@ -116,17 +116,57 @@ html {
 .hero-grid {
   background-image: linear-gradient(
       to right,
-      hsl(var(--border) / 0.35) 1px,
+      hsl(var(--foreground) / 0.1) 1px,
       transparent 1px
     ),
-    linear-gradient(to bottom, hsl(var(--border) / 0.35) 1px, transparent 1px);
+    linear-gradient(
+      to bottom,
+      hsl(var(--foreground) / 0.1) 1px,
+      transparent 1px
+    );
   background-size: 88px 88px;
   background-position: center;
-  opacity: 0.52;
+  opacity: 0.58;
+}
+
+.section-grid {
+  position: relative;
+  isolation: isolate;
+}
+
+.section-grid::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  z-index: 0;
+  background-image: linear-gradient(
+      to right,
+      hsl(var(--foreground) / 0.075) 1px,
+      transparent 1px
+    ),
+    linear-gradient(
+      to bottom,
+      hsl(var(--foreground) / 0.075) 1px,
+      transparent 1px
+    );
+  background-size: 88px 88px;
+  background-position: center;
+  opacity: 0.42;
+}
+
+.section-grid > * {
+  position: relative;
+  z-index: 1;
 }
 
 @media (max-width: 767px) {
   .hero-grid {
+    background-size: 48px 48px;
+    opacity: 0.46;
+  }
+
+  .section-grid::before {
     background-size: 48px 48px;
     opacity: 0.34;
   }
