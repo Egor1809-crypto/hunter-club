@@ -1,0 +1,211 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Hunter — Услуги</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;1,300;1,400;1,500&display=swap" rel="stylesheet">
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      background: #0d0d0d;
+      background-image:
+        linear-gradient(rgba(255,255,255,0.025) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(255,255,255,0.025) 1px, transparent 1px);
+      background-size: 38px 38px;
+      background-attachment: fixed;
+      color: #fff;
+      font-family: system-ui, sans-serif;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      position: relative;
+      padding-bottom: 108px;
+    }
+    .font-cormorant { font-family: 'Cormorant Garamond', Georgia, serif; }    .nav-z { position: relative; z-index: 10; }
+    .service-card { border-top: 1px solid rgba(255,255,255,0.08); padding: 18px 0; }
+    .service-summary { width: 100%; display: flex; align-items: flex-start; justify-content: space-between; gap: 12px; background: #111; border: 1px solid rgba(255,255,255,0.1); cursor: pointer; text-align: left; padding: 12px; }
+    .service-details { display: none; padding-top: 14px; }
+    .service-copy { display: grid; gap: 10px; padding: 14px 14px 16px; border: 1px solid rgba(255,255,255,0.08); background: #121212; }
+    .service-copy p { font-size: 12px; line-height: 1.65; color: rgba(255,255,255,0.52); }
+  </style>
+</head>
+<body data-page="services">
+
+  <div class="nav-z" style="display:flex;align-items:center;justify-content:space-between;padding:48px 20px 16px;border-bottom:1px solid rgba(255,255,255,0.08);">
+    <button data-back-target="mobile-home.html" style="background:none;border:none;cursor:pointer;">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,0.5)" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><line x1="19" y1="12" x2="5" y2="12"/><polyline points="12 19 5 12 12 5"/></svg>
+    </button>
+    <span class="font-cormorant" style="font-size:22px;letter-spacing:0.22em;font-weight:300;color:#fff;">HUNTER</span>
+    <div style="width:18px;"></div>
+  </div>
+
+  <div class="nav-z" style="padding:32px 20px 24px;">
+    <p style="font-size:9px;letter-spacing:0.3em;text-transform:uppercase;color:rgba(255,255,255,0.3);margin-bottom:12px;">Что мы делаем</p>
+    <h2 class="font-cormorant" style="font-size:38px;font-weight:300;color:#fff;">Услуги</h2>
+  </div>
+
+  <div class="nav-z" style="flex:1;padding:0 20px;">
+    <div data-service-card="haircut" class="service-card">
+      <button data-service-summary class="service-summary">
+        <div style="flex:1;">
+          <p class="font-cormorant" style="font-size:17px;font-weight:300;color:#fff;margin-bottom:4px;">Стрижка</p>
+          <p style="font-size:11px;color:rgba(255,255,255,0.35);line-height:1.5;">Точность, а не скорость.</p>
+        </div>
+        <div style="display:flex;align-items:center;gap:12px;flex-shrink:0;margin-top:4px;">
+          <div style="text-align:right;">
+            <p style="font-size:11px;color:rgba(255,255,255,0.5);white-space:nowrap;">По запросу</p>
+            <p style="font-size:11px;color:rgba(255,255,255,0.3);white-space:nowrap;">60 мин</p>
+          </div>
+          <div data-service-arrow style="width:28px;height:28px;border-radius:50%;border:1px solid rgba(255,255,255,0.15);display:flex;align-items:center;justify-content:center;flex-shrink:0;transition:transform .2s ease;">
+            <span style="color:rgba(255,255,255,0.4);font-size:14px;">›</span>
+          </div>
+        </div>
+      </button>
+      <div data-service-details class="service-details">
+        <div class="service-copy">
+          <p>Стрижка Hunter — это точность формы, которая подчёркивает характер, а не спорит с ним.</p>
+          <p>Мы начинаем с короткой консультации, чтобы понять, какой образ будет работать в жизни, а не только в зеркале.</p>
+          <p>Линии выстраиваются чисто, переходы — мягко, а итог выглядит дорого и уверенно.</p>
+          <p>Это стрижка для тех, кто привык к безупречному результату без лишних слов.</p>
+          <p>Вышел — и сразу готов на встречу, в город и на свою охоту.</p>
+        </div>
+      </div>
+    </div>
+
+    <div data-service-card="beard" class="service-card">
+      <button data-service-summary class="service-summary">
+        <div style="flex:1;">
+          <p class="font-cormorant" style="font-size:17px;font-weight:300;color:#fff;margin-bottom:4px;">Борода</p>
+          <p style="font-size:11px;color:rgba(255,255,255,0.35);line-height:1.5;">Моделирование и уход за бородой.</p>
+        </div>
+        <div style="display:flex;align-items:center;gap:12px;flex-shrink:0;margin-top:4px;">
+          <div style="text-align:right;">
+            <p style="font-size:11px;color:rgba(255,255,255,0.5);">По запросу</p>
+            <p style="font-size:11px;color:rgba(255,255,255,0.3);">30 мин</p>
+          </div>
+          <div data-service-arrow style="width:28px;height:28px;border-radius:50%;border:1px solid rgba(255,255,255,0.15);display:flex;align-items:center;justify-content:center;flex-shrink:0;transition:transform .2s ease;">
+            <span style="color:rgba(255,255,255,0.4);font-size:14px;">›</span>
+          </div>
+        </div>
+      </button>
+      <div data-service-details class="service-details">
+        <div class="service-copy">
+          <p>Борода Hunter — это не просто форма, а точный мужской акцент.</p>
+          <p>Мы выстраиваем контур, плотность и баланс, чтобы борода усиливала черты лица.</p>
+          <p>Каждый штрих работает на чистый силуэт, ухоженный вид и ощущение статуса.</p>
+          <p>В уходе важны комфорт, аккуратность и стойкий результат, который держит форму дольше.</p>
+          <p>Это тот самый финальный штрих, после которого образ звучит глубже.</p>
+        </div>
+      </div>
+    </div>
+
+    <div data-service-card="shave" class="service-card">
+      <button data-service-summary class="service-summary">
+        <div style="flex:1;">
+          <p class="font-cormorant" style="font-size:17px;font-weight:300;color:#fff;margin-bottom:4px;">Бритьё опасной бритвой</p>
+          <p style="font-size:11px;color:rgba(255,255,255,0.35);line-height:1.5;">Королевское бритьё опасной бритвой.</p>
+        </div>
+        <div style="display:flex;align-items:center;gap:12px;flex-shrink:0;margin-top:4px;">
+          <div style="text-align:right;">
+            <p style="font-size:11px;color:rgba(255,255,255,0.5);">По запросу</p>
+            <p style="font-size:11px;color:rgba(255,255,255,0.3);">45 мин</p>
+          </div>
+          <div data-service-arrow style="width:28px;height:28px;border-radius:50%;border:1px solid rgba(255,255,255,0.15);display:flex;align-items:center;justify-content:center;flex-shrink:0;transition:transform .2s ease;">
+            <span style="color:rgba(255,255,255,0.4);font-size:14px;">›</span>
+          </div>
+        </div>
+      </button>
+      <div data-service-details class="service-details">
+        <div class="service-copy">
+          <p>Бритьё опасной бритвой — это классический ритуал в премиальном исполнении.</p>
+          <p>Горячее полотенце, подготовка кожи и уверенное движение бритвы превращают процедуру в чистое удовольствие.</p>
+          <p>Мы работаем максимально деликатно, чтобы кожа осталась гладкой, свежей и спокойной.</p>
+          <p>Такое бритьё даёт не только безупречный результат, но и особое чувство собранности.</p>
+          <p>Это выбор для тех, кто ценит традицию, точность и настоящий мужской сервис.</p>
+        </div>
+      </div>
+    </div>
+
+    <div data-service-card="combo" class="service-card">
+      <button data-service-summary class="service-summary">
+        <div style="flex:1;">
+          <p class="font-cormorant" style="font-size:17px;font-weight:300;color:#fff;margin-bottom:4px;">Стрижка + борода</p>
+          <p style="font-size:11px;color:rgba(255,255,255,0.35);line-height:1.5;">Комплекс: стрижка и моделирование бороды.</p>
+        </div>
+        <div style="display:flex;align-items:center;gap:12px;flex-shrink:0;margin-top:4px;">
+          <div style="text-align:right;">
+            <p style="font-size:11px;color:rgba(255,255,255,0.5);">По запросу</p>
+            <p style="font-size:11px;color:rgba(255,255,255,0.3);">90 мин</p>
+          </div>
+          <div data-service-arrow style="width:28px;height:28px;border-radius:50%;border:1px solid rgba(255,255,255,0.15);display:flex;align-items:center;justify-content:center;flex-shrink:0;transition:transform .2s ease;">
+            <span style="color:rgba(255,255,255,0.4);font-size:14px;">›</span>
+          </div>
+        </div>
+      </button>
+      <div data-service-details class="service-details">
+        <div class="service-copy">
+          <p>Стрижка + борода — это цельный образ, собранный в одной процедуре.</p>
+          <p>Мы связываем форму волос и линию бороды так, чтобы всё выглядело гармонично и дорого.</p>
+          <p>Сначала задаём архитектуру стрижки, затем доводим бороду до безупречного баланса.</p>
+          <p>В результате вы получаете не две услуги, а один сильный образ без случайных деталей.</p>
+          <p>Именно так выглядит готовность к любому выходу — уверенно, чисто и по делу.</p>
+        </div>
+      </div>
+    </div>
+
+    <div data-service-card="dawn" class="service-card">
+      <button data-service-summary class="service-summary">
+        <div style="flex:1;">
+          <p class="font-cormorant" style="font-size:17px;font-weight:300;color:#fff;margin-bottom:4px;">Охота на рассвете</p>
+          <p style="font-size:11px;color:rgba(255,255,255,0.35);line-height:1.5;">VIP-формат с первыми лучами солнца.</p>
+        </div>
+        <div style="display:flex;align-items:center;gap:12px;flex-shrink:0;margin-top:4px;">
+          <div style="text-align:right;">
+            <p style="font-size:11px;color:rgba(255,255,255,0.5);">По запросу</p>
+            <p style="font-size:11px;color:rgba(255,255,255,0.3);">120 мин</p>
+          </div>
+          <div data-service-arrow style="width:28px;height:28px;border-radius:50%;border:1px solid rgba(255,255,255,0.15);display:flex;align-items:center;justify-content:center;flex-shrink:0;transition:transform .2s ease;">
+            <span style="color:rgba(255,255,255,0.4);font-size:14px;">›</span>
+          </div>
+        </div>
+      </button>
+      <div data-service-details class="service-details">
+        <div class="service-copy">
+          <p>Охота на рассвете — фирменный ритуал Hunter для тех, кто начинает день раньше других.</p>
+          <p>Это не просто услуга, а атмосферный старт, который собирает мысли и настраивает на результат.</p>
+          <p>Свежесть, точность и ощущение внутреннего азарта делают образ особенно энергичным.</p>
+          <p>Такой формат выбирают мужчины, для которых утро — это время силы, а не спешки.</p>
+          <p>На охоту с охотой — и с видом, который уже говорит за вас.</p>
+        </div>
+      </div>
+    </div>
+
+    <div style="border-top:1px solid rgba(255,255,255,0.08);"></div>
+  </div>
+
+  <div class="nav-z" style="position:fixed;left:0;right:0;bottom:0;z-index:40;border-top:1px solid rgba(255,255,255,0.08);background:rgba(11,11,11,0.98);backdrop-filter:blur(14px);box-shadow:0 -16px 40px rgba(0,0,0,0.32);">
+    <div style="display:flex;justify-content:space-around;align-items:center;min-height:88px;padding:14px 8px calc(12px + env(safe-area-inset-bottom));">
+      <button data-nav-target="mobile-home.html" style="display:flex;flex-direction:column;align-items:center;gap:5px;background:none;border:none;cursor:pointer;">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,0.25)" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="m3 9 9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
+        <span style="font-size:8px;letter-spacing:0.15em;text-transform:uppercase;color:rgba(255,255,255,0.25);">Главная</span>
+      </button>
+      <button data-nav-target="mobile-services.html" style="display:flex;flex-direction:column;align-items:center;gap:5px;background:none;border:none;cursor:pointer;">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="6" cy="6" r="3"/><circle cx="6" cy="18" r="3"/><line x1="20" y1="4" x2="8.12" y2="15.88"/><line x1="14.47" y1="14.48" x2="20" y2="20"/><line x1="8.12" y1="8.12" x2="12" y2="12"/></svg>
+        <span style="font-size:8px;letter-spacing:0.15em;text-transform:uppercase;color:#fff;">Услуги</span>
+      </button>
+      <button data-nav-target="mobile-appointments.html" style="display:flex;flex-direction:column;align-items:center;gap:5px;background:none;border:none;cursor:pointer;">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,0.25)" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+        <span style="font-size:8px;letter-spacing:0.15em;text-transform:uppercase;color:rgba(255,255,255,0.25);">Записи</span>
+      </button>
+      <button data-open-auth="true" style="display:flex;flex-direction:column;align-items:center;gap:5px;background:none;border:none;cursor:pointer;">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,0.25)" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+        <span style="font-size:8px;letter-spacing:0.15em;text-transform:uppercase;color:rgba(255,255,255,0.25);">Профиль</span>
+      </button>
+    </div>
+  </div>
+  <script src="./app.js"></script>
+</body>
+</html>

@@ -1,0 +1,292 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Hunter — Главный экран</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;1,300;1,400;1,500&display=swap" rel="stylesheet">
+  <script src="https://cdn.tailwindcss.com"></script>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    html, body {
+      background: #0d0d0d;
+      color: #fff;
+      font-family: system-ui, sans-serif;
+      min-height: 100%;
+      overflow-x: hidden;
+      overflow-y: auto;
+      -webkit-overflow-scrolling: touch;
+      padding-bottom: 108px;
+    }
+    .font-cormorant { font-family: 'Cormorant Garamond', Georgia, serif; }
+    .top-action {
+      width: 32px; height: 32px; display: inline-flex; align-items: center; justify-content: center;
+      border: 1px solid rgba(255,255,255,0.12); background: rgba(13,13,13,0.55); cursor: pointer;
+    }
+    .hunt-grid { display:grid; grid-template-columns:1fr 1fr; gap:6px; }
+    .hunt-grid button {
+      min-height: 60px;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      border:1px solid rgba(255,255,255,0.2);
+      padding:12px 10px;
+      text-align:center;
+      background:rgba(13,13,13,0.55);
+      cursor:pointer;
+    }
+    .hunt-grid button span {
+      display:block;
+      font-size:9px;
+      letter-spacing:0.18em;
+      text-transform:uppercase;
+      line-height:1.35;
+      color:rgba(255,255,255,0.65);
+    }
+    .map-preview-trigger {
+      display: inline-flex;
+      flex-direction: column;
+      align-items: flex-start;
+      gap: 2px;
+      background: none;
+      border: none;
+      padding: 0;
+      cursor: pointer;
+      text-align: left;
+    }
+    .map-preview-card {
+      position: absolute;
+      left: 0;
+      top: calc(100% + 12px);
+      width: 208px;
+      padding: 10px;
+      border: 1px solid rgba(255,255,255,0.14);
+      background: rgba(10,10,10,0.94);
+      box-shadow: 0 16px 40px rgba(0,0,0,0.34);
+      opacity: 0;
+      transform: translateY(10px) scale(0.98);
+      pointer-events: none;
+      transition: opacity .22s ease, transform .22s ease;
+    }
+    .map-preview-card.is-open {
+      opacity: 1;
+      transform: translateY(0) scale(1);
+      pointer-events: auto;
+    }
+    .map-mini {
+      position: relative;
+      height: 124px;
+      overflow: hidden;
+      border: 1px solid rgba(255,255,255,0.08);
+      background:
+        radial-gradient(circle at 24% 28%, rgba(255,255,255,0.08) 0 12%, transparent 13% 100%),
+        radial-gradient(circle at 74% 66%, rgba(255,255,255,0.08) 0 10%, transparent 11% 100%),
+        linear-gradient(115deg, rgba(255,255,255,0.04) 0 24%, transparent 24% 100%),
+        linear-gradient(25deg, rgba(255,255,255,0.04) 0 22%, transparent 22% 100%),
+        #141414;
+    }
+    .map-mini::before,
+    .map-mini::after {
+      content: "";
+      position: absolute;
+      inset: 0;
+      background-size: 34px 34px;
+      opacity: .35;
+    }
+    .map-mini::before {
+      background-image: linear-gradient(rgba(255,255,255,0.06) 1px, transparent 1px);
+    }
+    .map-mini::after {
+      background-image: linear-gradient(90deg, rgba(255,255,255,0.06) 1px, transparent 1px);
+    }
+    .map-mini-pin {
+      position: absolute;
+      left: 62%;
+      top: 42%;
+      width: 16px;
+      height: 16px;
+      border-radius: 999px 999px 999px 0;
+      transform: rotate(-45deg);
+      background: #fff;
+      box-shadow: 0 0 18px rgba(255,255,255,0.22);
+      z-index: 2;
+    }
+    .map-mini-pin::after {
+      content: "";
+      position: absolute;
+      left: 4px;
+      top: 4px;
+      width: 8px;
+      height: 8px;
+      border-radius: 999px;
+      background: #0d0d0d;
+    }
+    .map-preview-copy {
+      padding-top: 10px;
+      display: grid;
+      gap: 2px;
+    }
+    .map-preview-copy p:first-child {
+      font-family: 'Cormorant Garamond', Georgia, serif;
+      font-size: 22px;
+      line-height: .95;
+      color: #fff;
+    }
+    .map-preview-copy p:last-child {
+      font-size: 10px;
+      letter-spacing: .16em;
+      text-transform: uppercase;
+      color: rgba(255,255,255,0.34);
+    }
+  </style>
+</head>
+<body data-page="home" class="min-h-screen bg-[#0d0d0d] text-white relative" style="overflow-x:hidden;overflow-y:auto;">
+
+  <!-- Top bar -->
+  <div style="position:relative;z-index:20;display:flex;align-items:center;justify-content:space-between;padding:48px 20px 16px;border-bottom:1px solid rgba(255,255,255,0.08);background:#181818;">
+    <button data-nav-target="mobile-services.html" style="font-size:9px;letter-spacing:0.28em;text-transform:uppercase;color:rgba(255,255,255,0.42);background:none;border:none;cursor:pointer;">Меню</button>
+    <span class="font-cormorant" style="font-size:22px;letter-spacing:0.22em;font-weight:300;color:#fff;">HUNTER</span>
+    <div style="display:flex;align-items:center;gap:8px;">
+      <button data-open-auth="true" class="top-action" aria-label="Личный кабинет">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,0.6)" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+      </button>
+      <button data-open-notifications="true" class="top-action" aria-label="Уведомления">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,0.45)" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>
+      </button>
+    </div>
+  </div>
+
+  <!-- Hero -->
+  <div style="position:relative;z-index:10;padding:36px 20px 28px;">
+    <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:16px;">
+      <div style="flex:1;min-width:0;">
+        <h1 class="font-cormorant" style="font-size:40px;font-weight:300;line-height:1.0;color:#fff;margin-bottom:14px;">
+          Слава стрижёт<br><em>на славу</em>
+        </h1>
+        <p style="font-size:9px;letter-spacing:0.3em;text-transform:uppercase;color:rgba(255,255,255,0.35);margin-bottom:18px;">Премиальный барбершоп</p>
+        <p style="font-size:13px;color:rgba(255,255,255,0.45);line-height:1.6;margin-bottom:24px;max-width:240px;">
+          Hunter — стрижки для тех, кто привык к лучшему.<br>На охоту с охотой.
+        </p>
+      </div>
+      <div style="flex-shrink:0;width:112px;height:112px;border-radius:999px;overflow:hidden;background:rgba(255,255,255,0.92);border:1px solid rgba(255,255,255,0.18);box-shadow:0 0 28px rgba(255,255,255,0.1);margin-top:22px;">
+        <img src="./hunter-lion.png" alt="Логотип Hunter" style="width:100%;height:100%;object-fit:cover;transform:scale(1.16);" />
+      </div>
+    </div>
+    <a data-open-manifesto="true" href="#" style="font-size:9px;letter-spacing:0.2em;text-transform:uppercase;color:#fff;text-decoration:underline;text-underline-offset:8px;text-decoration-color:rgba(255,255,255,0.3);">Читать манифест →</a>
+  </div>
+
+  <!-- Divider -->
+  <div style="margin:0 20px;border-top:1px solid rgba(255,255,255,0.08);"></div>
+
+  <!-- Начать охоту -->
+  <div style="position:relative;z-index:10;padding:32px 20px 28px;">
+    <p class="font-cormorant" style="font-size:22px;font-weight:300;color:#fff;margin-bottom:20px;">Начать охоту</p>
+    <div class="hunt-grid">
+      <button data-service-option="haircut">
+        <span>Стрижка</span>
+      </button>
+      <button data-service-option="beard">
+        <span>Борода</span>
+      </button>
+      <button data-service-option="shave">
+        <span>Бритьё опасной бритвой</span>
+      </button>
+      <button data-service-option="combo">
+        <span>Стрижка + борода</span>
+      </button>
+      <button data-service-option="dawn">
+        <span>Охота на рассвете</span>
+      </button>
+      <button data-find-time="true" style="border-color:#fff;background:#fff;">
+        <span style="color:#000;">Найти время →</span>
+      </button>
+    </div>
+  </div>
+
+  <div style="position:relative;z-index:10;margin:0 20px 24px;border-top:1px solid rgba(255,255,255,0.08);"></div>
+
+  <section style="position:relative;z-index:10;padding:0 20px 24px;">
+    <p style="font-size:9px;letter-spacing:0.28em;text-transform:uppercase;color:rgba(255,255,255,0.3);margin-bottom:14px;">Разделы</p>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;">
+      <button data-nav-target="mobile-reviews.html" style="border:1px solid rgba(255,255,255,0.14);background:rgba(13,13,13,0.55);padding:14px 12px;text-align:left;cursor:pointer;">
+        <p class="font-cormorant" style="font-size:20px;line-height:0.95;font-weight:300;color:#fff;margin-bottom:8px;">Отзывы</p>
+        <p style="font-size:10px;line-height:1.55;color:rgba(255,255,255,0.42);">Впечатления гостей и оценка сервиса</p>
+      </button>
+      <button data-nav-target="mobile-barber.html" style="border:1px solid rgba(255,255,255,0.14);background:rgba(13,13,13,0.55);padding:14px 12px;text-align:left;cursor:pointer;">
+        <p class="font-cormorant" style="font-size:20px;line-height:0.95;font-weight:300;color:#fff;margin-bottom:8px;">О барбере</p>
+        <p style="font-size:10px;line-height:1.55;color:rgba(255,255,255,0.42);">Фото, философия и подход мастера</p>
+      </button>
+    </div>
+  </section>
+
+  <section style="position:relative;z-index:10;padding:0 20px 28px;">
+    <p style="font-size:9px;letter-spacing:0.28em;text-transform:uppercase;color:rgba(255,255,255,0.3);margin-bottom:16px;">Контакт</p>
+    <div style="display:grid;gap:14px;border:1px solid rgba(255,255,255,0.1);background:rgba(13,13,13,0.58);padding:18px 16px;">
+      <div>
+        <p class="font-cormorant" style="font-size:22px;font-weight:300;line-height:1.08;color:#fff;margin-bottom:8px;">Слава на связи.<br>Будьте со Славой.</p>
+        <p style="font-size:12px;line-height:1.65;color:rgba(255,255,255,0.5);">Свяжитесь с нами в удобное для вас время или просто загляните — мы всегда рады видеть вас.</p>
+      </div>
+      <div style="display:grid;gap:10px;">
+        <div>
+          <p style="font-size:9px;letter-spacing:0.18em;text-transform:uppercase;color:rgba(255,255,255,0.28);margin-bottom:5px;">Телефон</p>
+          <a href="tel:+79873245597" style="font-size:13px;color:#fff;text-decoration:none;">+7 987 324-55-97</a>
+        </div>
+        <div>
+          <p style="font-size:9px;letter-spacing:0.18em;text-transform:uppercase;color:rgba(255,255,255,0.28);margin-bottom:5px;">Адрес</p>
+          <div style="position:relative;display:inline-block;">
+            <button type="button" data-map-preview-toggle class="map-preview-trigger" aria-expanded="false">
+              <span style="font-size:13px;line-height:1.55;color:rgba(255,255,255,0.62);">г. Саратов, Сакко и Ванцетти, 14 корпус 1</span>
+              <span style="font-size:13px;line-height:1.55;color:rgba(255,255,255,0.62);">Саратов</span>
+            </button>
+            <div data-map-preview-card class="map-preview-card">
+              <div class="map-mini">
+                <div class="map-mini-pin"></div>
+              </div>
+              <div class="map-preview-copy">
+                <p>Hunter</p>
+                <p>Сакко и Ванцетти, 14 к1</p>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div>
+          <p style="font-size:9px;letter-spacing:0.18em;text-transform:uppercase;color:rgba(255,255,255,0.28);margin-bottom:5px;">Часы работы</p>
+          <p style="font-size:13px;line-height:1.55;color:rgba(255,255,255,0.62);">Понедельник — Пятница · 10:00 — 21:00<br>Суббота — Воскресенье · 11:00 — 20:00</p>
+        </div>
+        <div>
+          <button data-open-map-stub="true" style="font-size:10px;letter-spacing:0.18em;text-transform:uppercase;color:#fff;text-decoration:none;background:none;border:none;padding:0;cursor:pointer;">Открыть в картах</button>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Bottom nav -->
+  <div style="position:fixed;left:0;right:0;bottom:0;z-index:40;border-top:1px solid rgba(255,255,255,0.08);background:rgba(11,11,11,0.98);backdrop-filter:blur(14px);box-shadow:0 -16px 40px rgba(0,0,0,0.32);">
+    <div style="display:flex;justify-content:space-around;align-items:center;min-height:88px;padding:14px 8px calc(12px + env(safe-area-inset-bottom));">
+      <!-- Home -->
+      <button data-nav-target="mobile-home.html" style="display:flex;flex-direction:column;align-items:center;gap:5px;background:none;border:none;cursor:pointer;">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="m3 9 9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
+        <span style="font-size:8px;letter-spacing:0.15em;text-transform:uppercase;color:#fff;">Главная</span>
+      </button>
+      <!-- Scissors -->
+      <button data-nav-target="mobile-services.html" style="display:flex;flex-direction:column;align-items:center;gap:5px;background:none;border:none;cursor:pointer;">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,0.25)" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="6" cy="6" r="3"/><circle cx="6" cy="18" r="3"/><line x1="20" y1="4" x2="8.12" y2="15.88"/><line x1="14.47" y1="14.48" x2="20" y2="20"/><line x1="8.12" y1="8.12" x2="12" y2="12"/></svg>
+        <span style="font-size:8px;letter-spacing:0.15em;text-transform:uppercase;color:rgba(255,255,255,0.25);">Услуги</span>
+      </button>
+      <!-- Calendar -->
+      <button data-nav-target="mobile-appointments.html" style="display:flex;flex-direction:column;align-items:center;gap:5px;background:none;border:none;cursor:pointer;">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,0.25)" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+        <span style="font-size:8px;letter-spacing:0.15em;text-transform:uppercase;color:rgba(255,255,255,0.25);">Записи</span>
+      </button>
+      <!-- User -->
+      <button data-open-auth="true" style="display:flex;flex-direction:column;align-items:center;gap:5px;background:none;border:none;cursor:pointer;">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,0.25)" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+        <span style="font-size:8px;letter-spacing:0.15em;text-transform:uppercase;color:rgba(255,255,255,0.25);">Профиль</span>
+      </button>
+    </div>
+  </div>
+  <script src="./app.js"></script>
+</body>
+</html>
