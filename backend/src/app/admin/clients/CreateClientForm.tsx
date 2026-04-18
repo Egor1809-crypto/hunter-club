@@ -18,11 +18,22 @@ const labelStyle: React.CSSProperties = {
   gap: 8,
 };
 
+const warningStyle: React.CSSProperties = {
+  fontSize: 12,
+  lineHeight: 1.5,
+  color: "#f87171",
+  margin: 0,
+};
+
+const hasPhoneLikeContent = (value: string) => value.replace(/\D/g, "").length >= 6;
+
 const CreateClientForm = () => {
   const router = useRouter();
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState<string | null>(null);
+  const [firstName, setFirstName] = useState("");
+  const [lastName, setLastName] = useState("");
 
   const handleSubmit = async (formData: FormData) => {
     setIsSubmitting(true);
@@ -100,14 +111,35 @@ const CreateClientForm = () => {
             <span style={{ fontSize: 12, textTransform: "uppercase", letterSpacing: "0.14em", color: "#9ca3af" }}>
               Имя
             </span>
-            <input name="firstName" required style={inputStyle} />
+            <input
+              name="firstName"
+              required
+              value={firstName}
+              onChange={(event) => setFirstName(event.target.value)}
+              aria-invalid={hasPhoneLikeContent(firstName)}
+              style={{
+                ...inputStyle,
+                ...(hasPhoneLikeContent(firstName) ? { border: "1px solid rgba(248,113,113,0.85)" } : {}),
+              }}
+            />
+            {hasPhoneLikeContent(firstName) ? <p style={warningStyle}>! Проверьте, правильно ли заполнено поле имени.</p> : null}
           </label>
 
           <label style={labelStyle}>
             <span style={{ fontSize: 12, textTransform: "uppercase", letterSpacing: "0.14em", color: "#9ca3af" }}>
               Фамилия
             </span>
-            <input name="lastName" style={inputStyle} />
+            <input
+              name="lastName"
+              value={lastName}
+              onChange={(event) => setLastName(event.target.value)}
+              aria-invalid={hasPhoneLikeContent(lastName)}
+              style={{
+                ...inputStyle,
+                ...(hasPhoneLikeContent(lastName) ? { border: "1px solid rgba(248,113,113,0.85)" } : {}),
+              }}
+            />
+            {hasPhoneLikeContent(lastName) ? <p style={warningStyle}>! Проверьте, правильно ли заполнено поле фамилии.</p> : null}
           </label>
 
           <label style={labelStyle}>

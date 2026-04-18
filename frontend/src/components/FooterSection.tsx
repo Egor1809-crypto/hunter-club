@@ -4,7 +4,7 @@ import LegalSection from "@/components/LegalSection";
 const FooterSection = () => {
   const { language } = useLanguage();
   return (
-    <footer className="relative section-grid overflow-hidden py-8 bg-background border-t border-border">
+    <footer className="relative overflow-hidden bg-card pb-8 pt-0 md:pb-10">
       <div className="max-w-7xl mx-auto px-6 md:px-12 flex flex-col items-center justify-between gap-6 lg:px-[4rem]">
         <span className="font-display text-lg tracking-[0.2em] uppercase text-foreground">
           Hunter

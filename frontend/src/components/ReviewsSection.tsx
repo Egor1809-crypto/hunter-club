@@ -1,4 +1,4 @@
-import { FormEvent, TouchEvent, useCallback, useEffect, useMemo, useState } from "react";
+import { FormEvent, TouchEvent, useCallback, useEffect, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { ChevronLeft, ChevronRight, Star } from "lucide-react";
 import { useLanguage } from "@/context/LanguageContext";
@@ -79,6 +79,11 @@ const renderStars = (rating: string) => {
   ));
 };
 
+const hasPhoneLikeContent = (value: string) => {
+  const digits = value.replace(/\D/g, "");
+  return digits.length >= 6;
+};
+
 const ReviewCard = ({
   review,
   language,
@@ -98,12 +103,12 @@ const ReviewCard = ({
       </div>
       <div className="mt-4 flex min-h-0 flex-1 flex-col">
         <p className="font-display text-4xl leading-none text-white/18">"</p>
-        <p className="mt-3 font-body text-sm leading-relaxed text-foreground">
+        <p className="mt-3 max-w-[680px] font-display text-[24px] md:text-[28px] lg:text-[32px] leading-[1.52] text-foreground">
           {language === "ru" ? review.quote : review.quoteEn}
         </p>
       </div>
     </div>
-    <div className="flex min-h-[6.5rem] flex-col justify-end pt-6 space-y-2">
+    <div className="flex min-h-[6.5rem] flex-col justify-end pt-8 space-y-2">
       <div className="h-px w-10 bg-white/20" />
       <p className="font-display text-2xl font-light text-foreground">
         {language === "ru" ? review.name : review.nameEn}
@@ -123,7 +128,6 @@ const ReviewsSection = () => {
   const [service, setService] = useState("");
   const [message, setMessage] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [direction, setDirection] = useState(0);
   const [touchStartX, setTouchStartX] = useState<number | null>(null);
   const [isReviewOpen, setIsReviewOpen] = useState(false);
 
@@ -136,6 +140,7 @@ const ReviewsSection = () => {
       formTitle: "Поделитесь впечатлением",
       formDescription: "Коротко расскажите, как прошёл визит. Отзыв можно оставить прямо на сайте.",
       name: "Ваше имя",
+      nameWarning: "Проверьте, правильно ли заполнено поле имени.",
       service: "Какая услуга",
       message: "Ваш отзыв",
       rating: "Ваша оценка",
@@ -157,6 +162,7 @@ const ReviewsSection = () => {
       formTitle: "Share your impression",
       formDescription: "Tell us briefly how your visit went. You can leave feedback right on the website.",
       name: "Your name",
+      nameWarning: "Please check whether the name field is filled correctly.",
       service: "Service received",
       message: "Your review",
       rating: "Your rating",
@@ -171,20 +177,13 @@ const ReviewsSection = () => {
       widgetButton: "Leave a review",
     },
   }[language];
-
-  const desktopReviews = useMemo(
-    () =>
-      Array.from({ length: 3 }, (_, index) => reviews[(activeIndex + index) % reviews.length]),
-    [activeIndex],
-  );
+  const nameLooksLikePhone = hasPhoneLikeContent(name);
 
   const handlePrev = useCallback(() => {
-    setDirection(-1);
     setActiveIndex((c) => (c - 1 + reviews.length) % reviews.length);
   }, []);
 
   const handleNext = useCallback(() => {
-    setDirection(1);
     setActiveIndex((c) => (c + 1) % reviews.length);
   }, []);
 
@@ -245,74 +244,52 @@ const ReviewsSection = () => {
   };
 
   return (
-    <section id="reviews" className="section-golden section-grid bg-background overflow-hidden">
+    <section
+      id="reviews"
+      className="section-golden section-grid bg-background overflow-hidden scroll-mt-[4.5rem] md:scroll-mt-[5.25rem] lg:scroll-mt-[5.75rem]"
+    >
       <div className="max-w-7xl mx-auto px-6 md:px-12">
         <motion.div
           initial={{ opacity: 0, y: 30 }}
           whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true, margin: "-100px" }}
           transition={{ duration: 0.8 }}
-          className="flex flex-col md:flex-row md:items-end md:justify-between gap-8 mb-12 md:mb-16 lg:mx-8"
+          className="flex flex-col md:flex-row md:items-end md:justify-between gap-8 mb-12 md:mb-16"
         >
           <div>
             <h2 className="font-display text-4xl md:text-6xl font-light text-foreground leading-[0.95]">{copy.title}</h2>
           </div>
         </motion.div>
 
-        {/* Desktop: карусель из трех карточек */}
-        <div className="hidden lg:block relative">
+        <div className="relative">
           <button
             onClick={handlePrev}
             aria-label={copy.prev}
-            className="absolute -left-5 top-1/2 z-20 -translate-y-1/2 flex h-11 w-11 items-center justify-center border border-border bg-background/90 text-foreground transition-colors hover:bg-card"
+            className="absolute left-0 top-1/2 z-20 hidden h-11 w-11 -translate-y-1/2 items-center justify-center border border-border bg-background/90 text-foreground transition-colors hover:bg-card md:flex md:left-6 lg:left-[88px]"
           >
             <ChevronLeft className="h-5 w-5" />
           </button>
           <button
             onClick={handleNext}
             aria-label={copy.next}
-            className="absolute -right-5 top-1/2 z-20 -translate-y-1/2 flex h-11 w-11 items-center justify-center border border-border bg-background/90 text-foreground transition-colors hover:bg-card"
+            className="absolute right-0 top-1/2 z-20 hidden h-11 w-11 -translate-y-1/2 items-center justify-center border border-border bg-background/90 text-foreground transition-colors hover:bg-card md:flex md:right-6 lg:right-[88px]"
           >
             <ChevronRight className="h-5 w-5" />
           </button>
 
-          <div className="mx-8 overflow-hidden">
-            <AnimatePresence mode="wait" custom={direction}>
-              <motion.div
-                key={activeIndex}
-                custom={direction}
-                initial={{ opacity: 0, x: direction >= 0 ? 120 : -120 }}
-                animate={{ opacity: 1, x: 0 }}
-                exit={{ opacity: 0, x: direction >= 0 ? -120 : 120 }}
-                transition={{ duration: 0.45, ease: [0.25, 0.8, 0.25, 1] }}
-                className="grid grid-cols-3 gap-4"
-              >
-                {desktopReviews.map((review) => (
-                  <div key={`${review.name}-${activeIndex}`} className="h-full">
-                    <ReviewCard review={review} language={language} guestLabel={copy.guest} />
-                  </div>
-                ))}
-              </motion.div>
-            </AnimatePresence>
-          </div>
-        </div>
-
-        {/* Mobile: плавная карусель */}
-        <div className="lg:hidden relative">
           <div
-            className="overflow-hidden mx-0 sm:mx-2"
+            className="mx-14 overflow-hidden sm:mx-16 md:mx-20 lg:mx-24"
             onTouchStart={handleTouchStart}
             onTouchEnd={handleTouchEnd}
           >
-            <AnimatePresence mode="wait" custom={direction}>
+            <AnimatePresence mode="wait">
               <motion.div
                 key={activeIndex}
-                custom={direction}
-                initial={{ opacity: 0, x: direction >= 0 ? 200 : -200 }}
-                animate={{ opacity: 1, x: 0 }}
-                exit={{ opacity: 0, x: direction >= 0 ? -200 : 200 }}
-                transition={{ duration: 0.4, ease: [0.25, 0.8, 0.25, 1] }}
-                className="touch-pan-y"
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                exit={{ opacity: 0 }}
+                transition={{ duration: 0.35, ease: "easeInOut" }}
+                className="mx-auto max-w-3xl touch-pan-y"
               >
                 <ReviewCard review={reviews[activeIndex]} language={language} guestLabel={copy.guest} />
               </motion.div>
@@ -320,7 +297,7 @@ const ReviewsSection = () => {
             <div className="flex justify-center gap-2 mt-6">
               {reviews.map((_, i) => (
                 <button key={i}
-                  onClick={() => { setDirection(i > activeIndex ? 1 : -1); setActiveIndex(i); }}
+                  onClick={() => setActiveIndex(i)}
                   className={cn("h-2 rounded-full transition-all duration-300",
                     i === activeIndex ? "w-8 bg-foreground" : "w-2 bg-foreground/30")}
                   aria-label={`${language === "ru" ? "Отзыв" : "Review"} ${i + 1}`}
@@ -336,24 +313,26 @@ const ReviewsSection = () => {
           whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true, margin: "-80px" }}
           transition={{ duration: 0.7, delay: 0.1 }}
-          className="mt-12 md:mt-16 mx-0 lg:mx-8 border border-border bg-card/80 backdrop-blur-md p-5 md:p-8"
+          className="mt-12 md:mt-16 mx-14 sm:mx-16 md:mx-20 lg:mx-24"
         >
-          <div className="flex flex-col gap-6 md:flex-row md:items-end md:justify-between">
-            <div className="max-w-xl">
-              <h3 className="font-display text-3xl md:text-5xl font-light text-foreground leading-[0.96] mb-3">
-                {copy.widgetTitle}
-              </h3>
-              <p className="font-body text-sm md:text-base text-muted-foreground leading-relaxed">
-                {copy.widgetDescription}
-              </p>
+          <div className="mx-auto max-w-3xl border border-border bg-card/80 backdrop-blur-md p-5 md:p-8">
+            <div className="flex flex-col gap-6 md:flex-row md:items-end md:justify-between">
+              <div className="max-w-xl">
+                <h3 className="font-display text-3xl md:text-5xl font-light text-foreground leading-[0.96] mb-3">
+                  {copy.widgetTitle}
+                </h3>
+                <p className="font-body text-sm md:text-base text-muted-foreground leading-relaxed">
+                  {copy.widgetDescription}
+                </p>
+              </div>
+              <button
+                type="button"
+                onClick={() => setIsReviewOpen(true)}
+                className="w-full md:w-auto min-w-[220px] px-8 py-4 font-body text-xs tracking-[0.16em] uppercase bg-foreground text-background transition-colors duration-300 hover:bg-accent hover:text-foreground"
+              >
+                {copy.widgetButton}
+              </button>
             </div>
-            <button
-              type="button"
-              onClick={() => setIsReviewOpen(true)}
-              className="w-full md:w-auto min-w-[220px] px-8 py-4 font-body text-xs tracking-[0.16em] uppercase bg-foreground text-background transition-colors duration-300 hover:bg-accent hover:text-foreground"
-            >
-              {copy.widgetButton}
-            </button>
           </div>
         </motion.div>
 
@@ -369,7 +348,25 @@ const ReviewsSection = () => {
             </DialogHeader>
             <form onSubmit={handleSubmit} className="grid gap-5 pt-2">
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <Input value={name} onChange={(e) => setName(e.target.value)} placeholder={copy.name} aria-label={copy.name} required className="h-12 rounded-none border-border bg-card font-body text-sm" />
+                <div className="space-y-2">
+                  <Input
+                    value={name}
+                    onChange={(e) => setName(e.target.value)}
+                    placeholder={copy.name}
+                    aria-label={copy.name}
+                    aria-invalid={nameLooksLikePhone}
+                    required
+                    className={cn(
+                      "h-12 rounded-none bg-card font-body text-sm",
+                      nameLooksLikePhone ? "border-destructive/80 focus-visible:ring-destructive" : "border-border",
+                    )}
+                  />
+                  {nameLooksLikePhone ? (
+                    <p className="font-body text-xs leading-relaxed text-destructive">
+                      ! {copy.nameWarning}
+                    </p>
+                  ) : null}
+                </div>
                 <Input value={service} onChange={(e) => setService(e.target.value)} placeholder={copy.service} aria-label={copy.service} required className="h-12 rounded-none border-border bg-card font-body text-sm" />
               </div>
               <div className="space-y-3">

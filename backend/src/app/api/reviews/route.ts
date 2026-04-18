@@ -1,6 +1,6 @@
 import { apiError, apiSuccess } from "@/lib/api";
 import { requireAdminSession } from "@/lib/auth";
-import { prisma } from "@/lib/db";
+import { listReviews } from "@/lib/reviews-store";
 
 export const GET = async () => {
   try {
@@ -10,10 +10,7 @@ export const GET = async () => {
       return response;
     }
 
-    const reviews = await prisma.reviews.findMany({
-      orderBy: { created_at: "desc" },
-      take: 100,
-    });
+    const reviews = await listReviews({ take: 100 });
 
     return apiSuccess(reviews);
   } catch (error) {

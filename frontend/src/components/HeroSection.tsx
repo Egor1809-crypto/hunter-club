@@ -1,8 +1,6 @@
 import { useState } from "react";
-import { useQuery } from "@tanstack/react-query";
 import { motion } from "framer-motion";
 import { useLanguage } from "@/context/LanguageContext";
-import { BookingPanel } from "@/components/BookingSection";
 import {
   Sheet,
   SheetContent,
@@ -10,26 +8,11 @@ import {
   SheetHeader,
   SheetTitle,
 } from "@/components/ui/sheet";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
 
 const heroLogoUrl = `/${encodeURIComponent("Хантер Лого.png")}`;
 
-type ServiceOption = {
-  id: string;
-  name: string;
-  is_active: boolean;
-};
-
 const HeroSection = () => {
   const { language } = useLanguage();
-  const [selectedServiceId, setSelectedServiceId] = useState("");
-  const [isBookingOpen, setIsBookingOpen] = useState(false);
   const [isManifestoOpen, setIsManifestoOpen] = useState(false);
 
   const copy = {
@@ -39,9 +22,6 @@ const HeroSection = () => {
       titleAccent: "на славу",
       description: "Hunter — стрижки для тех, кто привык к лучшему.",
       tagline: "На охоту с охотой.",
-      chooseService: "Выберите услугу",
-      findTime: "Найти время",
-      loadingServices: "Загружаем услуги...",
       manifestoLink: "Читать манифест →",
       manifestoTitle: "Философия Hunter",
       manifestoDescription: "Территория тишины, ясности и холодного фокуса посреди плотных городских джунглей.",
@@ -54,8 +34,6 @@ const HeroSection = () => {
         "Когда мастер выключает машинку и вы смотрите в зеркало, вы видите не просто идеальный контур. Вы чувствуете структуру. Хаос уступает место системе. Ум становится холодным, а фокус — бритвенно-острым.",
         "Вы снова готовы к охоте.",
       ],
-      panelTitle: "Онлайн-запись",
-      panelDescription: "Сначала выберите услугу на главном экране, затем откройте полную панель даты и времени.",
     },
     en: {
       eyebrow: "Premium barbershop",
@@ -63,9 +41,6 @@ const HeroSection = () => {
       titleAccent: "with pride",
       description: "Hunter is grooming for those who expect the best.",
       tagline: "Step into the hunt with confidence.",
-      chooseService: "Choose a service",
-      findTime: "Find time",
-      loadingServices: "Loading services...",
       manifestoLink: "Read the manifesto →",
       manifestoTitle: "Hunter philosophy",
       manifestoDescription: "A quiet territory for clarity and cold focus in the middle of dense urban jungle.",
@@ -78,26 +53,8 @@ const HeroSection = () => {
         "When the barber turns off the clipper and you look into the mirror, you see more than an ideal contour. You feel structure. Chaos gives way to system. The mind turns cold and the focus becomes razor sharp.",
         "You are ready to hunt again.",
       ],
-      panelTitle: "Online booking",
-      panelDescription: "Choose a service on the hero screen first, then open the full date and time panel.",
     },
   }[language];
-
-  const servicesQuery = useQuery({
-    queryKey: ["services"],
-    queryFn: async () => {
-      const response = await fetch("/api/public/services");
-      const result = await response.json();
-
-      if (!response.ok || !result.success) {
-        throw new Error(result.error ?? "Failed to fetch services");
-      }
-
-      return (result.data as ServiceOption[]).filter((service) => service.is_active);
-    },
-  });
-
-  const services = servicesQuery.data ?? [];
 
   return (
     <section className="relative min-h-screen flex items-start overflow-hidden">
@@ -123,7 +80,7 @@ const HeroSection = () => {
       </div>
 
       {/* Content */}
-      <div className="relative z-10 w-full max-w-7xl mx-auto px-5 sm:px-6 md:px-12 pt-[15rem] sm:pt-[17rem] md:pt-[12.25rem] pb-12 md:pb-0">
+      <div className="relative z-10 w-full max-w-7xl mx-auto px-5 sm:px-6 md:px-12 pt-[15rem] sm:pt-[17rem] md:pt-[12.25rem] pb-24 sm:pb-28 md:pb-40">
         <motion.div
           initial={{ opacity: 0, y: 40 }}
           animate={{ opacity: 1, y: 0 }}
@@ -150,50 +107,8 @@ const HeroSection = () => {
           >
             {copy.manifestoLink}
           </button>
-          <div className="mt-24 sm:mt-20 md:mt-36 w-full max-w-[22rem] sm:max-w-xl border border-border bg-background/75 backdrop-blur-md p-4 md:p-5">
-            <div className="grid grid-cols-1 md:grid-cols-[1fr_auto] gap-3">
-              <Select value={selectedServiceId} onValueChange={setSelectedServiceId}>
-                <SelectTrigger className="h-12 w-full border-border bg-background px-4 font-body text-sm text-foreground">
-                  <SelectValue placeholder={servicesQuery.isLoading ? copy.loadingServices : copy.chooseService} />
-                </SelectTrigger>
-                <SelectContent className="border-border bg-background text-foreground">
-                  {services.map((service) => (
-                    <SelectItem
-                      key={service.id}
-                      value={service.id}
-                      className="font-body text-sm text-foreground focus:bg-card focus:text-foreground"
-                    >
-                      {service.name}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-              <button
-                type="button"
-                onClick={() => setIsBookingOpen(true)}
-                disabled={!selectedServiceId}
-                className="h-12 w-full md:w-auto px-6 font-body text-xs tracking-[0.15em] uppercase bg-foreground text-background transition-colors duration-300 hover:bg-accent hover:text-foreground disabled:bg-muted disabled:text-muted-foreground disabled:cursor-not-allowed"
-              >
-                {copy.findTime}
-              </button>
-            </div>
-          </div>
         </motion.div>
       </div>
-
-      <Sheet open={isBookingOpen} onOpenChange={setIsBookingOpen}>
-        <SheetContent side="right" className="w-full overflow-y-auto border-border bg-background text-foreground sm:max-w-4xl">
-          <SheetHeader className="mb-8">
-            <SheetTitle className="font-display text-3xl md:text-4xl font-light">
-              {copy.panelTitle}
-            </SheetTitle>
-            <SheetDescription className="font-body text-sm text-muted-foreground">
-              {copy.panelDescription}
-            </SheetDescription>
-          </SheetHeader>
-          <BookingPanel initialServiceId={selectedServiceId} />
-        </SheetContent>
-      </Sheet>
 
       <Sheet open={isManifestoOpen} onOpenChange={setIsManifestoOpen}>
         <SheetContent side="right" className="w-full overflow-y-auto border-border bg-background text-foreground sm:max-w-2xl">

@@ -82,6 +82,8 @@ const renderStars = (rating: string) => {
   ));
 };
 
+const hasPhoneLikeContent = (value: string) => value.replace(/\D/g, "").length >= 6;
+
 const CosmeticsSection = () => {
   const { language } = useLanguage();
   const { toast } = useToast();
@@ -106,6 +108,7 @@ const CosmeticsSection = () => {
       formTitle: "Поделитесь впечатлением",
       formDescription: "Коротко расскажите, как прошёл визит. Отзыв можно оставить прямо на сайте.",
       name: "Ваше имя",
+      nameWarning: "Проверьте, правильно ли заполнено поле имени.",
       service: "Какая услуга",
       message: "Ваш отзыв",
       rating: "Ваша оценка",
@@ -129,6 +132,7 @@ const CosmeticsSection = () => {
       formTitle: "Share your impression",
       formDescription: "Tell us briefly how your visit went. You can leave feedback right on the website.",
       name: "Your name",
+      nameWarning: "Please check whether the name field is filled correctly.",
       service: "Service received",
       message: "Your review",
       rating: "Your rating",
@@ -140,6 +144,7 @@ const CosmeticsSection = () => {
       errorDescription: "Please try again in a moment.",
     },
   }[language];
+  const nameLooksSuspicious = hasPhoneLikeContent(name);
 
   const currentReview = reviews[activeIndex];
 
@@ -195,7 +200,10 @@ const CosmeticsSection = () => {
   };
 
   return (
-    <section id="reviews" className="section-golden bg-background overflow-hidden">
+    <section
+      id="cosmetics"
+      className="section-golden bg-background overflow-hidden scroll-mt-[4.5rem] md:scroll-mt-[5.25rem] lg:scroll-mt-[5.75rem]"
+    >
       <div className="max-w-7xl mx-auto px-6 md:px-12">
         <motion.div
           initial={{ opacity: 0, y: 30 }}
@@ -313,13 +321,22 @@ const CosmeticsSection = () => {
 
             <form onSubmit={handleSubmit} className="grid gap-5">
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <Input
-                  value={name}
-                  onChange={(event) => setName(event.target.value)}
-                  placeholder={copy.name}
-                  required
-                  className="h-12 rounded-none border-border bg-background font-body text-sm"
-                />
+                <div className="space-y-2">
+                  <Input
+                    value={name}
+                    onChange={(event) => setName(event.target.value)}
+                    placeholder={copy.name}
+                    aria-invalid={nameLooksSuspicious}
+                    required
+                    className={cn(
+                      "h-12 rounded-none bg-background font-body text-sm",
+                      nameLooksSuspicious ? "border-destructive/80 focus-visible:ring-destructive" : "border-border",
+                    )}
+                  />
+                  {nameLooksSuspicious ? (
+                    <p className="font-body text-xs leading-relaxed text-destructive">! {copy.nameWarning}</p>
+                  ) : null}
+                </div>
                 <Input
                   value={service}
                   onChange={(event) => setService(event.target.value)}

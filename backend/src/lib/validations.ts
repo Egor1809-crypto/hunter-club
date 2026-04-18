@@ -78,6 +78,20 @@ export const sendSmsSchema = z.object({
   type: z.enum(["reminder_24h", "reminder_2h", "loyalty_reward", "custom"]),
 });
 
+export const requestPhoneOtpSchema = z.object({
+  phone: z.string().min(10).max(25),
+});
+
+export const verifyPhoneOtpSchema = z.object({
+  phone: z.string().min(10).max(25),
+  code: z.string().regex(/^\d{4}$/),
+});
+
+export const linkGooglePhoneSchema = z.object({
+  phone: z.string().min(10).max(25),
+  code: z.string().regex(/^\d{4}$/),
+});
+
 export const adminLoginSchema = z.object({
   username: z.string().min(1).max(50),
   password: z.string().min(1).max(255),

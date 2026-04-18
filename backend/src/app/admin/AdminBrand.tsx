@@ -1,6 +1,14 @@
 import Link from "next/link";
 
-const AdminBrand = ({ compact = false }: { compact?: boolean }) => {
+const AdminBrand = ({
+  compact = false,
+  subtitle = "Hunter CRM",
+  centered = false,
+}: {
+  compact?: boolean;
+  subtitle?: string | null;
+  centered?: boolean;
+}) => {
   return (
     <Link
       href="/admin"
@@ -10,6 +18,8 @@ const AdminBrand = ({ compact = false }: { compact?: boolean }) => {
         gap: compact ? 10 : 14,
         textDecoration: "none",
         color: "#f5f5f5",
+        justifyContent: centered ? "center" : undefined,
+        width: centered ? "100%" : undefined,
       }}
     >
       <span
@@ -38,16 +48,18 @@ const AdminBrand = ({ compact = false }: { compact?: boolean }) => {
         />
       </span>
       <span style={{ display: "grid", gap: 2 }}>
-        <span
-          style={{
-            fontSize: 12,
-            letterSpacing: "0.22em",
-            textTransform: "uppercase",
-            color: "#9ca3af",
-          }}
-        >
-          Hunter CRM
-        </span>
+        {subtitle ? (
+          <span
+            style={{
+              fontSize: 12,
+              letterSpacing: "0.22em",
+              textTransform: "uppercase",
+              color: "#9ca3af",
+            }}
+          >
+            {subtitle}
+          </span>
+        ) : null}
         <span
           style={{
             fontFamily: "var(--font-display), Georgia, serif",

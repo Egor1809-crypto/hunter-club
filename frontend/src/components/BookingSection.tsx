@@ -24,6 +24,61 @@ type Service = {
   is_active: boolean;
 };
 
+const fallbackServices = {
+  ru: [
+    {
+      id: "fallback-haircut",
+      name: "Стрижка",
+      description: "Точность, а не скорость.",
+      price: 3000,
+      duration_min: 60,
+      is_active: true,
+    },
+    {
+      id: "fallback-shave",
+      name: "Бритьё опасной бритвой",
+      description: "Королевское бритьё с горячими полотенцами и маслами",
+      price: 2500,
+      duration_min: 45,
+      is_active: true,
+    },
+    {
+      id: "fallback-haircut-beard",
+      name: "Стрижка + борода",
+      description: "Комплексный уход: стрижка и моделирование бороды",
+      price: 4500,
+      duration_min: 90,
+      is_active: true,
+    },
+  ],
+  en: [
+    {
+      id: "fallback-haircut",
+      name: "Haircut",
+      description: "Classic or modern haircut with a barber consultation",
+      price: 3000,
+      duration_min: 60,
+      is_active: true,
+    },
+    {
+      id: "fallback-shave",
+      name: "Straight Razor Shave",
+      description: "A royal shave with hot towels and oils",
+      price: 2500,
+      duration_min: 45,
+      is_active: true,
+    },
+    {
+      id: "fallback-haircut-beard",
+      name: "Haircut + Beard",
+      description: "Complete care: haircut and beard shaping",
+      price: 4500,
+      duration_min: 90,
+      is_active: true,
+    },
+  ],
+};
+
 type AvailabilityRangeResponse = {
   success: boolean;
   data: {
@@ -76,6 +131,8 @@ const fetchJson = async <T,>(url: string): Promise<T> => {
   return result as T;
 };
 
+const hasPhoneLikeContent = (value: string) => value.replace(/\D/g, "").length >= 6;
+
 type BookingPanelProps = {
   initialServiceId?: string | null;
 };
@@ -119,6 +176,8 @@ export const BookingPanel = ({ initialServiceId }: BookingPanelProps) => {
       noServices: "Активных услуг пока нет",
       name: "Имя",
       surname: "Фамилия",
+      nameWarning: "Проверьте, правильно ли заполнено поле имени.",
+      surnameWarning: "Проверьте, правильно ли заполнено поле фамилии.",
       phone: "Телефон",
       notes: "Комментарий",
       service: "Услуга",
@@ -143,6 +202,8 @@ export const BookingPanel = ({ initialServiceId }: BookingPanelProps) => {
       noServices: "No active services yet",
       name: "First name",
       surname: "Last name",
+      nameWarning: "Please check whether the first name field is filled correctly.",
+      surnameWarning: "Please check whether the last name field is filled correctly.",
       phone: "Phone",
       notes: "Notes",
       service: "Service",
@@ -163,18 +224,21 @@ export const BookingPanel = ({ initialServiceId }: BookingPanelProps) => {
     },
   });
 
-  const selectedService = servicesQuery.data?.find((service) => service.id === selectedServiceId) ?? null;
+  const services = servicesQuery.data?.length ? servicesQuery.data : fallbackServices[language];
+  const selectedService = services.find((service) => service.id === selectedServiceId) ?? null;
+  const firstNameLooksSuspicious = hasPhoneLikeContent(firstName);
+  const lastNameLooksSuspicious = hasPhoneLikeContent(lastName);
 
   useEffect(() => {
-    if (initialServiceId && servicesQuery.data?.some((service) => service.id === initialServiceId)) {
+    if (initialServiceId && services.some((service) => service.id === initialServiceId)) {
       setSelectedServiceId(initialServiceId);
       return;
     }
 
-    if (!selectedServiceId && servicesQuery.data?.length) {
-      setSelectedServiceId(servicesQuery.data[0].id);
+    if (!selectedServiceId && services.length) {
+      setSelectedServiceId(services[0].id);
     }
-  }, [initialServiceId, selectedServiceId, servicesQuery.data]);
+  }, [initialServiceId, selectedServiceId, services]);
 
   const availabilityRangeQuery = useQuery({
     queryKey: ["availability-range", selectedServiceId, formatDateOnly(today), formatDateOnly(rangeEnd)],
@@ -304,12 +368,12 @@ export const BookingPanel = ({ initialServiceId }: BookingPanelProps) => {
               <SelectTrigger className="h-12 border-border bg-background px-4 font-body text-sm text-foreground">
                 <SelectValue
                   placeholder={
-                    servicesQuery.isLoading ? copy.loading : servicesQuery.isError ? copy.noServices : copy.chooseService
+                    servicesQuery.isLoading ? copy.loading : copy.chooseService
                   }
                 />
               </SelectTrigger>
               <SelectContent className="border-border bg-background text-foreground">
-                {servicesQuery.data?.map((service) => (
+                {services.map((service) => (
                   <SelectItem
                     key={service.id}
                     value={service.id}
@@ -431,18 +495,36 @@ export const BookingPanel = ({ initialServiceId }: BookingPanelProps) => {
               </div>
 
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                <Input
-                  value={firstName}
-                  onChange={(event) => setFirstName(event.target.value)}
-                  placeholder={copy.name}
-                  className="h-12 border-border bg-background font-body text-sm"
-                />
-                <Input
-                  value={lastName}
-                  onChange={(event) => setLastName(event.target.value)}
-                  placeholder={copy.surname}
-                  className="h-12 border-border bg-background font-body text-sm"
-                />
+                <div className="space-y-2">
+                  <Input
+                    value={firstName}
+                    onChange={(event) => setFirstName(event.target.value)}
+                    placeholder={copy.name}
+                    aria-invalid={firstNameLooksSuspicious}
+                    className={cn(
+                      "h-12 bg-background font-body text-sm",
+                      firstNameLooksSuspicious ? "border-destructive/80 focus-visible:ring-destructive" : "border-border",
+                    )}
+                  />
+                  {firstNameLooksSuspicious ? (
+                    <p className="font-body text-xs leading-relaxed text-destructive">! {copy.nameWarning}</p>
+                  ) : null}
+                </div>
+                <div className="space-y-2">
+                  <Input
+                    value={lastName}
+                    onChange={(event) => setLastName(event.target.value)}
+                    placeholder={copy.surname}
+                    aria-invalid={lastNameLooksSuspicious}
+                    className={cn(
+                      "h-12 bg-background font-body text-sm",
+                      lastNameLooksSuspicious ? "border-destructive/80 focus-visible:ring-destructive" : "border-border",
+                    )}
+                  />
+                  {lastNameLooksSuspicious ? (
+                    <p className="font-body text-xs leading-relaxed text-destructive">! {copy.surnameWarning}</p>
+                  ) : null}
+                </div>
                 <Input
                   value={phone}
                   onChange={(event) => setPhone(event.target.value)}

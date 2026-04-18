@@ -1,21 +1,12 @@
 import { apiError, apiSuccess, formatZodError } from "@/lib/api";
-import { prisma } from "@/lib/db";
+import { createReview, listReviews } from "@/lib/reviews-store";
 import { createPublicReviewSchema } from "@/lib/validations";
 
 export const GET = async () => {
   try {
-    const reviews = await prisma.reviews.findMany({
-      where: { status: "published" },
-      orderBy: { created_at: "desc" },
+    const reviews = await listReviews({
+      status: "published",
       take: 20,
-      select: {
-        id: true,
-        customer_name: true,
-        service_label: true,
-        rating: true,
-        message: true,
-        created_at: true,
-      },
     });
 
     return apiSuccess(reviews);
@@ -33,13 +24,11 @@ export const POST = async (request: Request) => {
       return apiError(formatZodError(parsed.error), 422);
     }
 
-    const review = await prisma.reviews.create({
-      data: {
-        customer_name: parsed.data.customerName,
-        service_label: parsed.data.serviceLabel ?? null,
-        rating: parsed.data.rating,
-        message: parsed.data.message,
-      },
+    const review = await createReview({
+      customerName: parsed.data.customerName,
+      serviceLabel: parsed.data.serviceLabel ?? null,
+      rating: parsed.data.rating,
+      message: parsed.data.message,
     });
 
     return apiSuccess(review);

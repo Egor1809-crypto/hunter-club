@@ -1,14 +1,19 @@
 import { motion } from "framer-motion";
 import { useLanguage } from "@/context/LanguageContext";
 
+const contactLogoUrl = `/${encodeURIComponent("Хантер Лого.png")}`;
+const mapsQuery = encodeURIComponent("Саратов, Сакко и Ванцетти, 14 корпус 1");
+const openStreetMapEmbedUrl =
+  "https://www.openstreetmap.org/export/embed.html?bbox=46.0175%2C51.5290%2C46.0255%2C51.5335&layer=mapnik&marker=51.5312%2C46.0215";
+const openStreetMapUrl = `https://www.openstreetmap.org/search?query=${mapsQuery}`;
+
 const ContactSection = () => {
   const { language } = useLanguage();
   const copy = {
     ru: {
       eyebrow: "Контакт",
       title: "Слава на связи. Будьте со Славой.",
-      description: "Запишитесь на удобное время или просто загляните — мы всегда рады видеть вас.",
-      book: "Записаться",
+      description: "Свяжитесь с нами в удобное для вас время или просто загляните — мы всегда рады видеть вас.",
       address: "Адрес",
       hours: "Часы работы",
       openMaps: "Открыть в картах",
@@ -25,7 +30,10 @@ const ContactSection = () => {
   }[language];
 
   return (
-    <section id="contact" className="section-golden bg-card">
+    <section
+      id="contact"
+      className="section-golden bg-card scroll-mt-[4.5rem] md:scroll-mt-[5.25rem] lg:scroll-mt-[5.75rem]"
+    >
       <div className="max-w-7xl mx-auto px-6 md:px-12">
         <div className="grid grid-cols-1 md:grid-cols-2 gap-12 md:gap-24 lg:mx-8">
           {/* Left */}
@@ -39,10 +47,21 @@ const ContactSection = () => {
             <p className="font-body text-xs tracking-[0.25em] uppercase text-muted-foreground mb-4">
               {copy.eyebrow}
             </p>
-            <h2 className="font-display text-4xl md:text-6xl font-light text-foreground mb-[34px] md:mb-[55px] max-w-[12ch]">
-              {copy.title}
-            </h2>
-            <p className="font-body text-sm md:text-base text-muted-foreground leading-relaxed max-w-md mb-12">
+            <div className="mb-6 md:mb-8 flex items-start gap-5 md:gap-6">
+              <span className="relative mt-1 shrink-0 h-28 w-28 md:h-40 md:w-40 rounded-full bg-white/90 overflow-hidden shadow-[0_0_40px_rgba(255,255,255,0.08)] opacity-75">
+                <img
+                  src={contactLogoUrl}
+                  alt=""
+                  aria-hidden="true"
+                  className="h-full w-full object-cover scale-[1.18]"
+                  loading="lazy"
+                />
+              </span>
+              <h2 className="font-display text-[1.7rem] md:text-[2.4rem] font-light leading-[1.04] text-foreground max-w-[10ch]">
+                {copy.title}
+              </h2>
+            </div>
+            <p className="font-body text-sm md:text-base text-muted-foreground leading-relaxed max-w-md mb-7 md:mb-8">
               {copy.description}
             </p>
 
@@ -50,7 +69,7 @@ const ContactSection = () => {
               href="tel:+79873245597"
               className="inline-block font-body text-xs tracking-[0.15em] uppercase bg-foreground text-background px-8 py-4 hover:bg-accent hover:text-foreground transition-colors duration-300"
             >
-              {copy.book}: +7 987 324-55-97
+              +7 987 324-55-97
             </a>
           </motion.div>
 
@@ -75,14 +94,14 @@ const ContactSection = () => {
               <div className="mt-6 w-full max-w-md border border-border overflow-hidden bg-background">
                 <iframe
                   title={language === "ru" ? "Карта барбершопа Hunter" : "Hunter barbershop map"}
-                  src="https://www.google.com/maps?q=%D0%A1%D0%B0%D1%80%D0%B0%D1%82%D0%BE%D0%B2%2C%20%D0%A1%D0%B0%D0%BA%D0%BA%D0%BE%20%D0%B8%20%D0%92%D0%B0%D0%BD%D1%86%D0%B5%D1%82%D1%82%D0%B8%2C%2014%20%D0%BA%D0%BE%D1%80%D0%BF%D1%83%D1%81%201&z=16&output=embed"
+                  src={openStreetMapEmbedUrl}
                   className="h-52 w-full"
                   loading="lazy"
                   referrerPolicy="no-referrer-when-downgrade"
                 />
               </div>
               <a
-                href="https://www.google.com/maps/search/?api=1&query=%D0%A1%D0%B0%D1%80%D0%B0%D1%82%D0%BE%D0%B2%2C%20%D0%A1%D0%B0%D0%BA%D0%BA%D0%BE%20%D0%B8%20%D0%92%D0%B0%D0%BD%D1%86%D0%B5%D1%82%D1%82%D0%B8%2C%2014%20%D0%BA%D0%BE%D1%80%D0%BF%D1%83%D1%81%201"
+                href={openStreetMapUrl}
                 target="_blank"
                 rel="noreferrer"
                 className="inline-block mt-4 font-body text-xs tracking-[0.15em] uppercase text-foreground hover:text-accent transition-colors duration-300"

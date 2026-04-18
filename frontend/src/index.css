@@ -107,9 +107,9 @@
   background-color: hsl(0 72% 35% / 0.55) !important;
 }
 
-/* Smooth scrolling */
+/* Instant anchor navigation */
 html {
-  scroll-behavior: smooth;
+  scroll-behavior: auto;
 }
 
 /* Hero: large background grid overlay */
@@ -158,6 +158,10 @@ html {
 .section-grid > * {
   position: relative;
   z-index: 1;
+}
+
+.section-grid-strong::before {
+  opacity: 0.56;
 }
 
 @media (max-width: 767px) {

@@ -4,7 +4,7 @@ import AdminNav from "@/app/admin/AdminNav";
 import AdminBrand from "@/app/admin/AdminBrand";
 import ReviewStatusControl from "@/app/admin/reviews/ReviewStatusControl";
 import { getCurrentAdminSession } from "@/lib/auth";
-import { prisma } from "@/lib/db";
+import { listReviews } from "@/lib/reviews-store";
 
 const renderStars = (rating: number) =>
   Array.from({ length: 5 }, (_, index) => (index < rating ? "★" : "☆")).join("");
@@ -16,10 +16,7 @@ const AdminReviewsPage = async () => {
     redirect("/admin/login");
   }
 
-  const reviews = await prisma.reviews.findMany({
-    orderBy: { created_at: "desc" },
-    take: 100,
-  });
+  const reviews = await listReviews({ take: 100 });
 
   return (
     <main style={{ maxWidth: 1180, margin: "0 auto", padding: "40px 24px 72px" }}>

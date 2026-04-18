@@ -10,7 +10,7 @@ const AboutSection = () => {
       titleMain: "Мастерство,",
       titleAccent: "проверенное временем",
       short:
-        "Слава, который стрижёт на славу. Барбер с математическим фокусом на точность линий и абсолютную чистоту переходов. От строгой классики до современных стилей — всегда безупречная форма.",
+        "Барбер, который стрижёт на славу. Барбер с математическим фокусом на точность линий и абсолютную чистоту переходов. От строгой классики до современных стилей — всегда безупречная форма.",
       p1: "Hunter — это пространство, где традиции мужского ремесла встречаются с безупречным вкусом. Мы не гонимся за трендами — мы задаём стандарт.",
       p2: "Каждый визит — это ритуал. Приватная атмосфера, внимание к деталям и результат, который говорит сам за себя. Здесь ценят ваше время и уважают ваш стиль.",
     },
@@ -26,7 +26,10 @@ const AboutSection = () => {
   }[language];
 
   return (
-    <section id="about" className="section-golden section-grid bg-background">
+    <section
+      id="about"
+      className="section-golden section-grid bg-background scroll-mt-[4.5rem] md:scroll-mt-[5.25rem] lg:scroll-mt-[5.75rem]"
+    >
       <div className="max-w-7xl mx-auto px-5 sm:px-6 md:px-12">
         <div className="grid grid-cols-1 md:grid-cols-2 gap-10 md:gap-24 items-center lg:mx-8">
           {/* Left — barber photo + short description */}
@@ -62,7 +65,7 @@ const AboutSection = () => {
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true, margin: "-100px" }}
             transition={{ duration: 0.8, delay: 0.2 }}
-            className="max-w-[34rem]"
+            className="max-w-[34rem] self-start"
           >
             <p className="font-body text-xs tracking-[0.25em] uppercase text-muted-foreground mb-4">
               {copy.eyebrow}

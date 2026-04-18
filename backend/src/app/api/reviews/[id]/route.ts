@@ -1,6 +1,6 @@
 import { apiError, apiSuccess, formatZodError } from "@/lib/api";
 import { requireAdminSession } from "@/lib/auth";
-import { prisma } from "@/lib/db";
+import { updateReviewStatus } from "@/lib/reviews-store";
 import { updateReviewSchema } from "@/lib/validations";
 
 type Params = {
@@ -22,12 +22,14 @@ export const PATCH = async (request: Request, { params }: Params) => {
       return apiError(formatZodError(parsed.error), 422);
     }
 
-    const review = await prisma.reviews.update({
-      where: { id: params.id },
-      data: {
-        ...(parsed.data.status ? { status: parsed.data.status } : {}),
-      },
+    const review = await updateReviewStatus({
+      id: params.id,
+      status: parsed.data.status,
     });
+
+    if (!review) {
+      return apiError("Отзыв не найден", 404);
+    }
 
     return apiSuccess(review);
   } catch (error) {

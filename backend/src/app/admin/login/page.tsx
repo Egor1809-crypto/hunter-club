@@ -11,6 +11,19 @@ const AdminLoginPage = () => {
   const [error, setError] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
+  const handleGoBack = () => {
+    if (typeof window === "undefined") {
+      return;
+    }
+
+    if (window.history.length > 1) {
+      router.back();
+      return;
+    }
+
+    window.location.href = `${window.location.protocol}//${window.location.hostname}:8080/`;
+  };
+
   const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
     setError(null);
@@ -51,25 +64,47 @@ const AdminLoginPage = () => {
         display: "grid",
         placeItems: "center",
         padding: "24px",
-        background:
-          "radial-gradient(circle at top, rgba(50,50,50,0.45), rgba(10,10,10,1) 55%)",
+        background: "#0a0a0a",
       }}
     >
-      <div
-        style={{
-          width: "100%",
-          maxWidth: 460,
-          border: "1px solid rgba(255,255,255,0.12)",
-          background: "rgba(12,12,12,0.9)",
-          padding: 32,
-          backdropFilter: "blur(16px)",
-          boxShadow: "0 24px 80px rgba(0,0,0,0.35)",
-        }}
-      >
-        <div style={{ marginBottom: 24 }}>
-          <AdminBrand />
+      <div style={{ width: "100%", maxWidth: 460 }}>
+        <button
+          type="button"
+          onClick={handleGoBack}
+          style={{
+            marginBottom: 16,
+            display: "inline-flex",
+            alignItems: "center",
+            gap: 10,
+            border: "1px solid rgba(255,255,255,0.12)",
+            background: "rgba(12,12,12,0.78)",
+            color: "#f5f5f5",
+            padding: "12px 16px",
+            fontSize: 12,
+            letterSpacing: "0.16em",
+            textTransform: "uppercase",
+            cursor: "pointer",
+          }}
+        >
+          <span style={{ fontSize: 14, lineHeight: 1 }}>←</span>
+          Назад
+        </button>
+
+        <div
+          style={{
+            width: "100%",
+            border: "1px solid rgba(255,255,255,0.16)",
+            background: "rgba(12,12,12,0.9)",
+            padding: 40,
+            backdropFilter: "blur(16px)",
+            boxShadow: "0 24px 80px rgba(0,0,0,0.35)",
+            borderRadius: 0,
+          }}
+        >
+        <div style={{ marginBottom: 28, display: "flex", justifyContent: "center" }}>
+          <AdminBrand subtitle={null} centered />
         </div>
-        <h1 style={{ fontSize: 44, fontWeight: 300, margin: "0 0 8px" }}>Вход в CRM</h1>
+        <h1 style={{ fontSize: 44, fontWeight: 300, margin: "0 0 8px", color: "#f5f5f5" }}>Вход в CRM</h1>
         <p style={{ color: "#a1a1aa", lineHeight: 1.6, marginBottom: 28 }}>
           Войдите, чтобы управлять клиентами, записями, расписанием и показателями барбершопа.
         </p>
@@ -136,6 +171,7 @@ const AdminLoginPage = () => {
             {isSubmitting ? "Входим..." : "Войти"}
           </button>
         </form>
+        </div>
       </div>
     </main>
   );

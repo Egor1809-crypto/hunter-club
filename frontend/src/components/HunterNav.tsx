@@ -1,5 +1,3 @@
-import { useState } from "react";
-import { motion, AnimatePresence } from "framer-motion";
 import {
   Dialog,
   DialogContent,
@@ -8,6 +6,7 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "@/components/ui/dialog";
+import { Phone, ShieldCheck, UserRound } from "lucide-react";
 import { useLanguage } from "@/context/LanguageContext";
 
 const cosmeticsItems = [
@@ -28,131 +27,104 @@ const cosmeticsItems = [
   },
 ];
 
+const GoogleMark = () => (
+  <svg viewBox="0 0 24 24" aria-hidden="true" className="h-5 w-5">
+    <path
+      fill="#4285F4"
+      d="M21.6 12.23c0-.68-.06-1.33-.17-1.95H12v3.69h5.39a4.61 4.61 0 0 1-2 3.03v2.52h3.24c1.9-1.75 2.97-4.33 2.97-7.29Z"
+    />
+    <path
+      fill="#34A853"
+      d="M12 22c2.7 0 4.96-.9 6.61-2.45l-3.24-2.52c-.9.61-2.05.98-3.37.98-2.59 0-4.78-1.75-5.56-4.1H3.09v2.59A10 10 0 0 0 12 22Z"
+    />
+    <path
+      fill="#FBBC05"
+      d="M6.44 13.91A5.98 5.98 0 0 1 6.13 12c0-.66.11-1.3.31-1.91V7.5H3.09A10 10 0 0 0 2 12c0 1.61.39 3.14 1.09 4.5l3.35-2.59Z"
+    />
+    <path
+      fill="#EA4335"
+      d="M12 5.98c1.47 0 2.79.51 3.83 1.5l2.87-2.87C16.95 2.98 14.69 2 12 2A10 10 0 0 0 3.09 7.5l3.35 2.59c.78-2.35 2.97-4.11 5.56-4.11Z"
+    />
+  </svg>
+);
+
 const HunterNav = () => {
   const { language } = useLanguage();
-  const [isOpen, setIsOpen] = useState(false);
-  const navLogoUrl = `/${encodeURIComponent("Хантер Лого.png")}`;
-  const navItems = {
+  const navGroups = {
     ru: [
-      { label: "Услуги", href: "#services" },
-      { label: "Отзывы", href: "#reviews" },
-      { label: "О нас", href: "#about" },
-      { label: "Контакт", href: "#contact" },
+      [
+        { label: "Услуги", href: "#services" },
+        { label: "Косметика", href: "#cosmetics", kind: "dialog" as const },
+        { label: "Отзывы", href: "#reviews" },
+      ],
+      [
+        { label: "О нас", href: "#about" },
+        { label: "Контакт", href: "#contact" },
+        { label: "Записаться", href: "#services-booking", kind: "cta" as const },
+      ],
     ],
     en: [
-      { label: "Services", href: "#services" },
-      { label: "Reviews", href: "#reviews" },
-      { label: "About", href: "#about" },
-      { label: "Contact", href: "#contact" },
+      [
+        { label: "Services", href: "#services" },
+        { label: "Cosmetics", href: "#cosmetics", kind: "dialog" as const },
+        { label: "Reviews", href: "#reviews" },
+      ],
+      [
+        { label: "About", href: "#about" },
+        { label: "Contact", href: "#contact" },
+        { label: "Book now", href: "#services-booking", kind: "cta" as const },
+      ],
     ],
   }[language];
   const copy = {
     ru: {
-      book: "Записаться",
-      navigation: "Навигация",
-      cosmetics: "Косметика",
-      cosmeticsDesc: "Средства для укладки, бороды и домашнего ухода",
       cosmeticsDialogTitle: "Косметика",
       cosmeticsDialogDesc: "Подборка средств, которые поддерживают результат стрижки и ухода дома.",
-      menu: "Меню",
+      accountTitle: "Вход и регистрация",
+      guestLabel: "Для посетителя",
+      guestTitle: "Личный кабинет Hunter",
+      guestDesc: "Выберите удобный способ, чтобы зарегистрироваться и позже смотреть историю визитов.",
+      googleEntry: "Через Google",
+      googleEntryDesc: "Быстрая регистрация и вход в клиентский кабинет одним нажатием.",
+      phoneEntry: "По номеру",
+      phoneEntryDesc: "Регистрация через телефон с подтверждением и доступом к будущим записям.",
+      adminLabel: "Для мастера",
+      adminEntry: "CRM Admin",
+      adminEntryDesc: "Полный доступ к записям, клиентам, услугам, отзывам и внутренней CRM.",
     },
     en: {
-      book: "Book now",
-      navigation: "Navigation",
-      cosmetics: "Cosmetics",
-      cosmeticsDesc: "Products for styling, beard care and home grooming",
       cosmeticsDialogTitle: "Cosmetics",
       cosmeticsDialogDesc: "A curated set of products that help maintain your cut and grooming at home.",
-      menu: "Menu",
+      accountTitle: "Access",
+      guestLabel: "For visitor",
+      guestTitle: "Hunter account",
+      guestDesc: "Choose the most convenient way to sign up and later view your visit history.",
+      googleEntry: "With Google",
+      googleEntryDesc: "Quick sign-up and login to the client area in one click.",
+      phoneEntry: "With phone",
+      phoneEntryDesc: "Phone-based registration with confirmation and access to future bookings.",
+      adminLabel: "For barber",
+      adminEntry: "CRM Admin",
+      adminEntryDesc: "Full access to bookings, clients, services, reviews and the internal CRM.",
     },
   }[language];
+  const crmLoginHref =
+    typeof window !== "undefined"
+      ? `${window.location.protocol}//${window.location.hostname}:3000/admin/login`
+      : "http://127.0.0.1:3000/admin/login";
 
   return (
-    <nav className="fixed top-0 left-0 right-0 z-50 bg-background/80 backdrop-blur-md border-b border-border">
-      <div className="max-w-[96rem] mx-auto px-4 md:px-8">
-        <div className="flex items-center justify-between h-16 md:h-20 gap-3">
-        <a
-          href="#"
-          className="min-w-0 flex items-center gap-2.5 font-display text-xl sm:text-2xl md:text-3xl font-light tracking-[0.18em] text-foreground uppercase"
-        >
-          <span className="relative w-9 h-9 sm:w-10 sm:h-10 md:w-12 md:h-12 rounded-full bg-white/90 overflow-hidden shadow-[0_0_24px_rgba(255,255,255,0.12)] opacity-70 pointer-events-none select-none shrink-0 block">
-            <img
-              src={navLogoUrl}
-              alt=""
-              aria-hidden="true"
-              className="w-full h-full object-cover scale-[1.18]"
-              loading="lazy"
-            />
-          </span>
-          <span className="truncate">Hunter</span>
-        </a>
-
-        {/* Desktop nav */}
-        <div className="hidden md:flex items-center gap-12 ml-auto mr-3">
-          {navItems.map((item, index) => (
-            <div key={item.href} className="flex items-center gap-12">
-              <a
-                href={item.href}
-                className="font-body text-xs tracking-[0.15em] uppercase text-muted-foreground hover:text-foreground transition-colors duration-300"
-              >
-                {item.label}
-              </a>
-              {index < navItems.length - 1 && (
-                <span className="h-4 w-px bg-border" aria-hidden="true" />
-              )}
-            </div>
-          ))}
-          <a
-            href="#contact"
-            className="font-body text-xs tracking-[0.15em] uppercase bg-foreground text-background px-6 py-2.5 hover:bg-accent hover:text-foreground transition-colors duration-300"
-          >
-            {copy.book}
-          </a>
-        </div>
-
-        {/* Burger menu */}
-        <button
-          onClick={() => setIsOpen(!isOpen)}
-          className="flex flex-col gap-1.5 p-2"
-          aria-label={copy.menu}
-        >
-          <span className={`block w-6 h-px bg-foreground transition-transform duration-300 ${isOpen ? "rotate-45 translate-y-[3.5px]" : ""}`} />
-          <span className={`block w-6 h-px bg-foreground transition-opacity duration-300 ${isOpen ? "opacity-0" : ""}`} />
-          <span className={`block w-6 h-px bg-foreground transition-transform duration-300 ${isOpen ? "-rotate-45 -translate-y-[3.5px]" : ""}`} />
-        </button>
-        </div>
-      </div>
-
-      {/* Burger menu panel */}
-      <AnimatePresence>
-        {isOpen && (
-          <motion.div
-            initial={{ opacity: 0, y: -12 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: -12 }}
-            transition={{ duration: 0.25 }}
-            className="border-b border-border bg-background/95 backdrop-blur-md"
-          >
-            <div className="max-w-[96rem] mx-auto px-5 md:px-10 py-6 md:py-10">
-              <div className="flex flex-col gap-5">
-                <p className="font-body text-xs tracking-[0.25em] uppercase text-muted-foreground">
-                  {copy.navigation}
-                </p>
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                  {navItems.map((item) => (
-                    <a
-                      key={item.href}
-                      href={item.href}
-                      onClick={() => setIsOpen(false)}
-                      className="border border-border px-5 py-4 font-display text-2xl md:text-3xl font-light text-foreground hover:bg-card transition-colors duration-300"
-                    >
-                      {item.label}
-                    </a>
-                  ))}
+    <nav className="fixed top-0 left-0 right-0 z-50 border-b border-border/80 bg-background/78 backdrop-blur-xl">
+      <div className="max-w-[96rem] mx-auto px-4 md:px-6 lg:px-8">
+        <div className="relative flex items-center h-[4.5rem] md:h-[5.25rem] lg:h-[5.75rem] gap-3">
+          <div className="flex flex-1 items-center justify-end gap-4 md:gap-5 lg:gap-7 min-w-0">
+            {navGroups[0].map((item, index) => (
+              <div key={item.href} className="flex items-center gap-4 md:gap-5 lg:gap-7">
+                {item.kind === "dialog" ? (
                   <Dialog>
                     <DialogTrigger asChild>
-                      <button className="text-left border border-border px-5 py-4 font-display text-2xl md:text-3xl font-light text-foreground hover:bg-card transition-colors duration-300">
-                        {copy.cosmetics}
+                      <button className="font-body text-[9px] md:text-[10px] tracking-[0.22em] uppercase text-muted-foreground hover:text-foreground transition-colors duration-300 whitespace-nowrap">
+                        {item.label}
                       </button>
                     </DialogTrigger>
                     <DialogContent className="max-w-3xl border-border bg-background text-foreground">
@@ -179,19 +151,127 @@ const HunterNav = () => {
                       </div>
                     </DialogContent>
                   </Dialog>
+                ) : (
                   <a
-                    href="#contact"
-                    onClick={() => setIsOpen(false)}
-                    className="border border-foreground bg-foreground text-background px-5 py-4 font-display text-2xl md:text-3xl font-light hover:bg-accent hover:text-foreground transition-colors duration-300"
+                    href={item.href}
+                    className="font-body text-[9px] md:text-[10px] tracking-[0.22em] uppercase text-muted-foreground hover:text-foreground transition-colors duration-300 whitespace-nowrap"
                   >
-                    {copy.book}
+                    {item.label}
                   </a>
-                </div>
+                )}
+                {index < navGroups[0].length - 1 && (
+                  <span className="h-px w-3 md:w-4 bg-border/80" aria-hidden="true" />
+                )}
               </div>
-            </div>
-          </motion.div>
-        )}
-      </AnimatePresence>
+            ))}
+          </div>
+
+          <a
+            href="#"
+            className="relative shrink-0 px-6 md:px-8 lg:px-10 text-center font-display text-[1.65rem] sm:text-[2.1rem] md:text-[2.9rem] lg:text-[3.7rem] leading-none font-light tracking-[0.28em] text-foreground uppercase"
+          >
+            <span className="absolute left-0 top-1/2 hidden h-px w-4 -translate-y-1/2 bg-border/80 md:block lg:w-6" aria-hidden="true" />
+            HUNTER
+            <span className="absolute right-0 top-1/2 hidden h-px w-4 -translate-y-1/2 bg-border/80 md:block lg:w-6" aria-hidden="true" />
+          </a>
+
+          <div className="flex flex-1 items-center justify-start gap-4 md:gap-5 lg:gap-7 min-w-0">
+            {navGroups[1].map((item, index) => (
+              <div key={item.label} className="flex items-center gap-4 md:gap-5 lg:gap-7">
+                {item.kind === "cta" ? (
+                  <a
+                    href={item.href}
+                    className="font-body text-[9px] md:text-[10px] tracking-[0.22em] uppercase text-muted-foreground hover:text-foreground transition-colors duration-300 whitespace-nowrap"
+                  >
+                    {item.label}
+                  </a>
+                ) : (
+                  <a
+                    href={item.href}
+                    className="font-body text-[9px] md:text-[10px] tracking-[0.22em] uppercase text-muted-foreground hover:text-foreground transition-colors duration-300 whitespace-nowrap"
+                  >
+                    {item.label}
+                  </a>
+                )}
+                {index < navGroups[1].length - 1 && (
+                  <span className="h-px w-3 md:w-4 bg-border/80" aria-hidden="true" />
+                )}
+              </div>
+            ))}
+          </div>
+
+          <Dialog>
+            <DialogTrigger asChild>
+              <button
+                aria-label={copy.accountTitle}
+                className="absolute right-0 top-1/2 -translate-y-1/2 flex h-10 w-10 items-center justify-center border border-border/80 bg-background/70 text-foreground transition-colors duration-300 hover:bg-card"
+              >
+                <UserRound className="h-4 w-4" />
+              </button>
+            </DialogTrigger>
+            <DialogContent className="max-w-xl border-border bg-background text-foreground">
+              <DialogHeader>
+                <DialogTitle className="font-display text-3xl font-light">{copy.accountTitle}</DialogTitle>
+              </DialogHeader>
+              <div className="grid gap-4">
+                <div className="border border-border bg-card/60 p-5 md:p-6">
+                  <p className="font-body text-[11px] tracking-[0.18em] uppercase text-muted-foreground mb-3">
+                    {copy.guestLabel}
+                  </p>
+                  <p className="font-display text-2xl md:text-3xl font-light text-foreground mb-3">
+                    {copy.guestTitle}
+                  </p>
+                  <p className="font-body text-sm text-muted-foreground leading-relaxed mb-5">
+                    {copy.guestDesc}
+                  </p>
+                  <div className="grid gap-3 md:grid-cols-2">
+                    <a
+                      href="/account?method=google"
+                      className="border border-border bg-background/70 p-4 transition-colors duration-300 hover:bg-card"
+                    >
+                      <div className="mb-4 flex h-11 w-11 items-center justify-center border border-border/80">
+                        <GoogleMark />
+                      </div>
+                      <p className="font-display text-xl font-light text-foreground mb-2">{copy.googleEntry}</p>
+                      <p className="font-body text-sm text-muted-foreground leading-relaxed">
+                        {copy.googleEntryDesc}
+                      </p>
+                    </a>
+                    <a
+                      href="/account?method=phone"
+                      className="border border-border bg-background/70 p-4 transition-colors duration-300 hover:bg-card"
+                    >
+                      <div className="mb-4 flex h-11 w-11 items-center justify-center border border-border/80">
+                        <Phone className="h-5 w-5" />
+                      </div>
+                      <p className="font-display text-xl font-light text-foreground mb-2">{copy.phoneEntry}</p>
+                      <p className="font-body text-sm text-muted-foreground leading-relaxed">
+                        {copy.phoneEntryDesc}
+                      </p>
+                    </a>
+                  </div>
+                </div>
+
+                <a
+                  href={crmLoginHref}
+                  className="border border-border bg-card/60 p-5 md:p-6 transition-colors duration-300 hover:bg-card"
+                >
+                  <p className="font-body text-[11px] tracking-[0.18em] uppercase text-muted-foreground mb-3">
+                    {copy.adminLabel}
+                  </p>
+                  <div className="mb-4 flex h-11 w-11 items-center justify-center border border-border/80">
+                    <ShieldCheck className="h-5 w-5" />
+                  </div>
+                  <p className="font-display text-2xl font-light text-foreground mb-3">{copy.adminEntry}</p>
+                  <p className="font-body text-sm text-muted-foreground leading-relaxed">
+                    {copy.adminEntryDesc}
+                  </p>
+                </a>
+              </div>
+            </DialogContent>
+          </Dialog>
+        </div>
+      </div>
     </nav>
   );
 };
