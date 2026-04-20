@@ -111,7 +111,7 @@ const HunterNav = () => {
   const crmLoginHref =
     typeof window !== "undefined"
       ? `${window.location.protocol}//${window.location.hostname}:3000/admin/login`
-      : "http://127.0.0.1:3000/admin/login";
+      : "/admin/login";
 
   return (
     <nav className="fixed top-0 left-0 right-0 z-50 border-b border-border/80 bg-background/78 backdrop-blur-xl">

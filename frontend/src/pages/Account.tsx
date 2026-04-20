@@ -48,7 +48,7 @@ const Account = () => {
   const crmLoginHref =
     typeof window !== "undefined"
       ? `${window.location.protocol}//${window.location.hostname}:3000/admin/login`
-      : "http://127.0.0.1:3000/admin/login";
+      : "/admin/login";
 
   useEffect(() => {
     const fetchSession = async () => {
