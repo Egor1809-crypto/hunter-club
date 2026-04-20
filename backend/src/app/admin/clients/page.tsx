@@ -28,17 +28,18 @@ const filterInputStyle: React.CSSProperties = {
 const AdminClientsPage = async ({
   searchParams,
 }: {
-  searchParams?: Record<string, string | string[] | undefined>;
+  searchParams?: Promise<Record<string, string | string[] | undefined>>;
 }) => {
+  const resolvedSearchParams = await searchParams;
   const admin = await getCurrentAdminSession();
 
   if (!admin) {
     redirect("/admin/login");
   }
 
-  const search = getSearchParam(searchParams?.search)?.trim() ?? "";
-  const vip = getSearchParam(searchParams?.vip) ?? "all";
-  const sort = getSearchParam(searchParams?.sort) ?? "recent";
+  const search = getSearchParam(resolvedSearchParams?.search)?.trim() ?? "";
+  const vip = getSearchParam(resolvedSearchParams?.vip) ?? "all";
+  const sort = getSearchParam(resolvedSearchParams?.sort) ?? "recent";
 
   const where = {
     ...(search

@@ -9,8 +9,9 @@ import { prisma } from "@/lib/db";
 const AdminClientDetailsPage = async ({
   params,
 }: {
-  params: { id: string };
+  params: Promise<{ id: string }>;
 }) => {
+  const { id } = await params;
   const admin = await getCurrentAdminSession();
 
   if (!admin) {
@@ -18,7 +19,7 @@ const AdminClientDetailsPage = async ({
   }
 
   const client = await prisma.clients.findUnique({
-    where: { id: params.id },
+    where: { id },
     include: {
       bookings: {
         orderBy: { scheduled_at: "desc" },

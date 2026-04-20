@@ -5,12 +5,13 @@ import { prisma } from "@/lib/db";
 import { updateBookingSchema } from "@/lib/validations";
 
 type Params = {
-  params: { id: string };
+  params: Promise<{ id: string }>;
 };
 
 export const dynamic = "force-dynamic";
 
 export const GET = async (_request: Request, { params }: Params) => {
+  const { id } = await params;
   const { response } = await requireAdminSession();
 
   if (response) {
@@ -18,7 +19,7 @@ export const GET = async (_request: Request, { params }: Params) => {
   }
 
   const booking = await prisma.bookings.findUnique({
-    where: { id: params.id },
+    where: { id },
     include: {
       client: true,
       service: true,
@@ -33,6 +34,8 @@ export const GET = async (_request: Request, { params }: Params) => {
 };
 
 export const PATCH = async (request: Request, { params }: Params) => {
+  const { id } = await params;
+
   try {
     const { response } = await requireAdminSession();
 
@@ -40,7 +43,7 @@ export const PATCH = async (request: Request, { params }: Params) => {
       return response;
     }
 
-    const csrfResponse = requireAdminCsrf(request);
+    const csrfResponse = await requireAdminCsrf(request);
 
     if (csrfResponse) {
       return csrfResponse;
@@ -54,7 +57,7 @@ export const PATCH = async (request: Request, { params }: Params) => {
     }
 
     const booking = await prisma.bookings.update({
-      where: { id: params.id },
+      where: { id },
       data: {
         ...(parsed.data.scheduledAt ? { scheduled_at: new Date(parsed.data.scheduledAt) } : {}),
         ...(parsed.data.status ? { status: parsed.data.status } : {}),
@@ -75,12 +78,14 @@ export const PATCH = async (request: Request, { params }: Params) => {
       request,
       error,
       message: "Не удалось обновить запись",
-      context: { route: "/api/bookings/[id]", bookingId: params.id, method: "PATCH" },
+      context: { route: "/api/bookings/[id]", bookingId: id, method: "PATCH" },
     });
   }
 };
 
 export const DELETE = async (request: Request, { params }: Params) => {
+  const { id } = await params;
+
   try {
     const { response } = await requireAdminSession();
 
@@ -88,7 +93,7 @@ export const DELETE = async (request: Request, { params }: Params) => {
       return response;
     }
 
-    const csrfResponse = requireAdminCsrf(request);
+    const csrfResponse = await requireAdminCsrf(request);
 
     if (csrfResponse) {
       return csrfResponse;
@@ -96,21 +101,21 @@ export const DELETE = async (request: Request, { params }: Params) => {
 
     const booking = await prisma.$transaction(async (tx) => {
       await tx.notifications.deleteMany({
-        where: { booking_id: params.id },
+        where: { booking_id: id },
       });
 
       await tx.loyalty_rewards.updateMany({
-        where: { booking_id: params.id },
+        where: { booking_id: id },
         data: { booking_id: null },
       });
 
       await tx.loyalty_rewards.updateMany({
-        where: { redeemed_booking_id: params.id },
+        where: { redeemed_booking_id: id },
         data: { redeemed_booking_id: null },
       });
 
       return tx.bookings.delete({
-        where: { id: params.id },
+        where: { id },
       });
     });
 
@@ -124,7 +129,7 @@ export const DELETE = async (request: Request, { params }: Params) => {
       request,
       error,
       message: "Не удалось удалить запись",
-      context: { route: "/api/bookings/[id]", bookingId: params.id, method: "DELETE" },
+      context: { route: "/api/bookings/[id]", bookingId: id, method: "DELETE" },
     });
   }
 };

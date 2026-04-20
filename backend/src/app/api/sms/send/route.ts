@@ -15,7 +15,7 @@ export const POST = async (request: Request) => {
       return response;
     }
 
-    const csrfResponse = requireAdminCsrf(request);
+    const csrfResponse = await requireAdminCsrf(request);
 
     if (csrfResponse) {
       return csrfResponse;

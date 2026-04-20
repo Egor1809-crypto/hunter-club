@@ -58,8 +58,8 @@ export const POST = async (request: Request) => {
 
     const sessionToken = createSessionToken(adminUser);
     const csrfToken = createAdminCsrfToken();
-    setAdminSessionCookie(sessionToken);
-    setAdminCsrfCookie(csrfToken);
+    await setAdminSessionCookie(sessionToken);
+    await setAdminCsrfCookie(csrfToken);
 
     return apiSuccess({
       id: adminUser.id,

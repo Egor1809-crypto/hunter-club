@@ -20,6 +20,8 @@ npm run prisma:migrate:deploy
 npm run dev
 ```
 
+`database/init.sql` оставлен как legacy/reference bootstrap. Новые локальные и production-окружения должны подниматься через Prisma migrations.
+
 ## Миграции
 
 Для production и новых окружений используем Prisma migrations:
@@ -35,6 +37,18 @@ npm run prisma:migrate:status
 ```
 
 `prisma db push` оставлен только как вспомогательная dev-команда. Для сервера и чистой установки используйте migrations.
+
+## Production-проверки
+
+Перед деплоем:
+
+```bash
+cp .env.production.example .env.production
+npm run env:check
+npm run verify
+```
+
+Docker-образ перед стартом выполняет `prisma migrate deploy`, поэтому новая база поднимается через миграции без ручного запуска SQL.
 
 ## Основные API
 

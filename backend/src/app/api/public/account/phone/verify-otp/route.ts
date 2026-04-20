@@ -129,7 +129,7 @@ export const POST = async (request: Request) => {
       subjectId: client.id,
       account,
     });
-    setVisitorSessionCookie(sessionToken);
+    await setVisitorSessionCookie(sessionToken);
 
     return apiSuccess(account);
   } catch (error) {

@@ -13,18 +13,19 @@ const getSearchParam = (value: string | string[] | undefined) =>
 const AdminBookingsPage = async ({
   searchParams,
 }: {
-  searchParams?: Record<string, string | string[] | undefined>;
+  searchParams?: Promise<Record<string, string | string[] | undefined>>;
 }) => {
+  const resolvedSearchParams = await searchParams;
   const admin = await getCurrentAdminSession();
 
   if (!admin) {
     redirect("/admin/login");
   }
 
-  const search = getSearchParam(searchParams?.search)?.trim() ?? "";
-  const status = getSearchParam(searchParams?.status) ?? "all";
-  const dateFrom = getSearchParam(searchParams?.dateFrom) ?? "";
-  const dateTo = getSearchParam(searchParams?.dateTo) ?? "";
+  const search = getSearchParam(resolvedSearchParams?.search)?.trim() ?? "";
+  const status = getSearchParam(resolvedSearchParams?.status) ?? "all";
+  const dateFrom = getSearchParam(resolvedSearchParams?.dateFrom) ?? "";
+  const dateTo = getSearchParam(resolvedSearchParams?.dateTo) ?? "";
 
   const bookingWhere = {
     ...(status !== "all" ? { status: status as never } : {}),

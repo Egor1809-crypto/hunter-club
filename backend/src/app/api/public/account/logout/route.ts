@@ -13,7 +13,7 @@ export const POST = async () => {
     });
   }
 
-  clearVisitorSessionCookie();
+  await clearVisitorSessionCookie();
 
   return apiSuccess({
     loggedOut: true,

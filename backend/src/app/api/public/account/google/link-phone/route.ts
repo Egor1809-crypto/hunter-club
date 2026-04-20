@@ -50,7 +50,7 @@ export const POST = async (request: Request) => {
       account,
     });
 
-    setVisitorSessionCookie(refreshedToken);
+    await setVisitorSessionCookie(refreshedToken);
 
     return apiSuccess(account);
   } catch (error) {

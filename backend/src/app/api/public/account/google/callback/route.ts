@@ -25,8 +25,8 @@ export const GET = async (request: Request) => {
 
   const frontendUrl = `${url.protocol}//${url.hostname}:8080/account?method=google`;
 
-  const expectedState = getGoogleOauthStateCookie();
-  clearGoogleOauthStateCookie();
+  const expectedState = await getGoogleOauthStateCookie();
+  await clearGoogleOauthStateCookie();
 
   if (!code || !state || !expectedState || state !== expectedState) {
     return NextResponse.redirect(`${frontendUrl}&error=google_state`);
@@ -96,7 +96,7 @@ export const GET = async (request: Request) => {
       account,
     });
 
-    setVisitorSessionCookie(sessionToken);
+    await setVisitorSessionCookie(sessionToken);
 
     return NextResponse.redirect(frontendUrl);
   } catch (error) {

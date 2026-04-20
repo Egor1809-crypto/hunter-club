@@ -39,7 +39,7 @@ export const GET = async () => {
     account,
   });
 
-  setVisitorSessionCookie(refreshedToken);
+  await setVisitorSessionCookie(refreshedToken);
 
   return apiSuccess({
     authenticated: true,

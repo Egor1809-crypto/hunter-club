@@ -37,7 +37,7 @@ export const GET = async (request: Request) => {
   }
 
   const state = randomUUID();
-  setGoogleOauthStateCookie(state);
+  await setGoogleOauthStateCookie(state);
 
   const redirectUri = `${appUrl}/api/public/account/google/callback`;
   const params = new URLSearchParams({

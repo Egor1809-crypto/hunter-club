@@ -4,12 +4,14 @@ import { updateReviewStatus } from "@/lib/reviews-store";
 import { updateReviewSchema } from "@/lib/validations";
 
 type Params = {
-  params: { id: string };
+  params: Promise<{ id: string }>;
 };
 
 export const dynamic = "force-dynamic";
 
 export const PATCH = async (request: Request, { params }: Params) => {
+  const { id } = await params;
+
   try {
     const { response } = await requireAdminSession();
 
@@ -17,7 +19,7 @@ export const PATCH = async (request: Request, { params }: Params) => {
       return response;
     }
 
-    const csrfResponse = requireAdminCsrf(request);
+    const csrfResponse = await requireAdminCsrf(request);
 
     if (csrfResponse) {
       return csrfResponse;
@@ -31,7 +33,7 @@ export const PATCH = async (request: Request, { params }: Params) => {
     }
 
     const review = await updateReviewStatus({
-      id: params.id,
+      id,
       status: parsed.data.status,
     });
 
@@ -45,7 +47,7 @@ export const PATCH = async (request: Request, { params }: Params) => {
       request,
       error,
       message: "Не удалось обновить отзыв",
-      context: { route: "/api/reviews/[id]", reviewId: params.id },
+      context: { route: "/api/reviews/[id]", reviewId: id },
     });
   }
 };

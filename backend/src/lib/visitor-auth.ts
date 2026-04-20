@@ -119,8 +119,9 @@ export const revokeVisitorSession = async (payload: Pick<VisitorSessionPayload, 
   });
 };
 
-export const setVisitorSessionCookie = (token: string) => {
-  cookies().set(VISITOR_SESSION_COOKIE_NAME, token, {
+export const setVisitorSessionCookie = async (token: string) => {
+  const cookieStore = await cookies();
+  cookieStore.set(VISITOR_SESSION_COOKIE_NAME, token, {
     httpOnly: true,
     sameSite: "lax",
     secure: isProduction,
@@ -129,8 +130,9 @@ export const setVisitorSessionCookie = (token: string) => {
   });
 };
 
-export const clearVisitorSessionCookie = () => {
-  cookies().set(VISITOR_SESSION_COOKIE_NAME, "", {
+export const clearVisitorSessionCookie = async () => {
+  const cookieStore = await cookies();
+  cookieStore.set(VISITOR_SESSION_COOKIE_NAME, "", {
     httpOnly: true,
     sameSite: "lax",
     secure: isProduction,
@@ -140,7 +142,8 @@ export const clearVisitorSessionCookie = () => {
 };
 
 export const getCurrentVisitorSession = async () => {
-  const token = cookies().get(VISITOR_SESSION_COOKIE_NAME)?.value;
+  const cookieStore = await cookies();
+  const token = cookieStore.get(VISITOR_SESSION_COOKIE_NAME)?.value;
 
   if (!token) {
     return null;
@@ -161,8 +164,9 @@ export const getCurrentVisitorSession = async () => {
   return payload;
 };
 
-export const setGoogleOauthStateCookie = (state: string) => {
-  cookies().set(GOOGLE_STATE_COOKIE_NAME, state, {
+export const setGoogleOauthStateCookie = async (state: string) => {
+  const cookieStore = await cookies();
+  cookieStore.set(GOOGLE_STATE_COOKIE_NAME, state, {
     httpOnly: true,
     sameSite: "lax",
     secure: isProduction,
@@ -171,10 +175,14 @@ export const setGoogleOauthStateCookie = (state: string) => {
   });
 };
 
-export const getGoogleOauthStateCookie = () => cookies().get(GOOGLE_STATE_COOKIE_NAME)?.value ?? null;
+export const getGoogleOauthStateCookie = async () => {
+  const cookieStore = await cookies();
+  return cookieStore.get(GOOGLE_STATE_COOKIE_NAME)?.value ?? null;
+};
 
-export const clearGoogleOauthStateCookie = () => {
-  cookies().set(GOOGLE_STATE_COOKIE_NAME, "", {
+export const clearGoogleOauthStateCookie = async () => {
+  const cookieStore = await cookies();
+  cookieStore.set(GOOGLE_STATE_COOKIE_NAME, "", {
     httpOnly: true,
     sameSite: "lax",
     secure: isProduction,

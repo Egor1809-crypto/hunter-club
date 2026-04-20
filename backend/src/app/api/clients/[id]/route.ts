@@ -5,12 +5,13 @@ import { prisma } from "@/lib/db";
 import { updateClientSchema } from "@/lib/validations";
 
 type Params = {
-  params: { id: string };
+  params: Promise<{ id: string }>;
 };
 
 export const dynamic = "force-dynamic";
 
 export const GET = async (_request: Request, { params }: Params) => {
+  const { id } = await params;
   const { response } = await requireAdminSession();
 
   if (response) {
@@ -18,7 +19,7 @@ export const GET = async (_request: Request, { params }: Params) => {
   }
 
   const client = await prisma.clients.findUnique({
-    where: { id: params.id },
+    where: { id },
     include: {
       bookings: {
         orderBy: { scheduled_at: "desc" },
@@ -39,6 +40,8 @@ export const GET = async (_request: Request, { params }: Params) => {
 };
 
 export const PATCH = async (request: Request, { params }: Params) => {
+  const { id } = await params;
+
   try {
     const { response } = await requireAdminSession();
 
@@ -46,7 +49,7 @@ export const PATCH = async (request: Request, { params }: Params) => {
       return response;
     }
 
-    const csrfResponse = requireAdminCsrf(request);
+    const csrfResponse = await requireAdminCsrf(request);
 
     if (csrfResponse) {
       return csrfResponse;
@@ -60,7 +63,7 @@ export const PATCH = async (request: Request, { params }: Params) => {
     }
 
     const client = await prisma.clients.update({
-      where: { id: params.id },
+      where: { id },
       data: {
         ...(parsed.data.phone !== undefined ? { phone: parsed.data.phone } : {}),
         ...(parsed.data.firstName !== undefined ? { first_name: parsed.data.firstName } : {}),
@@ -76,12 +79,14 @@ export const PATCH = async (request: Request, { params }: Params) => {
       request,
       error,
       message: "Не удалось обновить клиента",
-      context: { route: "/api/clients/[id]", clientId: params.id, method: "PATCH" },
+      context: { route: "/api/clients/[id]", clientId: id, method: "PATCH" },
     });
   }
 };
 
 export const DELETE = async (request: Request, { params }: Params) => {
+  const { id } = await params;
+
   try {
     const { response } = await requireAdminSession();
 
@@ -89,14 +94,14 @@ export const DELETE = async (request: Request, { params }: Params) => {
       return response;
     }
 
-    const csrfResponse = requireAdminCsrf(request);
+    const csrfResponse = await requireAdminCsrf(request);
 
     if (csrfResponse) {
       return csrfResponse;
     }
 
     const bookingsCount = await prisma.bookings.count({
-      where: { client_id: params.id },
+      where: { client_id: id },
     });
 
     if (bookingsCount > 0) {
@@ -104,7 +109,7 @@ export const DELETE = async (request: Request, { params }: Params) => {
     }
 
     const client = await prisma.clients.delete({
-      where: { id: params.id },
+      where: { id },
     });
 
     return apiSuccess({ deleted: true, client });
@@ -117,7 +122,7 @@ export const DELETE = async (request: Request, { params }: Params) => {
       request,
       error,
       message: "Не удалось удалить клиента",
-      context: { route: "/api/clients/[id]", clientId: params.id, method: "DELETE" },
+      context: { route: "/api/clients/[id]", clientId: id, method: "DELETE" },
     });
   }
 };

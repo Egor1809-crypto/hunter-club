@@ -118,8 +118,9 @@ export const revokeAdminSessions = async (adminId: string) => {
   });
 };
 
-export const setAdminSessionCookie = (token: string) => {
-  cookies().set(SESSION_COOKIE_NAME, token, {
+export const setAdminSessionCookie = async (token: string) => {
+  const cookieStore = await cookies();
+  cookieStore.set(SESSION_COOKIE_NAME, token, {
     httpOnly: true,
     sameSite: "strict",
     secure: isProduction,
@@ -130,8 +131,9 @@ export const setAdminSessionCookie = (token: string) => {
 
 export const createAdminCsrfToken = () => randomBytes(32).toString("base64url");
 
-export const setAdminCsrfCookie = (token: string) => {
-  cookies().set(CSRF_COOKIE_NAME, token, {
+export const setAdminCsrfCookie = async (token: string) => {
+  const cookieStore = await cookies();
+  cookieStore.set(CSRF_COOKIE_NAME, token, {
     httpOnly: false,
     sameSite: "strict",
     secure: isProduction,
@@ -140,8 +142,9 @@ export const setAdminCsrfCookie = (token: string) => {
   });
 };
 
-export const clearAdminSessionCookie = () => {
-  cookies().set(SESSION_COOKIE_NAME, "", {
+export const clearAdminSessionCookie = async () => {
+  const cookieStore = await cookies();
+  cookieStore.set(SESSION_COOKIE_NAME, "", {
     httpOnly: true,
     sameSite: "strict",
     secure: isProduction,
@@ -149,7 +152,7 @@ export const clearAdminSessionCookie = () => {
     expires: new Date(0),
   });
 
-  cookies().set(CSRF_COOKIE_NAME, "", {
+  cookieStore.set(CSRF_COOKIE_NAME, "", {
     httpOnly: false,
     sameSite: "strict",
     secure: isProduction,
@@ -165,8 +168,9 @@ const safeEqual = (left: string, right: string) => {
   return leftBuffer.length === rightBuffer.length && timingSafeEqual(leftBuffer, rightBuffer);
 };
 
-export const requireAdminCsrf = (request: Request) => {
-  const cookieToken = cookies().get(CSRF_COOKIE_NAME)?.value;
+export const requireAdminCsrf = async (request: Request) => {
+  const cookieStore = await cookies();
+  const cookieToken = cookieStore.get(CSRF_COOKIE_NAME)?.value;
   const headerToken = request.headers.get("x-csrf-token");
 
   if (!cookieToken || !headerToken || !safeEqual(cookieToken, headerToken)) {
@@ -185,7 +189,8 @@ export const requireAdminCsrf = (request: Request) => {
 };
 
 export const getCurrentAdminSession = async () => {
-  const token = cookies().get(SESSION_COOKIE_NAME)?.value;
+  const cookieStore = await cookies();
+  const token = cookieStore.get(SESSION_COOKIE_NAME)?.value;
 
   if (!token) {
     return null;
