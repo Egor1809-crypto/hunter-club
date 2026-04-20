@@ -114,15 +114,8 @@ html {
 
 /* Hero: large background grid overlay */
 .hero-grid {
-  background-image: linear-gradient(
-      to right,
-      hsl(var(--border) / 0.35) 1px,
-      transparent 1px
-    ),
-    linear-gradient(to bottom, hsl(var(--border) / 0.35) 1px, transparent 1px);
-  background-size: 88px 88px;
-  background-position: center;
-  opacity: 0.52;
+  background-image: none;
+  opacity: 0;
 }
 
 .section-golden {

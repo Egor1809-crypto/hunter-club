@@ -60,15 +60,13 @@ const HeroSection = () => {
     <section className="relative min-h-screen flex items-start overflow-hidden">
       {/* Pure black background — no image */}
       <div className="absolute inset-0 bg-background z-0" />
-      {/* Large grid overlay to avoid empty hero background */}
-      <div className="absolute inset-0 hero-grid pointer-events-none z-[1]" />
-      {/* Solid patch behind the logo so the grid does not cut through it */}
+      {/* Solid patch behind the logo to keep the hero backdrop clean */}
       <div
-        className="absolute left-[66%] top-[6.5rem] -translate-x-1/2 z-[2] w-[17.5rem] sm:w-[20.5rem] md:left-[72%] md:top-[18%] md:w-[37rem] aspect-square rounded-full bg-background pointer-events-none select-none"
+        className="absolute left-[63%] top-[9rem] -translate-x-1/2 z-[2] w-[15rem] sm:w-[17rem] md:left-[68%] md:top-[24%] md:w-[31rem] aspect-square rounded-full bg-background pointer-events-none select-none"
       />
       {/* Logo placed under the text */}
       <div
-        className="absolute left-[66%] top-[6.5rem] -translate-x-1/2 z-[3] w-[16rem] sm:w-[19rem] md:left-[72%] md:top-[18%] md:w-[34rem] aspect-square rounded-full bg-white/90 overflow-hidden shadow-[0_0_80px_rgba(255,255,255,0.12)] opacity-60 md:opacity-70 pointer-events-none select-none"
+        className="absolute left-[63%] top-[9rem] -translate-x-1/2 z-[3] w-[13.75rem] sm:w-[15.5rem] md:left-[68%] md:top-[24%] md:w-[28rem] aspect-square rounded-full bg-white/90 overflow-hidden shadow-[0_0_80px_rgba(255,255,255,0.12)] opacity-60 md:opacity-70 pointer-events-none select-none"
       >
         <img
           src={heroLogoUrl}
@@ -85,7 +83,7 @@ const HeroSection = () => {
           initial={{ opacity: 0, y: 40 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 1, delay: 0.3, ease: "easeOut" }}
-          className="lg:ml-8"
+          className="md:ml-10 lg:ml-24"
         >
           <h1 className="font-display text-[2.75rem] sm:text-5xl md:text-7xl lg:text-8xl font-light leading-[0.92] sm:leading-[0.95] text-foreground mb-5 md:mb-[55px] max-w-[11ch]">
             {copy.titleMain}

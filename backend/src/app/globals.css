@@ -17,12 +17,7 @@ body {
   margin: 0;
   padding: 0;
   min-height: 100%;
-  background:
-    radial-gradient(circle at top, hsl(0 0% 18% / 0.22), transparent 30%),
-    linear-gradient(to right, hsl(var(--line) / 0.34) 1px, transparent 1px),
-    linear-gradient(to bottom, hsl(var(--line) / 0.34) 1px, transparent 1px),
-    hsl(var(--background));
-  background-size: auto, 88px 88px, 88px 88px, auto;
+  background: hsl(var(--background));
   color: hsl(var(--foreground));
   font-family: var(--font-body), system-ui, sans-serif;
 }
