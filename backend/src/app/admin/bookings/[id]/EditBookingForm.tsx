@@ -2,6 +2,7 @@
 
 import { useRouter } from "next/navigation";
 import { useMemo, useState } from "react";
+import { adminFetch } from "../../adminFetch";
 
 const inputStyle: React.CSSProperties = {
   width: "100%",
@@ -58,7 +59,7 @@ const EditBookingForm = ({
     };
 
     try {
-      const response = await fetch(`/api/bookings/${booking.id}`, {
+      const response = await adminFetch(`/api/bookings/${booking.id}`, {
         method: "PATCH",
         headers: {
           "Content-Type": "application/json",

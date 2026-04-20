@@ -1,15 +1,34 @@
-import { apiError, apiSuccess, formatZodError } from "@/lib/api";
-import { requireAdminSession } from "@/lib/auth";
+import { apiError, apiException, apiSuccess, formatZodError } from "@/lib/api";
+import { requireAdminCsrf, requireAdminSession } from "@/lib/auth";
 import { prisma } from "@/lib/db";
+import { checkRateLimit } from "@/lib/rate-limit";
 import { getSmsProvider, sendSmsMessage } from "@/lib/sms";
 import { sendSmsSchema } from "@/lib/validations";
 
+export const dynamic = "force-dynamic";
+
 export const POST = async (request: Request) => {
   try {
-    const { response } = await requireAdminSession();
+    const { admin, response } = await requireAdminSession();
 
     if (response) {
       return response;
+    }
+
+    const csrfResponse = requireAdminCsrf(request);
+
+    if (csrfResponse) {
+      return csrfResponse;
+    }
+
+    const rateLimit = await checkRateLimit({
+      key: `admin-sms-send:${admin.id}`,
+      limit: 20,
+      windowMs: 10 * 60 * 1000,
+    });
+
+    if (!rateLimit.allowed) {
+      return apiError(`Слишком много SMS. Повторите через ${rateLimit.retryAfterSec} сек.`, 429);
     }
 
     const body = await request.json();
@@ -75,6 +94,11 @@ export const POST = async (request: Request) => {
       notification: updatedNotification,
     });
   } catch (error) {
-    return apiError(error instanceof Error ? error.message : "Failed to send SMS", 500);
+    return apiException({
+      request,
+      error,
+      message: "Не удалось отправить SMS",
+      context: { route: "/api/sms/send" },
+    });
   }
 };

@@ -2,6 +2,7 @@
 
 import { useRouter } from "next/navigation";
 import { useState } from "react";
+import { adminFetch } from "../adminFetch";
 
 type ClientOption = {
   id: string;
@@ -61,7 +62,7 @@ const CreateBookingForm = ({
     };
 
     try {
-      const response = await fetch("/api/bookings", {
+      const response = await adminFetch("/api/bookings", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",

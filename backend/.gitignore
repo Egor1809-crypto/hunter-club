@@ -1,8 +1,10 @@
 .next
+.next.*
 node_modules
 .env
 dist
 coverage
+tsconfig.tsbuildinfo
 *.log
 .DS_Store
 

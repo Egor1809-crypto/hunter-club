@@ -62,7 +62,43 @@ CREATE INDEX idx_clients_last_visit ON clients(last_visit_at DESC);
 
 
 -- ============================================
--- 3. БРОНИРОВАНИЯ / ЗАПИСИ (bookings)
+-- 3. АККАУНТЫ ПОСЕТИТЕЛЕЙ / OTP / RATE LIMIT
+-- ============================================
+
+CREATE TABLE visitor_accounts (
+    id               UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    provider         VARCHAR(20) NOT NULL,
+    google_sub       VARCHAR(255) UNIQUE,
+    email            VARCHAR(255),
+    name             VARCHAR(255) NOT NULL,
+    avatar_url       TEXT,
+    phone            VARCHAR(20),
+    linked_client_id UUID REFERENCES clients(id) ON DELETE SET NULL,
+    last_login_at    TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+    created_at       TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+    updated_at       TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);
+
+CREATE TABLE phone_otps (
+    phone            VARCHAR(20) PRIMARY KEY,
+    code_hash        VARCHAR(128) NOT NULL,
+    expires_at       TIMESTAMPTZ NOT NULL,
+    created_at       TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+    updated_at       TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);
+
+CREATE TABLE rate_limits (
+    key              VARCHAR(255) PRIMARY KEY,
+    count            INTEGER NOT NULL DEFAULT 0,
+    reset_at         TIMESTAMPTZ NOT NULL,
+    updated_at       TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);
+
+CREATE INDEX idx_rate_limits_reset_at ON rate_limits(reset_at);
+
+
+-- ============================================
+-- 4. БРОНИРОВАНИЯ / ЗАПИСИ (bookings)
 -- ============================================
 
 CREATE TYPE booking_status AS ENUM (
@@ -114,7 +150,7 @@ CREATE INDEX idx_bookings_dawn ON bookings(is_dawn_hunt) WHERE is_dawn_hunt = TR
 
 
 -- ============================================
--- 4. ПРОГРАММА ЛОЯЛЬНОСТИ (loyalty)
+-- 5. ПРОГРАММА ЛОЯЛЬНОСТИ (loyalty)
 -- ============================================
 -- «На охоту с охотой» — без карт, без приложений.
 -- Слава знает своих. CRM считает автоматически.
@@ -151,7 +187,7 @@ CREATE INDEX idx_loyalty_rewards_pending ON loyalty_rewards(client_id, is_redeem
 
 
 -- ============================================
--- 5. SMS / НАПОМИНАНИЯ (notifications)
+-- 6. SMS / НАПОМИНАНИЯ (notifications)
 -- ============================================
 
 CREATE TYPE notification_type AS ENUM (
@@ -192,7 +228,7 @@ CREATE INDEX idx_notifications_client ON notifications(client_id);
 
 
 -- ============================================
--- 6. РАБОЧИЙ ГРАФИК (schedule)
+-- 7. РАБОЧИЙ ГРАФИК (schedule)
 -- ============================================
 -- Расписание мастера. Слоты генерируются на основе этих данных.
 
@@ -238,7 +274,7 @@ INSERT INTO work_schedule (day_of_week, start_time, end_time, is_dawn_hunt) VALU
 
 
 -- ============================================
--- 7. АНАЛИТИКА — Агрегации (analytics_daily)
+-- 8. АНАЛИТИКА — Агрегации (analytics_daily)
 -- ============================================
 -- Материализованные дневные метрики для быстрых дашбордов.
 
@@ -261,7 +297,7 @@ CREATE INDEX idx_analytics_date ON analytics_daily(report_date DESC);
 
 
 -- ============================================
--- 8. ADMIN / AUTH
+-- 9. ADMIN / AUTH
 -- ============================================
 -- Минимальная аутентификация для CRM-панели.
 -- Один пользователь (Слава), но структура позволяет расширить.
@@ -279,7 +315,7 @@ CREATE TABLE admin_users (
 
 
 -- ============================================
--- 9. НАСТРОЙКИ (settings)
+-- 10. НАСТРОЙКИ (settings)
 -- ============================================
 -- Ключ-значение для глобальных настроек.
 
@@ -292,7 +328,7 @@ CREATE TABLE settings (
 
 
 -- ============================================
--- 10. ОТЗЫВЫ С САЙТА (reviews)
+-- 11. ОТЗЫВЫ С САЙТА (reviews)
 -- ============================================
 -- Посетители оставляют отзывы на сайте, а Слава модерирует их в CRM.
 
@@ -340,6 +376,15 @@ CREATE TRIGGER trg_services_updated BEFORE UPDATE ON services
     FOR EACH ROW EXECUTE FUNCTION update_updated_at();
 
 CREATE TRIGGER trg_clients_updated BEFORE UPDATE ON clients
+    FOR EACH ROW EXECUTE FUNCTION update_updated_at();
+
+CREATE TRIGGER trg_visitor_accounts_updated BEFORE UPDATE ON visitor_accounts
+    FOR EACH ROW EXECUTE FUNCTION update_updated_at();
+
+CREATE TRIGGER trg_phone_otps_updated BEFORE UPDATE ON phone_otps
+    FOR EACH ROW EXECUTE FUNCTION update_updated_at();
+
+CREATE TRIGGER trg_rate_limits_updated BEFORE UPDATE ON rate_limits
     FOR EACH ROW EXECUTE FUNCTION update_updated_at();
 
 CREATE TRIGGER trg_bookings_updated BEFORE UPDATE ON bookings

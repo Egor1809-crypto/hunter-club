@@ -8,10 +8,16 @@ const required = (value: string | undefined, name: string) => {
 
 export const isProduction = process.env.NODE_ENV === "production";
 
-export const getSessionSecret = () => {
-  const secret = required(process.env.NEXTAUTH_SECRET, "NEXTAUTH_SECRET");
+const forbiddenSessionSecrets = new Set([
+  "change-me-in-production",
+  "replace-with-a-long-random-secret-at-least-32-characters",
+  "CHANGE_THIS_TO_A_LONG_RANDOM_SECRET_WITH_32_PLUS_CHARACTERS",
+]);
 
-  if (secret === "change-me-in-production") {
+export const getSessionSecret = () => {
+  const secret = required(process.env.NEXTAUTH_SECRET, "NEXTAUTH_SECRET").trim();
+
+  if (forbiddenSessionSecrets.has(secret)) {
     throw new Error("NEXTAUTH_SECRET must be changed before running the backend");
   }
 

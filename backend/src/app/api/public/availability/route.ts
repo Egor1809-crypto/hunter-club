@@ -1,4 +1,4 @@
-import { apiError, apiSuccess } from "@/lib/api";
+import { apiError, apiException, apiSuccess } from "@/lib/api";
 import { getAvailabilityRange, getDayAvailability } from "@/lib/availability";
 
 export const GET = async (request: Request) => {
@@ -25,6 +25,11 @@ export const GET = async (request: Request) => {
 
     return apiError("date or dateFrom/dateTo is required", 422);
   } catch (error) {
-    return apiError(error instanceof Error ? error.message : "Failed to fetch public availability", 500);
+    return apiException({
+      request,
+      error,
+      message: "Не удалось получить доступное время",
+      context: { route: "/api/public/availability" },
+    });
   }
 };

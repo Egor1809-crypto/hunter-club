@@ -1,19 +1,13 @@
-type RateLimitEntry = {
-  count: number;
-  resetAt: number;
+import { Prisma } from "@prisma/client";
+import { prisma } from "@/lib/db";
+
+type RateLimitResult = {
+  allowed: boolean;
+  remaining: number;
+  retryAfterSec: number;
 };
 
-const store = new Map<string, RateLimitEntry>();
-
-const pruneExpiredEntries = (now: number) => {
-  for (const [key, entry] of store.entries()) {
-    if (entry.resetAt <= now) {
-      store.delete(key);
-    }
-  }
-};
-
-export const checkRateLimit = ({
+export const checkRateLimit = async ({
   key,
   limit,
   windowMs,
@@ -21,39 +15,71 @@ export const checkRateLimit = ({
   key: string;
   limit: number;
   windowMs: number;
-}) => {
+}): Promise<RateLimitResult> => {
   const now = Date.now();
-  pruneExpiredEntries(now);
+  const nowDate = new Date(now);
+  const resetAt = new Date(now + windowMs);
 
-  const current = store.get(key);
+  await prisma.rate_limits.deleteMany({
+    where: {
+      key,
+      reset_at: { lte: nowDate },
+    },
+  });
 
-  if (!current || current.resetAt <= now) {
-    store.set(key, {
-      count: 1,
-      resetAt: now + windowMs,
+  try {
+    const created = await prisma.rate_limits.create({
+      data: {
+        key,
+        count: 1,
+        reset_at: resetAt,
+      },
     });
 
     return {
       allowed: true,
       remaining: limit - 1,
-      retryAfterSec: Math.ceil(windowMs / 1000),
+      retryAfterSec: Math.max(1, Math.ceil((created.reset_at.getTime() - now) / 1000)),
     };
+  } catch (error) {
+    if (!(error instanceof Prisma.PrismaClientKnownRequestError) || error.code !== "P2002") {
+      throw error;
+    }
   }
 
-  if (current.count >= limit) {
+  const incremented = await prisma.rate_limits.updateMany({
+    where: {
+      key,
+      reset_at: { gt: nowDate },
+      count: { lt: limit },
+    },
+    data: {
+      count: { increment: 1 },
+      updated_at: nowDate,
+    },
+  });
+
+  const current = await prisma.rate_limits.findUnique({
+    where: { key },
+  });
+
+  if (!current) {
+    return checkRateLimit({ key, limit, windowMs });
+  }
+
+  const retryAfterSec = Math.max(1, Math.ceil((current.reset_at.getTime() - now) / 1000));
+
+  if (incremented.count === 0) {
     return {
       allowed: false,
       remaining: 0,
-      retryAfterSec: Math.max(1, Math.ceil((current.resetAt - now) / 1000)),
+      retryAfterSec,
     };
   }
-
-  current.count += 1;
-  store.set(key, current);
 
   return {
     allowed: true,
     remaining: Math.max(0, limit - current.count),
-    retryAfterSec: Math.max(1, Math.ceil((current.resetAt - now) / 1000)),
+    retryAfterSec,
   };
 };

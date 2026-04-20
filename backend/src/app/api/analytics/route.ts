@@ -1,6 +1,8 @@
-import { apiError, apiSuccess } from "@/lib/api";
+import { apiException, apiSuccess } from "@/lib/api";
 import { requireAdminSession } from "@/lib/auth";
 import { prisma } from "@/lib/db";
+
+export const dynamic = "force-dynamic";
 
 const getPeriodStart = (period: string) => {
   const now = new Date();
@@ -93,6 +95,11 @@ export const GET = async (request: Request) => {
       daily,
     });
   } catch (error) {
-    return apiError(error instanceof Error ? error.message : "Failed to fetch analytics", 500);
+    return apiException({
+      request,
+      error,
+      message: "Не удалось получить аналитику",
+      context: { route: "/api/analytics" },
+    });
   }
 };

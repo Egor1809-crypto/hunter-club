@@ -1,5 +1,6 @@
 import { cookies } from "next/headers";
 import { createHmac, timingSafeEqual } from "node:crypto";
+import { prisma } from "@/lib/db";
 import { getSessionSecret, isProduction } from "@/lib/env";
 
 const VISITOR_SESSION_COOKIE_NAME = "hunter_visitor_session";
@@ -26,16 +27,21 @@ type VisitorSessionPayload = {
       result: string;
     }>;
   };
+  iat: number;
   exp: number;
 };
+
+const getVisitorSessionRevokeKey = ({ provider, subjectId }: { provider: string; subjectId?: string }) =>
+  `visitor_session_revoked_after:${provider}:${subjectId ?? "anonymous"}`;
 
 const toBase64Url = (value: string) => Buffer.from(value, "utf8").toString("base64url");
 const fromBase64Url = (value: string) => Buffer.from(value, "base64url").toString("utf8");
 const sign = (payload: string) => createHmac("sha256", getSessionSecret()).update(payload).digest("base64url");
 
-export const createVisitorSessionToken = (payload: Omit<VisitorSessionPayload, "exp">) => {
+export const createVisitorSessionToken = (payload: Omit<VisitorSessionPayload, "iat" | "exp">) => {
   const fullPayload: VisitorSessionPayload = {
     ...payload,
+    iat: Date.now(),
     exp: Math.floor(Date.now() / 1000) + VISITOR_SESSION_MAX_AGE,
   };
 
@@ -59,13 +65,58 @@ export const verifyVisitorSessionToken = (token: string) => {
     return null;
   }
 
-  const payload = JSON.parse(fromBase64Url(encodedPayload)) as VisitorSessionPayload;
+  let payload: VisitorSessionPayload;
+
+  try {
+    payload = JSON.parse(fromBase64Url(encodedPayload));
+  } catch {
+    return null;
+  }
+
+  if (!Number.isFinite(payload.iat) || !Number.isFinite(payload.exp)) {
+    return null;
+  }
 
   if (payload.exp < Math.floor(Date.now() / 1000)) {
     return null;
   }
 
   return payload;
+};
+
+const getVisitorSessionRevokedAfter = async (payload: Pick<VisitorSessionPayload, "provider" | "subjectId">) => {
+  const setting = await prisma.settings.findUnique({
+    where: { key: getVisitorSessionRevokeKey(payload) },
+  });
+
+  const value = setting?.value as unknown;
+
+  if (
+    value &&
+    typeof value === "object" &&
+    !Array.isArray(value) &&
+    "revokedAfter" in value &&
+    typeof value.revokedAfter === "number"
+  ) {
+    return value.revokedAfter;
+  }
+
+  return null;
+};
+
+export const revokeVisitorSession = async (payload: Pick<VisitorSessionPayload, "provider" | "subjectId">) => {
+  await prisma.settings.upsert({
+    where: { key: getVisitorSessionRevokeKey(payload) },
+    create: {
+      key: getVisitorSessionRevokeKey(payload),
+      value: { revokedAfter: Date.now() },
+      description: "Visitor session revocation timestamp",
+    },
+    update: {
+      value: { revokedAfter: Date.now() },
+      updated_at: new Date(),
+    },
+  });
 };
 
 export const setVisitorSessionCookie = (token: string) => {
@@ -88,14 +139,26 @@ export const clearVisitorSessionCookie = () => {
   });
 };
 
-export const getCurrentVisitorSession = () => {
+export const getCurrentVisitorSession = async () => {
   const token = cookies().get(VISITOR_SESSION_COOKIE_NAME)?.value;
 
   if (!token) {
     return null;
   }
 
-  return verifyVisitorSessionToken(token);
+  const payload = verifyVisitorSessionToken(token);
+
+  if (!payload) {
+    return null;
+  }
+
+  const revokedAfter = await getVisitorSessionRevokedAfter(payload);
+
+  if (revokedAfter !== null && payload.iat <= revokedAfter) {
+    return null;
+  }
+
+  return payload;
 };
 
 export const setGoogleOauthStateCookie = (state: string) => {

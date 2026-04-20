@@ -1,5 +1,5 @@
-import { apiError, apiSuccess, formatZodError } from "@/lib/api";
-import { requireAdminSession } from "@/lib/auth";
+import { apiError, apiException, apiSuccess, formatZodError } from "@/lib/api";
+import { requireAdminCsrf, requireAdminSession } from "@/lib/auth";
 import { updateReviewStatus } from "@/lib/reviews-store";
 import { updateReviewSchema } from "@/lib/validations";
 
@@ -7,12 +7,20 @@ type Params = {
   params: { id: string };
 };
 
+export const dynamic = "force-dynamic";
+
 export const PATCH = async (request: Request, { params }: Params) => {
   try {
     const { response } = await requireAdminSession();
 
     if (response) {
       return response;
+    }
+
+    const csrfResponse = requireAdminCsrf(request);
+
+    if (csrfResponse) {
+      return csrfResponse;
     }
 
     const body = await request.json();
@@ -33,6 +41,11 @@ export const PATCH = async (request: Request, { params }: Params) => {
 
     return apiSuccess(review);
   } catch (error) {
-    return apiError(error instanceof Error ? error.message : "Не удалось обновить отзыв", 500);
+    return apiException({
+      request,
+      error,
+      message: "Не удалось обновить отзыв",
+      context: { route: "/api/reviews/[id]", reviewId: params.id },
+    });
   }
 };

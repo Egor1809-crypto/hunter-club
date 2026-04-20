@@ -20,7 +20,7 @@ export type VisitorAccountProfile = {
 
 type GoogleVisitorRow = {
   id: string;
-  google_sub: string;
+  google_sub: string | null;
   email: string | null;
   name: string;
   avatar_url: string | null;
@@ -43,38 +43,6 @@ const splitName = (fullName: string) => {
     firstName: parts[0],
     lastName: parts.slice(1).join(" "),
   };
-};
-
-declare global {
-  var hunterVisitorAccountsReady: Promise<void> | undefined;
-}
-
-const ensureVisitorAccountsTable = async () => {
-  if (!global.hunterVisitorAccountsReady) {
-    global.hunterVisitorAccountsReady = (async () => {
-      await prisma.$executeRawUnsafe(`
-        CREATE TABLE IF NOT EXISTS visitor_accounts (
-          id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
-          provider VARCHAR(20) NOT NULL,
-          google_sub VARCHAR(255) UNIQUE,
-          email VARCHAR(255),
-          name VARCHAR(255) NOT NULL,
-          avatar_url TEXT,
-          phone VARCHAR(20),
-          linked_client_id UUID REFERENCES clients(id) ON DELETE SET NULL,
-          last_login_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
-          created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
-          updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
-        )
-      `);
-
-      await prisma.$executeRawUnsafe(
-        "CREATE UNIQUE INDEX IF NOT EXISTS visitor_accounts_google_sub_idx ON visitor_accounts(google_sub)",
-      );
-    })();
-  }
-
-  await global.hunterVisitorAccountsReady;
 };
 
 const getAccountLevel = (totalVisits: number, isVip: boolean) => {
@@ -193,44 +161,50 @@ export const upsertGoogleVisitorAccount = async ({
   name: string;
   avatarUrl: string | null;
 }) => {
-  await ensureVisitorAccountsTable();
-
-  const rows = (await prisma.$queryRawUnsafe(
-    `
-      INSERT INTO visitor_accounts (provider, google_sub, email, name, avatar_url, last_login_at, updated_at)
-      VALUES ('google', $1, $2, $3, $4, NOW(), NOW())
-      ON CONFLICT (google_sub)
-      DO UPDATE SET
-        email = EXCLUDED.email,
-        name = EXCLUDED.name,
-        avatar_url = EXCLUDED.avatar_url,
-        last_login_at = NOW(),
-        updated_at = NOW()
-      RETURNING id, google_sub, email, name, avatar_url, phone, linked_client_id
-    `,
-    googleSub,
-    email,
-    name,
-    avatarUrl,
-  )) as GoogleVisitorRow[];
-
-  return rows[0] ?? null;
+  return prisma.visitor_accounts.upsert({
+    where: { google_sub: googleSub },
+    update: {
+      email,
+      name,
+      avatar_url: avatarUrl,
+      last_login_at: new Date(),
+      updated_at: new Date(),
+    },
+    create: {
+      provider: "google",
+      google_sub: googleSub,
+      email,
+      name,
+      avatar_url: avatarUrl,
+    },
+    select: {
+      id: true,
+      google_sub: true,
+      email: true,
+      name: true,
+      avatar_url: true,
+      phone: true,
+      linked_client_id: true,
+    },
+  });
 };
 
 export const getGoogleVisitorAccountById = async (id: string) => {
-  await ensureVisitorAccountsTable();
-
-  const rows = (await prisma.$queryRawUnsafe(
-    `
-      SELECT id, google_sub, email, name, avatar_url, phone, linked_client_id
-      FROM visitor_accounts
-      WHERE id = $1::uuid AND provider = 'google'
-      LIMIT 1
-    `,
-    id,
-  )) as GoogleVisitorRow[];
-
-  return rows[0] ?? null;
+  return prisma.visitor_accounts.findFirst({
+    where: {
+      id,
+      provider: "google",
+    },
+    select: {
+      id: true,
+      google_sub: true,
+      email: true,
+      name: true,
+      avatar_url: true,
+      phone: true,
+      linked_client_id: true,
+    },
+  });
 };
 
 export const buildGoogleVisitorProfile = async (visitorId: string) => {
@@ -273,8 +247,6 @@ export const linkGoogleVisitorToPhone = async ({
   visitorId: string;
   phone: string;
 }) => {
-  await ensureVisitorAccountsTable();
-
   const visitor = await getGoogleVisitorAccountById(visitorId);
 
   if (!visitor) {
@@ -297,16 +269,15 @@ export const linkGoogleVisitorToPhone = async ({
     },
   });
 
-  await prisma.$executeRawUnsafe(
-    `
-      UPDATE visitor_accounts
-      SET phone = $2, linked_client_id = $3, updated_at = NOW(), last_login_at = NOW()
-      WHERE id = $1::uuid
-    `,
-    visitorId,
-    phone,
-    client.id,
-  );
+  await prisma.visitor_accounts.update({
+    where: { id: visitorId },
+    data: {
+      phone,
+      linked_client_id: client.id,
+      updated_at: new Date(),
+      last_login_at: new Date(),
+    },
+  });
 
   return buildGoogleVisitorProfile(visitorId);
 };

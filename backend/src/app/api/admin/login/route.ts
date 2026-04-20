@@ -1,5 +1,11 @@
-import { apiError, apiSuccess, formatZodError } from "@/lib/api";
-import { createSessionToken, setAdminSessionCookie, verifyAdminPassword } from "@/lib/auth";
+import { apiError, apiException, apiSuccess, formatZodError } from "@/lib/api";
+import {
+  createAdminCsrfToken,
+  createSessionToken,
+  setAdminCsrfCookie,
+  setAdminSessionCookie,
+  verifyAdminPassword,
+} from "@/lib/auth";
 import { prisma } from "@/lib/db";
 import { checkRateLimit } from "@/lib/rate-limit";
 import { adminLoginSchema } from "@/lib/validations";
@@ -8,7 +14,7 @@ export const POST = async (request: Request) => {
   try {
     const forwardedFor = request.headers.get("x-forwarded-for");
     const clientIp = forwardedFor?.split(",")[0]?.trim() || "unknown";
-    const loginRateLimit = checkRateLimit({
+    const loginRateLimit = await checkRateLimit({
       key: `admin-login:${clientIp}`,
       limit: 5,
       windowMs: 15 * 60 * 1000,
@@ -51,7 +57,9 @@ export const POST = async (request: Request) => {
     });
 
     const sessionToken = createSessionToken(adminUser);
+    const csrfToken = createAdminCsrfToken();
     setAdminSessionCookie(sessionToken);
+    setAdminCsrfCookie(csrfToken);
 
     return apiSuccess({
       id: adminUser.id,
@@ -60,6 +68,11 @@ export const POST = async (request: Request) => {
       role: adminUser.role,
     });
   } catch (error) {
-    return apiError(error instanceof Error ? error.message : "Не удалось выполнить вход", 500);
+    return apiException({
+      request,
+      error,
+      message: "Не удалось выполнить вход",
+      context: { route: "/api/admin/login" },
+    });
   }
 };

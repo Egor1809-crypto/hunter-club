@@ -1,12 +1,14 @@
-import { apiError, apiSuccess, formatZodError } from "@/lib/api";
+import { apiError, apiException, apiSuccess, formatZodError } from "@/lib/api";
 import { verifyPhoneOtp } from "@/lib/phone-otp";
 import { createVisitorSessionToken, getCurrentVisitorSession, setVisitorSessionCookie } from "@/lib/visitor-auth";
 import { linkGooglePhoneSchema } from "@/lib/validations";
 import { linkGoogleVisitorToPhone } from "@/lib/visitor-accounts";
 
+export const dynamic = "force-dynamic";
+
 export const POST = async (request: Request) => {
   try {
-    const session = getCurrentVisitorSession();
+    const session = await getCurrentVisitorSession();
 
     if (!session || session.provider !== "google" || !session.subjectId) {
       return apiError("Сессия Google-входа не найдена", 401);
@@ -19,7 +21,7 @@ export const POST = async (request: Request) => {
       return apiError(formatZodError(parsed.error), 422);
     }
 
-    const verification = verifyPhoneOtp({
+    const verification = await verifyPhoneOtp({
       phone: parsed.data.phone,
       code: parsed.data.code,
     });
@@ -52,6 +54,11 @@ export const POST = async (request: Request) => {
 
     return apiSuccess(account);
   } catch (error) {
-    return apiError(error instanceof Error ? error.message : "Не удалось связать номер телефона", 500);
+    return apiException({
+      request,
+      error,
+      message: "Не удалось связать номер телефона",
+      context: { route: "/api/public/account/google/link-phone" },
+    });
   }
 };

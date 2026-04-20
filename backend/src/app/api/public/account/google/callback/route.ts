@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import { getRequestId, logError } from "@/lib/logger";
 import { clearGoogleOauthStateCookie, createVisitorSessionToken, getGoogleOauthStateCookie, setVisitorSessionCookie } from "@/lib/visitor-auth";
 import { buildGoogleVisitorProfile, upsertGoogleVisitorAccount } from "@/lib/visitor-accounts";
 
@@ -14,7 +15,10 @@ type GoogleUserInfo = {
   picture?: string;
 };
 
+export const dynamic = "force-dynamic";
+
 export const GET = async (request: Request) => {
+  const requestId = getRequestId(request);
   const url = new URL(request.url);
   const code = url.searchParams.get("code");
   const state = url.searchParams.get("state");
@@ -95,7 +99,16 @@ export const GET = async (request: Request) => {
     setVisitorSessionCookie(sessionToken);
 
     return NextResponse.redirect(frontendUrl);
-  } catch {
+  } catch (error) {
+    logError({
+      requestId,
+      message: "Google OAuth callback failed",
+      error,
+      context: {
+        route: "/api/public/account/google/callback",
+      },
+    });
+
     return NextResponse.redirect(`${frontendUrl}&error=google_callback`);
   }
 };

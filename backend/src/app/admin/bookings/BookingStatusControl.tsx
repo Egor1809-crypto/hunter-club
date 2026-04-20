@@ -2,6 +2,7 @@
 
 import { useRouter } from "next/navigation";
 import { useState } from "react";
+import { adminFetch } from "../adminFetch";
 
 const statusLabels: Record<string, string> = {
   scheduled: "Запланирована",
@@ -29,7 +30,7 @@ const BookingStatusControl = ({
     setError(null);
 
     try {
-      const response = await fetch(`/api/bookings/${bookingId}`, {
+      const response = await adminFetch(`/api/bookings/${bookingId}`, {
         method: "PATCH",
         headers: {
           "Content-Type": "application/json",

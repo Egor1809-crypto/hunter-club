@@ -1,5 +1,5 @@
 import { Prisma } from "@prisma/client";
-import { apiError, apiSuccess, formatZodError } from "@/lib/api";
+import { apiError, apiException, apiSuccess, formatZodError } from "@/lib/api";
 import { prisma } from "@/lib/db";
 import { verifyPhoneOtp } from "@/lib/phone-otp";
 import { checkRateLimit } from "@/lib/rate-limit";
@@ -34,7 +34,7 @@ export const POST = async (request: Request) => {
       return apiError(formatZodError(parsed.error), 422);
     }
 
-    const rateLimit = checkRateLimit({
+    const rateLimit = await checkRateLimit({
       key: `public-phone-verify:${clientIp}:${parsed.data.phone}`,
       limit: 10,
       windowMs: 10 * 60 * 1000,
@@ -44,7 +44,7 @@ export const POST = async (request: Request) => {
       return apiError(`Слишком много попыток. Повторите через ${rateLimit.retryAfterSec} сек.`, 429);
     }
 
-    const verification = verifyPhoneOtp({
+    const verification = await verifyPhoneOtp({
       phone: parsed.data.phone,
       code: parsed.data.code,
     });
@@ -140,6 +140,11 @@ export const POST = async (request: Request) => {
           ? error.message
           : "Не удалось подтвердить код";
 
-    return apiError(message, 500);
+    return apiException({
+      request,
+      error,
+      message,
+      context: { route: "/api/public/account/phone/verify-otp" },
+    });
   }
 };

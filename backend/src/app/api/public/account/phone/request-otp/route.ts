@@ -1,5 +1,5 @@
-import { apiError, apiSuccess, formatZodError } from "@/lib/api";
-import { createPhoneOtp, maskPhoneNumber } from "@/lib/phone-otp";
+import { apiError, apiException, apiSuccess, formatZodError } from "@/lib/api";
+import { createPhoneOtp, deletePhoneOtp, maskPhoneNumber, normalizePhoneNumber } from "@/lib/phone-otp";
 import { checkRateLimit } from "@/lib/rate-limit";
 import { getSmsProvider, sendSmsMessage } from "@/lib/sms";
 import { requestPhoneOtpSchema } from "@/lib/validations";
@@ -16,20 +16,26 @@ export const POST = async (request: Request) => {
       return apiError(formatZodError(parsed.error), 422);
     }
 
-    const otp = createPhoneOtp(parsed.data.phone);
+    const normalizedPhone = normalizePhoneNumber(parsed.data.phone);
 
-    if (!otp) {
+    if (!normalizedPhone) {
       return apiError("Введите корректный номер телефона", 422);
     }
 
-    const rateLimit = checkRateLimit({
-      key: `public-phone-otp:${clientIp}:${otp.normalizedPhone}`,
+    const rateLimit = await checkRateLimit({
+      key: `public-phone-otp:${clientIp}:${normalizedPhone}`,
       limit: 5,
       windowMs: 10 * 60 * 1000,
     });
 
     if (!rateLimit.allowed) {
       return apiError(`Слишком много попыток. Повторите через ${rateLimit.retryAfterSec} сек.`, 429);
+    }
+
+    const otp = await createPhoneOtp(normalizedPhone);
+
+    if (!otp) {
+      return apiError("Введите корректный номер телефона", 422);
     }
 
     const provider = await getSmsProvider();
@@ -40,6 +46,7 @@ export const POST = async (request: Request) => {
     });
 
     if (smsResult.status !== "sent") {
+      await deletePhoneOtp(otp.normalizedPhone);
       return apiError(smsResult.errorDetails ?? "Не удалось отправить код подтверждения", 500);
     }
 
@@ -49,6 +56,11 @@ export const POST = async (request: Request) => {
       expiresInSec: otp.expiresInSec,
     });
   } catch (error) {
-    return apiError(error instanceof Error ? error.message : "Не удалось отправить код подтверждения", 500);
+    return apiException({
+      request,
+      error,
+      message: "Не удалось отправить код подтверждения",
+      context: { route: "/api/public/account/phone/request-otp" },
+    });
   }
 };

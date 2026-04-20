@@ -1,9 +1,11 @@
 import { Prisma } from "@prisma/client";
-import { apiError, apiSuccess } from "@/lib/api";
-import { requireAdminSession } from "@/lib/auth";
+import { apiError, apiException, apiSuccess } from "@/lib/api";
+import { requireAdminCsrf, requireAdminSession } from "@/lib/auth";
 import { prisma } from "@/lib/db";
 import { formatZodError } from "@/lib/api";
 import { updateServicesSchema } from "@/lib/validations";
+
+export const dynamic = "force-dynamic";
 
 export const GET = async () => {
   const services = await prisma.services.findMany({
@@ -19,6 +21,12 @@ export const PATCH = async (request: Request) => {
 
     if (response) {
       return response;
+    }
+
+    const csrfResponse = requireAdminCsrf(request);
+
+    if (csrfResponse) {
+      return csrfResponse;
     }
 
     const body = await request.json();
@@ -44,6 +52,11 @@ export const PATCH = async (request: Request) => {
 
     return apiSuccess(result);
   } catch (error) {
-    return apiError(error instanceof Error ? error.message : "Не удалось обновить услуги", 500);
+    return apiException({
+      request,
+      error,
+      message: "Не удалось обновить услуги",
+      context: { route: "/api/services" },
+    });
   }
 };

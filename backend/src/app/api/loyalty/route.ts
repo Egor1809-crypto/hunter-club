@@ -1,8 +1,10 @@
 import { Prisma } from "@prisma/client";
-import { apiError, apiSuccess, formatZodError } from "@/lib/api";
-import { requireAdminSession } from "@/lib/auth";
+import { apiError, apiException, apiSuccess, formatZodError } from "@/lib/api";
+import { requireAdminCsrf, requireAdminSession } from "@/lib/auth";
 import { prisma } from "@/lib/db";
 import { createLoyaltyRuleSchema } from "@/lib/validations";
+
+export const dynamic = "force-dynamic";
 
 export const GET = async (request: Request) => {
   try {
@@ -41,7 +43,12 @@ export const GET = async (request: Request) => {
       clientRewards,
     });
   } catch (error) {
-    return apiError(error instanceof Error ? error.message : "Failed to fetch loyalty data", 500);
+    return apiException({
+      request,
+      error,
+      message: "Не удалось получить данные лояльности",
+      context: { route: "/api/loyalty", method: "GET" },
+    });
   }
 };
 
@@ -51,6 +58,12 @@ export const POST = async (request: Request) => {
 
     if (response) {
       return response;
+    }
+
+    const csrfResponse = requireAdminCsrf(request);
+
+    if (csrfResponse) {
+      return csrfResponse;
     }
 
     const body = await request.json();
@@ -82,6 +95,11 @@ export const POST = async (request: Request) => {
 
     return apiSuccess(loyaltyRule);
   } catch (error) {
-    return apiError(error instanceof Error ? error.message : "Failed to create loyalty rule", 500);
+    return apiException({
+      request,
+      error,
+      message: "Не удалось создать правило лояльности",
+      context: { route: "/api/loyalty", method: "POST" },
+    });
   }
 };

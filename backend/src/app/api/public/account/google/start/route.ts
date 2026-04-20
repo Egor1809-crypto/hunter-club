@@ -1,8 +1,31 @@
 import { randomUUID } from "node:crypto";
 import { NextResponse } from "next/server";
+import { checkRateLimit } from "@/lib/rate-limit";
 import { setGoogleOauthStateCookie } from "@/lib/visitor-auth";
 
-export const GET = async () => {
+export const dynamic = "force-dynamic";
+
+export const GET = async (request: Request) => {
+  const forwardedFor = request.headers.get("x-forwarded-for");
+  const clientIp = forwardedFor?.split(",")[0]?.trim() || "unknown";
+  const rateLimit = await checkRateLimit({
+    key: `public-google-start:${clientIp}`,
+    limit: 20,
+    windowMs: 10 * 60 * 1000,
+  });
+
+  if (!rateLimit.allowed) {
+    return NextResponse.json(
+      {
+        success: false,
+        data: null,
+        error: `Слишком много попыток входа. Повторите через ${rateLimit.retryAfterSec} сек.`,
+        meta: null,
+      },
+      { status: 429 },
+    );
+  }
+
   const clientId = process.env.GOOGLE_CLIENT_ID;
   const appUrl = process.env.NEXTAUTH_URL;
 

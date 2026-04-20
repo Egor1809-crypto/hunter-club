@@ -1,27 +1,17 @@
-type PhoneOtpEntry = {
-  code: string;
-  expiresAt: number;
-};
-
-declare global {
-  // eslint-disable-next-line no-var
-  var hunterPhoneOtpStore: Map<string, PhoneOtpEntry> | undefined;
-}
-
-const otpStore = global.hunterPhoneOtpStore ?? new Map<string, PhoneOtpEntry>();
-
-if (process.env.NODE_ENV !== "production") {
-  global.hunterPhoneOtpStore = otpStore;
-}
+import { createHmac, randomInt, timingSafeEqual } from "node:crypto";
+import { prisma } from "@/lib/db";
+import { getSessionSecret } from "@/lib/env";
 
 const OTP_TTL_MS = 5 * 60 * 1000;
 
-const pruneExpiredOtps = (now: number) => {
-  for (const [phone, entry] of otpStore.entries()) {
-    if (entry.expiresAt <= now) {
-      otpStore.delete(phone);
-    }
-  }
+const hashOtpCode = ({ phone, code }: { phone: string; code: string }) =>
+  createHmac("sha256", getSessionSecret()).update(`${phone}:${code}`).digest("hex");
+
+const safeEqual = (left: string, right: string) => {
+  const leftBuffer = Buffer.from(left);
+  const rightBuffer = Buffer.from(right);
+
+  return leftBuffer.length === rightBuffer.length && timingSafeEqual(leftBuffer, rightBuffer);
 };
 
 export const normalizePhoneNumber = (phone: string) => {
@@ -53,7 +43,7 @@ export const maskPhoneNumber = (phone: string) => {
   return `+${digits.slice(0, Math.max(1, digits.length - 6))} •• •• ${tail}`;
 };
 
-export const createPhoneOtp = (phone: string) => {
+export const createPhoneOtp = async (phone: string) => {
   const normalizedPhone = normalizePhoneNumber(phone);
 
   if (!normalizedPhone) {
@@ -61,12 +51,24 @@ export const createPhoneOtp = (phone: string) => {
   }
 
   const now = Date.now();
-  pruneExpiredOtps(now);
+  const code = String(randomInt(1000, 10_000));
 
-  const code = String(Math.floor(1000 + Math.random() * 9000));
-  otpStore.set(normalizedPhone, {
-    code,
-    expiresAt: now + OTP_TTL_MS,
+  await prisma.phone_otps.deleteMany({
+    where: { expires_at: { lte: new Date(now) } },
+  });
+
+  await prisma.phone_otps.upsert({
+    where: { phone: normalizedPhone },
+    create: {
+      phone: normalizedPhone,
+      code_hash: hashOtpCode({ phone: normalizedPhone, code }),
+      expires_at: new Date(now + OTP_TTL_MS),
+    },
+    update: {
+      code_hash: hashOtpCode({ phone: normalizedPhone, code }),
+      expires_at: new Date(now + OTP_TTL_MS),
+      updated_at: new Date(now),
+    },
   });
 
   return {
@@ -76,7 +78,19 @@ export const createPhoneOtp = (phone: string) => {
   };
 };
 
-export const verifyPhoneOtp = ({ phone, code }: { phone: string; code: string }) => {
+export const deletePhoneOtp = async (phone: string) => {
+  const normalizedPhone = normalizePhoneNumber(phone);
+
+  if (!normalizedPhone) {
+    return;
+  }
+
+  await prisma.phone_otps.deleteMany({
+    where: { phone: normalizedPhone },
+  });
+};
+
+export const verifyPhoneOtp = async ({ phone, code }: { phone: string; code: string }) => {
   const normalizedPhone = normalizePhoneNumber(phone);
 
   if (!normalizedPhone) {
@@ -88,9 +102,14 @@ export const verifyPhoneOtp = ({ phone, code }: { phone: string; code: string })
   }
 
   const now = Date.now();
-  pruneExpiredOtps(now);
 
-  const entry = otpStore.get(normalizedPhone);
+  await prisma.phone_otps.deleteMany({
+    where: { expires_at: { lte: new Date(now) } },
+  });
+
+  const entry = await prisma.phone_otps.findUnique({
+    where: { phone: normalizedPhone },
+  });
 
   if (!entry) {
     return {
@@ -100,8 +119,10 @@ export const verifyPhoneOtp = ({ phone, code }: { phone: string; code: string })
     };
   }
 
-  if (entry.expiresAt <= now) {
-    otpStore.delete(normalizedPhone);
+  if (entry.expires_at.getTime() <= now) {
+    await prisma.phone_otps.delete({
+      where: { phone: normalizedPhone },
+    });
 
     return {
       ok: false as const,
@@ -110,7 +131,9 @@ export const verifyPhoneOtp = ({ phone, code }: { phone: string; code: string })
     };
   }
 
-  if (entry.code !== code) {
+  const expectedHash = hashOtpCode({ phone: normalizedPhone, code });
+
+  if (!safeEqual(entry.code_hash, expectedHash)) {
     return {
       ok: false as const,
       reason: "invalid_code" as const,
@@ -118,7 +141,9 @@ export const verifyPhoneOtp = ({ phone, code }: { phone: string; code: string })
     };
   }
 
-  otpStore.delete(normalizedPhone);
+  await prisma.phone_otps.delete({
+    where: { phone: normalizedPhone },
+  });
 
   return {
     ok: true as const,

@@ -2,8 +2,10 @@ import { apiSuccess } from "@/lib/api";
 import { buildGoogleVisitorProfile, getGoogleVisitorNeedsPhoneLink } from "@/lib/visitor-accounts";
 import { createVisitorSessionToken, getCurrentVisitorSession, setVisitorSessionCookie } from "@/lib/visitor-auth";
 
+export const dynamic = "force-dynamic";
+
 export const GET = async () => {
-  const session = getCurrentVisitorSession();
+  const session = await getCurrentVisitorSession();
 
   if (!session) {
     return apiSuccess({

@@ -1,6 +1,6 @@
 import { motion } from "framer-motion";
 import { useLanguage } from "@/context/LanguageContext";
-import aboutSlavaCropped from "@/assets/about-slava-cropped.png";
+import aboutSlavaCropped from "@/assets/about-slava-cropped.jpg";
 
 const AboutSection = () => {
   const { language } = useLanguage();

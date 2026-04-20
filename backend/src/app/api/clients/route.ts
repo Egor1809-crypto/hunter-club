@@ -1,7 +1,9 @@
-import { apiError, apiSuccess, formatZodError, parsePagination } from "@/lib/api";
-import { requireAdminSession } from "@/lib/auth";
+import { apiError, apiException, apiSuccess, formatZodError, parsePagination } from "@/lib/api";
+import { requireAdminCsrf, requireAdminSession } from "@/lib/auth";
 import { prisma } from "@/lib/db";
 import { createClientSchema } from "@/lib/validations";
+
+export const dynamic = "force-dynamic";
 
 export const GET = async (request: Request) => {
   const { response } = await requireAdminSession();
@@ -47,6 +49,12 @@ export const POST = async (request: Request) => {
       return response;
     }
 
+    const csrfResponse = requireAdminCsrf(request);
+
+    if (csrfResponse) {
+      return csrfResponse;
+    }
+
     const body = await request.json();
     const parsed = createClientSchema.safeParse(body);
 
@@ -66,6 +74,11 @@ export const POST = async (request: Request) => {
 
     return apiSuccess(client);
   } catch (error) {
-    return apiError(error instanceof Error ? error.message : "Не удалось создать клиента", 500);
+    return apiException({
+      request,
+      error,
+      message: "Не удалось создать клиента",
+      context: { route: "/api/clients" },
+    });
   }
 };

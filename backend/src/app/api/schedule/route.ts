@@ -1,9 +1,11 @@
 import { Prisma } from "@prisma/client";
-import { apiError, apiSuccess, formatZodError } from "@/lib/api";
-import { requireAdminSession } from "@/lib/auth";
+import { apiError, apiException, apiSuccess, formatZodError } from "@/lib/api";
+import { requireAdminCsrf, requireAdminSession } from "@/lib/auth";
 import { prisma } from "@/lib/db";
 import { parseDateOnly, parseTimeOnly } from "@/lib/datetime";
 import { createScheduleExceptionSchema } from "@/lib/validations";
+
+export const dynamic = "force-dynamic";
 
 export const GET = async (request: Request) => {
   try {
@@ -34,7 +36,12 @@ export const GET = async (request: Request) => {
       exceptions,
     });
   } catch (error) {
-    return apiError(error instanceof Error ? error.message : "Не удалось получить расписание", 500);
+    return apiException({
+      request,
+      error,
+      message: "Не удалось получить расписание",
+      context: { route: "/api/schedule", method: "GET" },
+    });
   }
 };
 
@@ -44,6 +51,12 @@ export const POST = async (request: Request) => {
 
     if (response) {
       return response;
+    }
+
+    const csrfResponse = requireAdminCsrf(request);
+
+    if (csrfResponse) {
+      return csrfResponse;
     }
 
     const body = await request.json();
@@ -69,6 +82,11 @@ export const POST = async (request: Request) => {
       return apiError("Исключение для этой даты уже существует", 409);
     }
 
-    return apiError(error instanceof Error ? error.message : "Не удалось создать исключение расписания", 500);
+    return apiException({
+      request,
+      error,
+      message: "Не удалось создать исключение расписания",
+      context: { route: "/api/schedule", method: "POST" },
+    });
   }
 };

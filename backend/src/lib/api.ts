@@ -1,9 +1,11 @@
 import { NextResponse } from "next/server";
+import { getRequestId, logError } from "@/lib/logger";
 
 type Meta = {
   total?: number;
   page?: number;
   pageSize?: number;
+  requestId?: string;
 };
 
 export const apiSuccess = <T>(data: T, meta?: Meta) =>
@@ -24,6 +26,39 @@ export const apiError = (error: string, status = 400) =>
     },
     { status },
   );
+
+export const apiException = ({
+  request,
+  error,
+  message,
+  status = 500,
+  context,
+}: {
+  request?: Request;
+  error: unknown;
+  message: string;
+  status?: number;
+  context?: Record<string, string | number | boolean | null | undefined>;
+}) => {
+  const requestId = getRequestId(request);
+
+  logError({
+    requestId,
+    message,
+    error,
+    context,
+  });
+
+  return NextResponse.json(
+    {
+      success: false,
+      data: null,
+      error: message,
+      meta: { requestId },
+    },
+    { status },
+  );
+};
 
 export const parsePagination = (searchParams: URLSearchParams) => {
   const page = Math.max(1, Number(searchParams.get("page") ?? "1"));

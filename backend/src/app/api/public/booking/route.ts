@@ -1,8 +1,9 @@
 import { Prisma } from "@prisma/client";
 import { z } from "zod";
-import { apiError, apiSuccess, formatZodError } from "@/lib/api";
+import { apiError, apiException, apiSuccess, formatZodError } from "@/lib/api";
 import { getDayAvailability } from "@/lib/availability";
 import { prisma } from "@/lib/db";
+import { checkRateLimit } from "@/lib/rate-limit";
 
 const publicBookingSchema = z.object({
   firstName: z.string().min(1).max(100),
@@ -13,8 +14,53 @@ const publicBookingSchema = z.object({
   notes: z.string().optional().nullable(),
 });
 
+type BookingOverlapClient = Pick<typeof prisma, "bookings">;
+
+const getBookingLockKey = (scheduledAt: Date) => {
+  const day = scheduledAt.toISOString().slice(0, 10);
+  return `hunter-bookings:${day}`;
+};
+
+const lockBookingDay = async (db: Pick<typeof prisma, "$executeRaw">, scheduledAt: Date) => {
+  await db.$executeRaw`SELECT pg_advisory_xact_lock(hashtextextended(${getBookingLockKey(scheduledAt)}, 0))`;
+};
+
+const hasBookingOverlap = async (db: BookingOverlapClient, scheduledAt: Date, durationMin: number) => {
+  const start = scheduledAt;
+  const end = new Date(start.getTime() + durationMin * 60_000);
+
+  const bookings = await db.bookings.findMany({
+    where: {
+      status: { in: ["scheduled", "confirmed", "in_progress"] },
+    },
+    select: {
+      scheduled_at: true,
+      duration_min: true,
+    },
+  });
+
+  return bookings.some((booking) => {
+    const bookingStart = booking.scheduled_at;
+    const bookingEnd = new Date(bookingStart.getTime() + booking.duration_min * 60_000);
+
+    return start < bookingEnd && end > bookingStart;
+  });
+};
+
 export const POST = async (request: Request) => {
   try {
+    const forwardedFor = request.headers.get("x-forwarded-for");
+    const clientIp = forwardedFor?.split(",")[0]?.trim() || "unknown";
+    const rateLimit = await checkRateLimit({
+      key: `public-booking:${clientIp}`,
+      limit: 8,
+      windowMs: 10 * 60 * 1000,
+    });
+
+    if (!rateLimit.allowed) {
+      return apiError(`Слишком много попыток записи. Повторите через ${rateLimit.retryAfterSec} сек.`, 429);
+    }
+
     const body = await request.json();
     const parsed = publicBookingSchema.safeParse(body);
 
@@ -49,37 +95,51 @@ export const POST = async (request: Request) => {
 
     const normalizedPhone = parsed.data.phone.trim();
 
-    const client = await prisma.clients.upsert({
-      where: { phone: normalizedPhone },
-      update: {
-        first_name: parsed.data.firstName,
-        last_name: parsed.data.lastName ?? null,
-        notes: parsed.data.notes ?? undefined,
-      },
-      create: {
-        phone: normalizedPhone,
-        first_name: parsed.data.firstName,
-        last_name: parsed.data.lastName ?? null,
-        notes: parsed.data.notes ?? null,
-      },
+    const booking = await prisma.$transaction(async (tx) => {
+      await lockBookingDay(tx, scheduledAt);
+
+      const hasOverlap = await hasBookingOverlap(tx, scheduledAt, service.duration_min);
+
+      if (hasOverlap) {
+        return null;
+      }
+
+      const client = await tx.clients.upsert({
+        where: { phone: normalizedPhone },
+        update: {
+          first_name: parsed.data.firstName,
+          last_name: parsed.data.lastName ?? null,
+          notes: parsed.data.notes ?? undefined,
+        },
+        create: {
+          phone: normalizedPhone,
+          first_name: parsed.data.firstName,
+          last_name: parsed.data.lastName ?? null,
+          notes: parsed.data.notes ?? null,
+        },
+      });
+
+      return tx.bookings.create({
+        data: {
+          client_id: client.id,
+          service_id: service.id,
+          scheduled_at: scheduledAt,
+          duration_min: service.duration_min,
+          source: "website",
+          price: service.price ? new Prisma.Decimal(service.price.toString()) : null,
+          is_dawn_hunt: service.is_dawn_hunt,
+          notes: parsed.data.notes ?? null,
+        },
+        include: {
+          client: true,
+          service: true,
+        },
+      });
     });
 
-    const booking = await prisma.bookings.create({
-      data: {
-        client_id: client.id,
-        service_id: service.id,
-        scheduled_at: scheduledAt,
-        duration_min: service.duration_min,
-        source: "website",
-        price: service.price ? new Prisma.Decimal(service.price.toString()) : null,
-        is_dawn_hunt: service.is_dawn_hunt,
-        notes: parsed.data.notes ?? null,
-      },
-      include: {
-        client: true,
-        service: true,
-      },
-    });
+    if (!booking) {
+      return apiError("Выбранное время уже занято или недоступно", 409);
+    }
 
     return apiSuccess({
       id: booking.id,
@@ -96,6 +156,11 @@ export const POST = async (request: Request) => {
       },
     });
   } catch (error) {
-    return apiError(error instanceof Error ? error.message : "Не удалось создать запись с сайта", 500);
+    return apiException({
+      request,
+      error,
+      message: "Не удалось создать запись с сайта",
+      context: { route: "/api/public/booking" },
+    });
   }
 };

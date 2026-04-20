@@ -1,14 +1,32 @@
 import { Prisma } from "@prisma/client";
-import { apiError, apiSuccess, formatZodError, parsePagination } from "@/lib/api";
-import { requireAdminSession } from "@/lib/auth";
+import { apiError, apiException, apiSuccess, formatZodError, parsePagination } from "@/lib/api";
+import { requireAdminCsrf, requireAdminSession } from "@/lib/auth";
 import { prisma } from "@/lib/db";
 import { createBookingSchema } from "@/lib/validations";
 
-const hasBookingOverlap = async (scheduledAt: Date, durationMin: number, ignoreId?: string) => {
+export const dynamic = "force-dynamic";
+
+type BookingOverlapClient = Pick<typeof prisma, "bookings">;
+
+const getBookingLockKey = (scheduledAt: Date) => {
+  const day = scheduledAt.toISOString().slice(0, 10);
+  return `hunter-bookings:${day}`;
+};
+
+const lockBookingDay = async (db: Pick<typeof prisma, "$executeRaw">, scheduledAt: Date) => {
+  await db.$executeRaw`SELECT pg_advisory_xact_lock(hashtextextended(${getBookingLockKey(scheduledAt)}, 0))`;
+};
+
+const hasBookingOverlap = async (
+  db: BookingOverlapClient,
+  scheduledAt: Date,
+  durationMin: number,
+  ignoreId?: string,
+) => {
   const start = scheduledAt;
   const end = new Date(start.getTime() + durationMin * 60_000);
 
-  const bookings = await prisma.bookings.findMany({
+  const bookings = await db.bookings.findMany({
     where: {
       ...(ignoreId ? { NOT: { id: ignoreId } } : {}),
       status: { in: ["scheduled", "confirmed", "in_progress"] },
@@ -80,6 +98,12 @@ export const POST = async (request: Request) => {
       return response;
     }
 
+    const csrfResponse = requireAdminCsrf(request);
+
+    if (csrfResponse) {
+      return csrfResponse;
+    }
+
     const body = await request.json();
     const parsed = createBookingSchema.safeParse(body);
 
@@ -108,31 +132,44 @@ export const POST = async (request: Request) => {
     }
 
     const scheduledAt = new Date(parsed.data.scheduledAt);
-    const hasOverlap = await hasBookingOverlap(scheduledAt, service.duration_min);
+    const booking = await prisma.$transaction(async (tx) => {
+      await lockBookingDay(tx, scheduledAt);
 
-    if (hasOverlap) {
+      const hasOverlap = await hasBookingOverlap(tx, scheduledAt, service.duration_min);
+
+      if (hasOverlap) {
+        return null;
+      }
+
+      return tx.bookings.create({
+        data: {
+          client_id: client.id,
+          service_id: service.id,
+          scheduled_at: scheduledAt,
+          duration_min: service.duration_min,
+          source: parsed.data.source ?? "phone",
+          price: service.price ? new Prisma.Decimal(service.price.toString()) : null,
+          is_dawn_hunt: service.is_dawn_hunt,
+          notes: parsed.data.notes ?? null,
+        },
+        include: {
+          client: true,
+          service: true,
+        },
+      });
+    });
+
+    if (!booking) {
       return apiError("Запись пересекается с уже существующим визитом", 409);
     }
 
-    const booking = await prisma.bookings.create({
-      data: {
-        client_id: client.id,
-        service_id: service.id,
-        scheduled_at: scheduledAt,
-        duration_min: service.duration_min,
-        source: parsed.data.source ?? "phone",
-        price: service.price ? new Prisma.Decimal(service.price.toString()) : null,
-        is_dawn_hunt: service.is_dawn_hunt,
-        notes: parsed.data.notes ?? null,
-      },
-      include: {
-        client: true,
-        service: true,
-      },
-    });
-
     return apiSuccess(booking);
   } catch (error) {
-    return apiError(error instanceof Error ? error.message : "Не удалось создать запись", 500);
+    return apiException({
+      request,
+      error,
+      message: "Не удалось создать запись",
+      context: { route: "/api/bookings" },
+    });
   }
 };
