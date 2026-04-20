@@ -23,7 +23,8 @@ export const GET = async (request: Request) => {
   const code = url.searchParams.get("code");
   const state = url.searchParams.get("state");
 
-  const frontendUrl = `${url.protocol}//${url.hostname}:8080/account?method=google`;
+  const appUrl = process.env.NEXTAUTH_URL;
+  const frontendUrl = `${appUrl ?? `${url.protocol}//${url.host}`}/account?method=google`;
 
   const expectedState = await getGoogleOauthStateCookie();
   await clearGoogleOauthStateCookie();
@@ -34,8 +35,6 @@ export const GET = async (request: Request) => {
 
   const clientId = process.env.GOOGLE_CLIENT_ID;
   const clientSecret = process.env.GOOGLE_CLIENT_SECRET;
-  const appUrl = process.env.NEXTAUTH_URL;
-
   if (!clientId || !clientSecret || !appUrl) {
     return NextResponse.redirect(`${frontendUrl}&error=google_config`);
   }
