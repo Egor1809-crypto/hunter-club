@@ -23,6 +23,14 @@ type Service = {
   is_active: boolean;
 };
 
+type DisplayService = {
+  id: string;
+  name: string;
+  price: string;
+  duration: string;
+  description: string;
+};
+
 const fallbackServices = {
   ru: [
     { id: "fallback-haircut", name: "Стрижка", price: "от 3 000 ₽", duration: "60 мин", description: "Точность, а не скорость." },
@@ -175,7 +183,7 @@ const ServicesSection = () => {
     },
   });
 
-  const services = servicesQuery.data?.length
+  const services: DisplayService[] = servicesQuery.data?.length
     ? servicesQuery.data.map((service) => ({
         id: service.id,
         name:
@@ -195,8 +203,7 @@ const ServicesSection = () => {
 
   const servicesWithDetails = services.map((service) => ({
     ...service,
-    details:
-      serviceDetails[language][service.name as keyof (typeof serviceDetails)[typeof language]] ?? [service.description],
+    details: (serviceDetails[language] as Record<string, string[]>)[service.name] ?? [service.description],
   }));
 
   return (
