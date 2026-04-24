@@ -2,22 +2,14 @@
 
 import { useRouter } from "next/navigation";
 import { useState } from "react";
-import { adminFetch } from "../adminFetch";
-
-const inputStyle: React.CSSProperties = {
-  width: "100%",
-  border: "1px solid rgba(255,255,255,0.12)",
-  background: "rgba(10,10,10,0.9)",
-  color: "#f5f5f5",
-  padding: "12px 14px",
-  fontSize: 14,
-  outline: "none",
-};
-
-const labelStyle: React.CSSProperties = {
-  display: "grid",
-  gap: 8,
-};
+import {
+  adminControlStyle,
+  adminFormGridStyle,
+  adminLabelStyle,
+  adminLabelTextStyle,
+  adminPrimaryButtonStyle,
+} from "@/app/admin/adminFormStyles";
+import { adminColors, adminTextStyles } from "@/app/admin/adminTheme";
 
 const CreateScheduleExceptionForm = () => {
   const router = useRouter();
@@ -40,7 +32,7 @@ const CreateScheduleExceptionForm = () => {
     };
 
     try {
-      const response = await adminFetch("/api/schedule", {
+      const response = await fetch("/api/schedule", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -71,18 +63,16 @@ const CreateScheduleExceptionForm = () => {
   return (
     <section
       style={{
-        border: "1px solid rgba(255,255,255,0.12)",
-        background: "rgba(18,18,18,0.92)",
+        border: `1px solid ${adminColors.border}`,
+        background: adminColors.panel,
         padding: 20,
         marginBottom: 24,
       }}
     >
       <div style={{ marginBottom: 16 }}>
-        <p style={{ fontSize: 12, letterSpacing: "0.18em", textTransform: "uppercase", color: "#9ca3af" }}>
-          Действие CRM
-        </p>
-        <h2 style={{ fontSize: 28, fontWeight: 300, margin: "10px 0 8px" }}>Добавить исключение</h2>
-        <p style={{ color: "#a1a1aa", lineHeight: 1.7, margin: 0 }}>
+        <p style={adminTextStyles.eyebrow}>Действие CRM</p>
+        <h2 style={{ ...adminTextStyles.title, margin: "10px 0 8px" }}>Добавить исключение</h2>
+        <p style={{ ...adminTextStyles.bodyMuted, margin: 0 }}>
           Отметьте выходной день или задайте особый график на конкретную дату.
         </p>
       </div>
@@ -95,28 +85,30 @@ const CreateScheduleExceptionForm = () => {
         style={{ display: "grid", gap: 16 }}
       >
         <div
-          style={{
-            display: "grid",
-            gridTemplateColumns: "repeat(auto-fit, minmax(220px, 1fr))",
-            gap: 16,
-          }}
+          style={adminFormGridStyle}
         >
-          <label style={labelStyle}>
-            <span style={{ fontSize: 12, textTransform: "uppercase", letterSpacing: "0.14em", color: "#9ca3af" }}>
-              Дата
-            </span>
-            <input type="date" name="exceptionDate" required style={inputStyle} />
+          <label style={adminLabelStyle}>
+            <span style={adminLabelTextStyle}>Дата</span>
+            <input type="date" name="exceptionDate" required style={adminControlStyle} />
           </label>
 
           <label
             style={{
-              display: "flex",
+              display: "grid",
+              gridTemplateColumns: "18px 1fr",
               alignItems: "center",
-              gap: 10,
-              color: "#d4d4d8",
-              fontSize: 14,
+              gap: 12,
+              color: adminColors.textSoft,
+              fontSize: 16,
               alignSelf: "end",
-              minHeight: 48,
+              minHeight: 56,
+              width: "100%",
+              boxSizing: "border-box",
+              border: `1px solid ${adminColors.border}`,
+              background: isDayOff ? adminColors.panelActive : adminColors.panelStrong,
+              padding: "0 16px",
+              cursor: "pointer",
+              userSelect: "none",
             }}
           >
             <input
@@ -124,53 +116,48 @@ const CreateScheduleExceptionForm = () => {
               name="isDayOff"
               checked={isDayOff}
               onChange={(event) => setIsDayOff(event.target.checked)}
+              style={{
+                width: 14,
+                height: 14,
+                accentColor: adminColors.text,
+                margin: 0,
+                cursor: "pointer",
+              }}
             />
             Полный выходной
           </label>
 
-          <label style={labelStyle}>
-            <span style={{ fontSize: 12, textTransform: "uppercase", letterSpacing: "0.14em", color: "#9ca3af" }}>
-              Начало
-            </span>
-            <input type="time" name="startTime" disabled={isDayOff} style={inputStyle} />
+          <label style={adminLabelStyle}>
+            <span style={adminLabelTextStyle}>Начало</span>
+            <input type="time" name="startTime" disabled={isDayOff} style={adminControlStyle} />
           </label>
 
-          <label style={labelStyle}>
-            <span style={{ fontSize: 12, textTransform: "uppercase", letterSpacing: "0.14em", color: "#9ca3af" }}>
-              Конец
-            </span>
-            <input type="time" name="endTime" disabled={isDayOff} style={inputStyle} />
+          <label style={adminLabelStyle}>
+            <span style={adminLabelTextStyle}>Конец</span>
+            <input type="time" name="endTime" disabled={isDayOff} style={adminControlStyle} />
           </label>
         </div>
 
-        <label style={labelStyle}>
-          <span style={{ fontSize: 12, textTransform: "uppercase", letterSpacing: "0.14em", color: "#9ca3af" }}>
-            Причина
-          </span>
-          <textarea name="reason" rows={4} style={{ ...inputStyle, resize: "vertical" }} />
+        <label style={adminLabelStyle}>
+          <span style={adminLabelTextStyle}>Причина</span>
+          <textarea name="reason" rows={4} style={{ ...adminControlStyle, resize: "vertical" }} />
         </label>
 
-        <div style={{ display: "flex", alignItems: "center", gap: 16, flexWrap: "wrap" }}>
+        <div style={{ display: "flex", alignItems: "center", justifyContent: "flex-end", gap: 16, flexWrap: "wrap" }}>
+          {error ? <span style={{ color: adminColors.danger }}>{error}</span> : null}
+          {success ? <span style={{ color: adminColors.success }}>{success}</span> : null}
+
           <button
             type="submit"
             disabled={isSubmitting}
             style={{
-              border: "none",
-              background: "#f5f5f5",
-              color: "#09090b",
-              padding: "14px 18px",
-              fontSize: 12,
-              letterSpacing: "0.16em",
-              textTransform: "uppercase",
+              ...adminPrimaryButtonStyle,
               cursor: isSubmitting ? "not-allowed" : "pointer",
               opacity: isSubmitting ? 0.65 : 1,
             }}
           >
             {isSubmitting ? "Сохраняем..." : "Добавить исключение"}
           </button>
-
-          {error ? <span style={{ color: "#fca5a5" }}>{error}</span> : null}
-          {success ? <span style={{ color: "#86efac" }}>{success}</span> : null}
         </div>
       </form>
     </section>

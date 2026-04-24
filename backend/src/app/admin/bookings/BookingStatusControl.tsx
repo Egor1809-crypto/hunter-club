@@ -2,7 +2,7 @@
 
 import { useRouter } from "next/navigation";
 import { useState } from "react";
-import { adminFetch } from "../adminFetch";
+import AdminFilterSelect from "@/app/admin/AdminFilterSelect";
 
 const statusLabels: Record<string, string> = {
   scheduled: "Запланирована",
@@ -30,7 +30,7 @@ const BookingStatusControl = ({
     setError(null);
 
     try {
-      const response = await adminFetch(`/api/bookings/${bookingId}`, {
+      const response = await fetch(`/api/bookings/${bookingId}`, {
         method: "PATCH",
         headers: {
           "Content-Type": "application/json",
@@ -54,27 +54,16 @@ const BookingStatusControl = ({
 
   return (
     <div style={{ display: "grid", gap: 8 }}>
-      <select
+      <AdminFilterSelect
+        name="status"
         value={status}
-        onChange={(event) => setStatus(event.target.value)}
-        style={{
-          width: "100%",
-          border: "1px solid rgba(255,255,255,0.12)",
-          background: "rgba(10,10,10,0.9)",
-          color: "#f5f5f5",
-          padding: "10px 12px",
-          fontSize: 12,
-          textTransform: "uppercase",
-          letterSpacing: "0.08em",
-          outline: "none",
-        }}
-      >
-        {["scheduled", "confirmed", "in_progress", "completed", "cancelled", "no_show"].map((item) => (
-          <option key={item} value={item}>
-            {statusLabels[item] ?? item}
-          </option>
-        ))}
-      </select>
+        ariaLabel="Статус записи"
+        onValueChange={setStatus}
+        options={["scheduled", "confirmed", "in_progress", "completed", "cancelled", "no_show"].map((item) => ({
+          value: item,
+          label: statusLabels[item] ?? item,
+        }))}
+      />
 
       <button
         type="button"

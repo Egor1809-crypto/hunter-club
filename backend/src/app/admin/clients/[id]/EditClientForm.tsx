@@ -2,31 +2,13 @@
 
 import { useRouter } from "next/navigation";
 import { useState } from "react";
-import { adminFetch } from "../../adminFetch";
-
-const inputStyle: React.CSSProperties = {
-  width: "100%",
-  border: "1px solid rgba(255,255,255,0.12)",
-  background: "rgba(10,10,10,0.9)",
-  color: "#f5f5f5",
-  padding: "12px 14px",
-  fontSize: 14,
-  outline: "none",
-};
-
-const labelStyle: React.CSSProperties = {
-  display: "grid",
-  gap: 8,
-};
-
-const warningStyle: React.CSSProperties = {
-  fontSize: 12,
-  lineHeight: 1.5,
-  color: "#f87171",
-  margin: 0,
-};
-
-const hasPhoneLikeContent = (value: string) => value.replace(/\D/g, "").length >= 6;
+import {
+  adminControlStyle,
+  adminFormGridStyle,
+  adminLabelStyle,
+  adminLabelTextStyle,
+  adminPrimaryButtonStyle,
+} from "@/app/admin/adminFormStyles";
 
 const EditClientForm = ({
   client,
@@ -44,8 +26,6 @@ const EditClientForm = ({
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState<string | null>(null);
-  const [firstName, setFirstName] = useState(client.first_name);
-  const [lastName, setLastName] = useState(client.last_name ?? "");
 
   const handleSubmit = async (formData: FormData) => {
     setIsSubmitting(true);
@@ -61,7 +41,7 @@ const EditClientForm = ({
     };
 
     try {
-      const response = await adminFetch(`/api/clients/${client.id}`, {
+      const response = await fetch(`/api/clients/${client.id}`, {
         method: "PATCH",
         headers: {
           "Content-Type": "application/json",
@@ -109,60 +89,27 @@ const EditClientForm = ({
         style={{ display: "grid", gap: 16 }}
       >
         <div
-          style={{
-            display: "grid",
-            gridTemplateColumns: "repeat(auto-fit, minmax(220px, 1fr))",
-            gap: 16,
-          }}
+          style={adminFormGridStyle}
         >
-          <label style={labelStyle}>
-            <span style={{ fontSize: 12, textTransform: "uppercase", letterSpacing: "0.14em", color: "#9ca3af" }}>
-              Имя
-            </span>
-            <input
-              name="firstName"
-              value={firstName}
-              onChange={(event) => setFirstName(event.target.value)}
-              required
-              aria-invalid={hasPhoneLikeContent(firstName)}
-              style={{
-                ...inputStyle,
-                ...(hasPhoneLikeContent(firstName) ? { border: "1px solid rgba(248,113,113,0.85)" } : {}),
-              }}
-            />
-            {hasPhoneLikeContent(firstName) ? <p style={warningStyle}>! Проверьте, правильно ли заполнено поле имени.</p> : null}
+          <label style={adminLabelStyle}>
+            <span style={adminLabelTextStyle}>Имя</span>
+            <input name="firstName" defaultValue={client.first_name} required style={adminControlStyle} />
           </label>
 
-          <label style={labelStyle}>
-            <span style={{ fontSize: 12, textTransform: "uppercase", letterSpacing: "0.14em", color: "#9ca3af" }}>
-              Фамилия
-            </span>
-            <input
-              name="lastName"
-              value={lastName}
-              onChange={(event) => setLastName(event.target.value)}
-              aria-invalid={hasPhoneLikeContent(lastName)}
-              style={{
-                ...inputStyle,
-                ...(hasPhoneLikeContent(lastName) ? { border: "1px solid rgba(248,113,113,0.85)" } : {}),
-              }}
-            />
-            {hasPhoneLikeContent(lastName) ? <p style={warningStyle}>! Проверьте, правильно ли заполнено поле фамилии.</p> : null}
+          <label style={adminLabelStyle}>
+            <span style={adminLabelTextStyle}>Фамилия</span>
+            <input name="lastName" defaultValue={client.last_name ?? ""} style={adminControlStyle} />
           </label>
 
-          <label style={labelStyle}>
-            <span style={{ fontSize: 12, textTransform: "uppercase", letterSpacing: "0.14em", color: "#9ca3af" }}>
-              Телефон
-            </span>
-            <input name="phone" defaultValue={client.phone} required style={inputStyle} />
+          <label style={adminLabelStyle}>
+            <span style={adminLabelTextStyle}>Телефон</span>
+            <input name="phone" defaultValue={client.phone} required style={adminControlStyle} />
           </label>
         </div>
 
-        <label style={labelStyle}>
-          <span style={{ fontSize: 12, textTransform: "uppercase", letterSpacing: "0.14em", color: "#9ca3af" }}>
-            Заметки
-          </span>
-          <textarea name="notes" rows={5} defaultValue={client.notes ?? ""} style={{ ...inputStyle, resize: "vertical" }} />
+        <label style={adminLabelStyle}>
+          <span style={adminLabelTextStyle}>Заметки</span>
+          <textarea name="notes" rows={5} defaultValue={client.notes ?? ""} style={{ ...adminControlStyle, resize: "vertical" }} />
         </label>
 
         <label
@@ -171,7 +118,7 @@ const EditClientForm = ({
             alignItems: "center",
             gap: 10,
             color: "#d4d4d8",
-            fontSize: 14,
+            fontSize: 16,
           }}
         >
           <input type="checkbox" name="isVip" defaultChecked={client.is_vip} />
@@ -183,13 +130,7 @@ const EditClientForm = ({
             type="submit"
             disabled={isSubmitting}
             style={{
-              border: "none",
-              background: "#f5f5f5",
-              color: "#09090b",
-              padding: "14px 18px",
-              fontSize: 12,
-              letterSpacing: "0.16em",
-              textTransform: "uppercase",
+              ...adminPrimaryButtonStyle,
               cursor: isSubmitting ? "not-allowed" : "pointer",
               opacity: isSubmitting ? 0.65 : 1,
             }}

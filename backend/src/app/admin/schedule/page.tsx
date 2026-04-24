@@ -1,9 +1,11 @@
 import { redirect } from "next/navigation";
-import AdminLogoutButton from "@/app/admin/AdminLogoutButton";
+import AdminDevNotice from "@/app/admin/AdminDevNotice";
 import AdminNav from "@/app/admin/AdminNav";
+import AdminPageTop from "@/app/admin/AdminPageTop";
 import CreateScheduleExceptionForm from "@/app/admin/schedule/CreateScheduleExceptionForm";
 import { getCurrentAdminSession } from "@/lib/auth";
 import { prisma } from "@/lib/db";
+import { isDatabaseUnavailableError } from "@/lib/dev-admin";
 
 const weekDayLabels: Record<number, string> = {
   0: "Воскресенье",
@@ -31,15 +33,27 @@ const AdminSchedulePage = async () => {
     redirect("/admin/login");
   }
 
-  const [schedule, exceptions] = await Promise.all([
-    prisma.work_schedule.findMany({
-      orderBy: [{ day_of_week: "asc" }, { start_time: "asc" }],
-    }),
-    prisma.schedule_exceptions.findMany({
-      orderBy: { exception_date: "asc" },
-      take: 30,
-    }),
-  ]);
+  let schedule: Awaited<ReturnType<typeof prisma.work_schedule.findMany>> = [];
+  let exceptions: Awaited<ReturnType<typeof prisma.schedule_exceptions.findMany>> = [];
+  let isDevFallback = false;
+
+  try {
+    [schedule, exceptions] = await Promise.all([
+      prisma.work_schedule.findMany({
+        orderBy: [{ day_of_week: "asc" }, { start_time: "asc" }],
+      }),
+      prisma.schedule_exceptions.findMany({
+        orderBy: { exception_date: "asc" },
+        take: 30,
+      }),
+    ]);
+  } catch (error) {
+    if (!isDatabaseUnavailableError(error)) {
+      throw error;
+    }
+
+    isDevFallback = true;
+  }
 
   const scheduleByDay = schedule.reduce<Record<number, typeof schedule>>((acc, item) => {
     if (!acc[item.day_of_week]) {
@@ -52,30 +66,12 @@ const AdminSchedulePage = async () => {
 
   return (
     <main style={{ maxWidth: 1180, margin: "0 auto", padding: "40px 24px 72px" }}>
-      <div
-        style={{
-          display: "flex",
-          justifyContent: "space-between",
-          alignItems: "flex-start",
-          gap: 24,
-          marginBottom: 24,
-          flexWrap: "wrap",
-        }}
-      >
-        <div>
-          <p style={{ fontSize: 12, letterSpacing: "0.22em", textTransform: "uppercase", color: "#9ca3af" }}>
-            Hunter CRM
-          </p>
-          <h1 style={{ fontSize: 40, fontWeight: 300, margin: "10px 0 8px" }}>Расписание</h1>
-          <p style={{ color: "#a1a1aa", maxWidth: 720, lineHeight: 1.7 }}>
-            Здесь видно основной рабочий график мастера и исключения по конкретным датам.
-          </p>
-        </div>
-
-        <AdminLogoutButton />
-      </div>
-
+      <AdminPageTop />
       <AdminNav />
+
+      {isDevFallback ? (
+        <AdminDevNotice message="Расписание открыто без подключения к PostgreSQL, поэтому данные пока пустые." />
+      ) : null}
 
       <CreateScheduleExceptionForm />
 

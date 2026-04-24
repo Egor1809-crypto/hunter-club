@@ -2,39 +2,22 @@
 
 import { useRouter } from "next/navigation";
 import { useState } from "react";
-import { adminFetch } from "../adminFetch";
+import {
+  adminControlStyle,
+  adminFormGridStyle,
+  adminLabelStyle,
+  adminLabelTextStyle,
+  adminPrimaryButtonStyle,
+} from "@/app/admin/adminFormStyles";
+import { adminColors, adminTextStyles } from "@/app/admin/adminTheme";
 
-const inputStyle: React.CSSProperties = {
-  width: "100%",
-  border: "1px solid rgba(255,255,255,0.12)",
-  background: "rgba(10,10,10,0.9)",
-  color: "#f5f5f5",
-  padding: "12px 14px",
-  fontSize: 14,
-  outline: "none",
-};
-
-const labelStyle: React.CSSProperties = {
-  display: "grid",
-  gap: 8,
-};
-
-const warningStyle: React.CSSProperties = {
-  fontSize: 12,
-  lineHeight: 1.5,
-  color: "#f87171",
-  margin: 0,
-};
-
-const hasPhoneLikeContent = (value: string) => value.replace(/\D/g, "").length >= 6;
+const clientButtonWidth = 236;
 
 const CreateClientForm = () => {
   const router = useRouter();
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState<string | null>(null);
-  const [firstName, setFirstName] = useState("");
-  const [lastName, setLastName] = useState("");
 
   const handleSubmit = async (formData: FormData) => {
     setIsSubmitting(true);
@@ -50,7 +33,7 @@ const CreateClientForm = () => {
     };
 
     try {
-      const response = await adminFetch("/api/clients", {
+      const response = await fetch("/api/clients", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -78,20 +61,16 @@ const CreateClientForm = () => {
   return (
     <section
       style={{
-        border: "1px solid rgba(255,255,255,0.12)",
-        background: "rgba(18,18,18,0.92)",
+        border: `1px solid ${adminColors.border}`,
+        background: adminColors.panel,
         padding: 20,
         marginBottom: 24,
       }}
     >
       <div style={{ marginBottom: 16 }}>
-        <p style={{ fontSize: 12, letterSpacing: "0.18em", textTransform: "uppercase", color: "#9ca3af" }}>
-          Действие CRM
-        </p>
-        <h2 style={{ fontSize: 28, fontWeight: 300, margin: "10px 0 8px" }}>Создать клиента</h2>
-        <p style={{ color: "#a1a1aa", lineHeight: 1.7, margin: 0 }}>
-          Добавьте нового клиента прямо в базу данных.
-        </p>
+        <p style={adminTextStyles.eyebrow}>Действие CRM</p>
+        <h2 style={{ ...adminTextStyles.title, margin: "10px 0 8px" }}>Создать клиента</h2>
+        <p style={{ ...adminTextStyles.bodyMuted, margin: 0 }}>Добавьте нового клиента прямо в базу данных.</p>
       </div>
 
       <form
@@ -102,96 +81,80 @@ const CreateClientForm = () => {
         style={{ display: "grid", gap: 16 }}
       >
         <div
-          style={{
-            display: "grid",
-            gridTemplateColumns: "repeat(auto-fit, minmax(220px, 1fr))",
-            gap: 16,
-          }}
+          style={adminFormGridStyle}
         >
-          <label style={labelStyle}>
-            <span style={{ fontSize: 12, textTransform: "uppercase", letterSpacing: "0.14em", color: "#9ca3af" }}>
-              Имя
-            </span>
-            <input
-              name="firstName"
-              required
-              value={firstName}
-              onChange={(event) => setFirstName(event.target.value)}
-              aria-invalid={hasPhoneLikeContent(firstName)}
-              style={{
-                ...inputStyle,
-                ...(hasPhoneLikeContent(firstName) ? { border: "1px solid rgba(248,113,113,0.85)" } : {}),
-              }}
-            />
-            {hasPhoneLikeContent(firstName) ? <p style={warningStyle}>! Проверьте, правильно ли заполнено поле имени.</p> : null}
+          <label style={adminLabelStyle}>
+            <span style={adminLabelTextStyle}>Имя</span>
+            <input name="firstName" required style={adminControlStyle} />
           </label>
 
-          <label style={labelStyle}>
-            <span style={{ fontSize: 12, textTransform: "uppercase", letterSpacing: "0.14em", color: "#9ca3af" }}>
-              Фамилия
-            </span>
-            <input
-              name="lastName"
-              value={lastName}
-              onChange={(event) => setLastName(event.target.value)}
-              aria-invalid={hasPhoneLikeContent(lastName)}
-              style={{
-                ...inputStyle,
-                ...(hasPhoneLikeContent(lastName) ? { border: "1px solid rgba(248,113,113,0.85)" } : {}),
-              }}
-            />
-            {hasPhoneLikeContent(lastName) ? <p style={warningStyle}>! Проверьте, правильно ли заполнено поле фамилии.</p> : null}
+          <label style={adminLabelStyle}>
+            <span style={adminLabelTextStyle}>Фамилия</span>
+            <input name="lastName" style={adminControlStyle} />
           </label>
 
-          <label style={labelStyle}>
-            <span style={{ fontSize: 12, textTransform: "uppercase", letterSpacing: "0.14em", color: "#9ca3af" }}>
-              Телефон
-            </span>
-            <input name="phone" required style={inputStyle} />
+          <label style={adminLabelStyle}>
+            <span style={adminLabelTextStyle}>Телефон</span>
+            <input name="phone" required style={adminControlStyle} />
           </label>
         </div>
 
-        <label style={labelStyle}>
-          <span style={{ fontSize: 12, textTransform: "uppercase", letterSpacing: "0.14em", color: "#9ca3af" }}>
-            Заметки
-          </span>
-          <textarea name="notes" rows={4} style={{ ...inputStyle, resize: "vertical" }} />
+        <label style={adminLabelStyle}>
+          <span style={adminLabelTextStyle}>Заметки</span>
+          <textarea name="notes" rows={4} style={{ ...adminControlStyle, resize: "vertical" }} />
         </label>
 
         <label
           style={{
-            display: "flex",
+            display: "inline-grid",
+            gridTemplateColumns: "18px max-content",
             alignItems: "center",
-            gap: 10,
-            color: "#d4d4d8",
-            fontSize: 14,
+            justifySelf: "start",
+            gap: 12,
+            color: adminColors.textSoft,
+            fontSize: 16,
+            minHeight: 56,
+            boxSizing: "border-box",
+            border: `1px solid ${adminColors.border}`,
+            background: adminColors.panelStrong,
+            padding: "0 16px",
+            cursor: "pointer",
+            userSelect: "none",
           }}
         >
-          <input type="checkbox" name="isVip" />
+          <input
+            type="checkbox"
+            name="isVip"
+            style={{
+              width: 14,
+              height: 14,
+              accentColor: adminColors.text,
+              margin: 0,
+              cursor: "pointer",
+            }}
+          />
           Отметить как VIP
         </label>
 
-        <div style={{ display: "flex", alignItems: "center", gap: 16, flexWrap: "wrap" }}>
+        <div style={{ display: "flex", alignItems: "center", justifyContent: "flex-end", gap: 16, flexWrap: "wrap" }}>
+          {error ? <span style={{ color: adminColors.danger }}>{error}</span> : null}
+          {success ? <span style={{ color: adminColors.success }}>{success}</span> : null}
+
           <button
             type="submit"
             disabled={isSubmitting}
             style={{
-              border: "none",
-              background: "#f5f5f5",
-              color: "#09090b",
-              padding: "14px 18px",
-              fontSize: 12,
-              letterSpacing: "0.16em",
-              textTransform: "uppercase",
+              ...adminPrimaryButtonStyle,
+              width: clientButtonWidth,
+              display: "inline-flex",
+              alignItems: "center",
+              justifyContent: "center",
               cursor: isSubmitting ? "not-allowed" : "pointer",
               opacity: isSubmitting ? 0.65 : 1,
             }}
           >
             {isSubmitting ? "Создаём..." : "Создать клиента"}
           </button>
-
-          {error ? <span style={{ color: "#fca5a5" }}>{error}</span> : null}
-          {success ? <span style={{ color: "#86efac" }}>{success}</span> : null}
         </div>
       </form>
     </section>

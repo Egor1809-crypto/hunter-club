@@ -1,6 +1,5 @@
 import Link from "next/link";
 import { notFound, redirect } from "next/navigation";
-import AdminLogoutButton from "@/app/admin/AdminLogoutButton";
 import AdminNav from "@/app/admin/AdminNav";
 import EditBookingForm from "@/app/admin/bookings/[id]/EditBookingForm";
 import { getCurrentAdminSession } from "@/lib/auth";
@@ -18,9 +17,8 @@ const statusLabels: Record<string, string> = {
 const AdminBookingDetailsPage = async ({
   params,
 }: {
-  params: Promise<{ id: string }>;
+  params: { id: string };
 }) => {
-  const { id } = await params;
   const admin = await getCurrentAdminSession();
 
   if (!admin) {
@@ -28,7 +26,7 @@ const AdminBookingDetailsPage = async ({
   }
 
   const booking = await prisma.bookings.findUnique({
-    where: { id },
+    where: { id: params.id },
     include: {
       client: true,
       service: true,
@@ -60,8 +58,6 @@ const AdminBookingDetailsPage = async ({
             Детальная карточка записи с клиентом, услугой и быстрым редактированием визита.
           </p>
         </div>
-
-        <AdminLogoutButton />
       </div>
 
       <AdminNav />

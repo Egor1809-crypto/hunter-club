@@ -1,6 +1,5 @@
 import Link from "next/link";
 import { notFound, redirect } from "next/navigation";
-import AdminLogoutButton from "@/app/admin/AdminLogoutButton";
 import AdminNav from "@/app/admin/AdminNav";
 import EditClientForm from "@/app/admin/clients/[id]/EditClientForm";
 import { getCurrentAdminSession } from "@/lib/auth";
@@ -9,9 +8,8 @@ import { prisma } from "@/lib/db";
 const AdminClientDetailsPage = async ({
   params,
 }: {
-  params: Promise<{ id: string }>;
+  params: { id: string };
 }) => {
-  const { id } = await params;
   const admin = await getCurrentAdminSession();
 
   if (!admin) {
@@ -19,7 +17,7 @@ const AdminClientDetailsPage = async ({
   }
 
   const client = await prisma.clients.findUnique({
-    where: { id },
+    where: { id: params.id },
     include: {
       bookings: {
         orderBy: { scheduled_at: "desc" },
@@ -66,8 +64,6 @@ const AdminClientDetailsPage = async ({
             Детальная карточка клиента с редактированием, историей записей и активными наградами.
           </p>
         </div>
-
-        <AdminLogoutButton />
       </div>
 
       <AdminNav />

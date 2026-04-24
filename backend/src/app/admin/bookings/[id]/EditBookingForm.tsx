@@ -2,22 +2,14 @@
 
 import { useRouter } from "next/navigation";
 import { useMemo, useState } from "react";
-import { adminFetch } from "../../adminFetch";
-
-const inputStyle: React.CSSProperties = {
-  width: "100%",
-  border: "1px solid rgba(255,255,255,0.12)",
-  background: "rgba(10,10,10,0.9)",
-  color: "#f5f5f5",
-  padding: "12px 14px",
-  fontSize: 14,
-  outline: "none",
-};
-
-const labelStyle: React.CSSProperties = {
-  display: "grid",
-  gap: 8,
-};
+import AdminFilterSelect from "@/app/admin/AdminFilterSelect";
+import {
+  adminControlStyle,
+  adminFormGridStyle,
+  adminLabelStyle,
+  adminLabelTextStyle,
+  adminPrimaryButtonStyle,
+} from "@/app/admin/adminFormStyles";
 
 const EditBookingForm = ({
   booking,
@@ -59,7 +51,7 @@ const EditBookingForm = ({
     };
 
     try {
-      const response = await adminFetch(`/api/bookings/${booking.id}`, {
+      const response = await fetch(`/api/bookings/${booking.id}`, {
         method: "PATCH",
         headers: {
           "Content-Type": "application/json",
@@ -107,46 +99,39 @@ const EditBookingForm = ({
         style={{ display: "grid", gap: 16 }}
       >
         <div
-          style={{
-            display: "grid",
-            gridTemplateColumns: "repeat(auto-fit, minmax(220px, 1fr))",
-            gap: 16,
-          }}
+          style={adminFormGridStyle}
         >
-          <label style={labelStyle}>
-            <span style={{ fontSize: 12, textTransform: "uppercase", letterSpacing: "0.14em", color: "#9ca3af" }}>
-              Дата
-            </span>
-            <input type="date" name="date" defaultValue={defaults.date} required style={inputStyle} />
+          <label style={adminLabelStyle}>
+            <span style={adminLabelTextStyle}>Дата</span>
+            <input type="date" name="date" defaultValue={defaults.date} required style={adminControlStyle} />
           </label>
 
-          <label style={labelStyle}>
-            <span style={{ fontSize: 12, textTransform: "uppercase", letterSpacing: "0.14em", color: "#9ca3af" }}>
-              Время
-            </span>
-            <input type="time" name="time" defaultValue={defaults.time} required style={inputStyle} />
+          <label style={adminLabelStyle}>
+            <span style={adminLabelTextStyle}>Время</span>
+            <input type="time" name="time" defaultValue={defaults.time} required style={adminControlStyle} />
           </label>
 
-          <label style={labelStyle}>
-            <span style={{ fontSize: 12, textTransform: "uppercase", letterSpacing: "0.14em", color: "#9ca3af" }}>
-              Статус
-            </span>
-            <select name="status" defaultValue={booking.status} style={inputStyle}>
-              <option value="scheduled">Запланирована</option>
-              <option value="confirmed">Подтверждена</option>
-              <option value="in_progress">В работе</option>
-              <option value="completed">Завершена</option>
-              <option value="cancelled">Отменена</option>
-              <option value="no_show">Не пришёл</option>
-            </select>
+          <label style={adminLabelStyle}>
+            <span style={adminLabelTextStyle}>Статус</span>
+            <AdminFilterSelect
+              name="status"
+              value={booking.status}
+              ariaLabel="Статус записи"
+              options={[
+                { value: "scheduled", label: "Запланирована" },
+                { value: "confirmed", label: "Подтверждена" },
+                { value: "in_progress", label: "В работе" },
+                { value: "completed", label: "Завершена" },
+                { value: "cancelled", label: "Отменена" },
+                { value: "no_show", label: "Не пришёл" },
+              ]}
+            />
           </label>
         </div>
 
-        <label style={labelStyle}>
-          <span style={{ fontSize: 12, textTransform: "uppercase", letterSpacing: "0.14em", color: "#9ca3af" }}>
-            Заметки
-          </span>
-          <textarea name="notes" rows={5} defaultValue={booking.notes ?? ""} style={{ ...inputStyle, resize: "vertical" }} />
+        <label style={adminLabelStyle}>
+          <span style={adminLabelTextStyle}>Заметки</span>
+          <textarea name="notes" rows={5} defaultValue={booking.notes ?? ""} style={{ ...adminControlStyle, resize: "vertical" }} />
         </label>
 
         <div style={{ display: "flex", alignItems: "center", gap: 16, flexWrap: "wrap" }}>
@@ -154,13 +139,7 @@ const EditBookingForm = ({
             type="submit"
             disabled={isSubmitting}
             style={{
-              border: "none",
-              background: "#f5f5f5",
-              color: "#09090b",
-              padding: "14px 18px",
-              fontSize: 12,
-              letterSpacing: "0.16em",
-              textTransform: "uppercase",
+              ...adminPrimaryButtonStyle,
               cursor: isSubmitting ? "not-allowed" : "pointer",
               opacity: isSubmitting ? 0.65 : 1,
             }}

@@ -1,45 +1,42 @@
 import Link from "next/link";
 import { redirect } from "next/navigation";
 import AdminFilterSelect from "@/app/admin/AdminFilterSelect";
-import AdminLogoutButton from "@/app/admin/AdminLogoutButton";
+import AdminDevNotice from "@/app/admin/AdminDevNotice";
 import AdminNav from "@/app/admin/AdminNav";
+import AdminPageTop from "@/app/admin/AdminPageTop";
+import {
+  adminActionRowStyle,
+  adminControlStyle,
+  adminFilterGridStyle,
+  adminLabelStyle,
+  adminLabelTextStyle,
+  adminPrimaryButtonStyle,
+  adminSecondaryButtonStyle,
+} from "@/app/admin/adminFormStyles";
 import CreateClientForm from "@/app/admin/clients/CreateClientForm";
 import { getCurrentAdminSession } from "@/lib/auth";
 import { prisma } from "@/lib/db";
+import { isDatabaseUnavailableError } from "@/lib/dev-admin";
 
 const getSearchParam = (value: string | string[] | undefined) =>
   Array.isArray(value) ? value[0] : value;
 
-const filterLabelStyle: React.CSSProperties = {
-  display: "grid",
-  gap: 8,
-};
-
-const filterInputStyle: React.CSSProperties = {
-  width: "100%",
-  border: "1px solid rgba(255,255,255,0.12)",
-  background: "rgba(10,10,10,0.92)",
-  color: "#f5f5f5",
-  padding: "12px 14px",
-  fontSize: 14,
-  outline: "none",
-};
+const clientActionButtonWidth = 236;
 
 const AdminClientsPage = async ({
   searchParams,
 }: {
-  searchParams?: Promise<Record<string, string | string[] | undefined>>;
+  searchParams?: Record<string, string | string[] | undefined>;
 }) => {
-  const resolvedSearchParams = await searchParams;
   const admin = await getCurrentAdminSession();
 
   if (!admin) {
     redirect("/admin/login");
   }
 
-  const search = getSearchParam(resolvedSearchParams?.search)?.trim() ?? "";
-  const vip = getSearchParam(resolvedSearchParams?.vip) ?? "all";
-  const sort = getSearchParam(resolvedSearchParams?.sort) ?? "recent";
+  const search = getSearchParam(searchParams?.search)?.trim() ?? "";
+  const vip = getSearchParam(searchParams?.vip) ?? "all";
+  const sort = getSearchParam(searchParams?.sort) ?? "recent";
 
   const where = {
     ...(search
@@ -62,39 +59,31 @@ const AdminClientsPage = async ({
         ? [{ total_visits: "desc" as const }, { last_visit_at: "desc" as const }]
         : [{ last_visit_at: "desc" as const }, { created_at: "desc" as const }];
 
-  const clients = await prisma.clients.findMany({
-    where,
-    orderBy,
-    take: 50,
-  });
+  let clients: Awaited<ReturnType<typeof prisma.clients.findMany>> = [];
+  let isDevFallback = false;
+
+  try {
+    clients = await prisma.clients.findMany({
+      where,
+      orderBy,
+      take: 50,
+    });
+  } catch (error) {
+    if (!isDatabaseUnavailableError(error)) {
+      throw error;
+    }
+
+    isDevFallback = true;
+  }
 
   return (
     <main style={{ maxWidth: 1180, margin: "0 auto", padding: "40px 24px 72px" }}>
-      <div
-        style={{
-          display: "flex",
-          justifyContent: "space-between",
-          alignItems: "flex-start",
-          gap: 24,
-          marginBottom: 24,
-          flexWrap: "wrap",
-        }}
-      >
-        <div>
-          <p style={{ fontSize: 12, letterSpacing: "0.22em", textTransform: "uppercase", color: "#9ca3af" }}>
-            Hunter CRM
-          </p>
-          <h1 style={{ fontSize: 40, fontWeight: 300, margin: "10px 0 8px" }}>Клиенты</h1>
-          <p style={{ color: "#a1a1aa", maxWidth: 680, lineHeight: 1.7 }}>
-            Рабочий список клиентских карточек из реальной базы. Здесь можно быстро просматривать
-            клиентскую базу барбершопа.
-          </p>
-        </div>
-
-        <AdminLogoutButton />
-      </div>
-
+      <AdminPageTop />
       <AdminNav />
+
+      {isDevFallback ? (
+        <AdminDevNotice message="База данных сейчас недоступна, поэтому список клиентов открыт в пустом dev-режиме." />
+      ) : null}
 
       <CreateClientForm />
 
@@ -108,29 +97,20 @@ const AdminClientsPage = async ({
       >
         <form
           method="GET"
-          style={{
-            display: "grid",
-            gridTemplateColumns: "repeat(auto-fit, minmax(180px, 1fr))",
-            gap: 16,
-            alignItems: "end",
-          }}
+          style={adminFilterGridStyle}
         >
-          <label style={filterLabelStyle}>
-            <span style={{ fontSize: 12, textTransform: "uppercase", letterSpacing: "0.14em", color: "#9ca3af" }}>
-              Поиск
-            </span>
+          <label style={adminLabelStyle}>
+            <span style={adminLabelTextStyle}>Поиск</span>
             <input
               name="search"
               defaultValue={search}
               placeholder="Имя или телефон"
-              style={filterInputStyle}
+              style={adminControlStyle}
             />
           </label>
 
-          <label style={filterLabelStyle}>
-            <span style={{ fontSize: 12, textTransform: "uppercase", letterSpacing: "0.14em", color: "#9ca3af" }}>
-              Тип клиента
-            </span>
+          <label style={adminLabelStyle}>
+            <span style={adminLabelTextStyle}>Тип клиента</span>
             <AdminFilterSelect
               name="vip"
               value={vip}
@@ -143,10 +123,8 @@ const AdminClientsPage = async ({
             />
           </label>
 
-          <label style={filterLabelStyle}>
-            <span style={{ fontSize: 12, textTransform: "uppercase", letterSpacing: "0.14em", color: "#9ca3af" }}>
-              Сортировка
-            </span>
+          <label style={adminLabelStyle}>
+            <span style={adminLabelTextStyle}>Сортировка</span>
             <AdminFilterSelect
               name="sort"
               value={sort}
@@ -159,37 +137,39 @@ const AdminClientsPage = async ({
             />
           </label>
 
-          <div style={{ display: "flex", gap: 12, flexWrap: "wrap" }}>
-            <button
-              type="submit"
-              style={{
-                border: "none",
-                background: "#f5f5f5",
-                color: "#09090b",
-                padding: "14px 18px",
-                fontSize: 12,
-                letterSpacing: "0.16em",
-                textTransform: "uppercase",
-                cursor: "pointer",
-              }}
-            >
-              Применить
-            </button>
-
+          <div
+            style={{
+              ...adminActionRowStyle,
+              gridColumn: "1 / -1",
+              justifySelf: "end",
+              width: "fit-content",
+            }}
+          >
             <Link
               href="/admin/clients"
               style={{
-                border: "1px solid rgba(255,255,255,0.14)",
-                padding: "13px 18px",
-                textDecoration: "none",
-                color: "#f5f5f5",
-                fontSize: 12,
-                letterSpacing: "0.16em",
-                textTransform: "uppercase",
+                ...adminSecondaryButtonStyle,
+                width: clientActionButtonWidth,
+                display: "inline-flex",
+                alignItems: "center",
+                justifyContent: "center",
               }}
             >
               Сбросить
             </Link>
+
+            <button
+              type="submit"
+              style={{
+                ...adminPrimaryButtonStyle,
+                width: clientActionButtonWidth,
+                display: "inline-flex",
+                alignItems: "center",
+                justifyContent: "center",
+              }}
+            >
+              Применить
+            </button>
           </div>
         </form>
       </section>

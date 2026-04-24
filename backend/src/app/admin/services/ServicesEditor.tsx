@@ -2,7 +2,7 @@
 
 import { useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
-import { adminFetch } from "../adminFetch";
+import { adminControlStyle, adminLabelTextStyle } from "@/app/admin/adminFormStyles";
 
 type ServiceItem = {
   id: string;
@@ -29,21 +29,96 @@ type EditableService = {
 };
 
 const inputStyle: React.CSSProperties = {
-  width: "100%",
-  border: "1px solid rgba(255,255,255,0.12)",
-  background: "rgba(10,10,10,0.9)",
-  color: "#f5f5f5",
-  padding: "12px 14px",
-  fontSize: 14,
-  outline: "none",
+  ...adminControlStyle,
 };
 
 const headerTextStyle: React.CSSProperties = {
-  fontSize: 12,
-  textTransform: "uppercase",
+  ...adminLabelTextStyle,
   letterSpacing: "0.16em",
-  color: "#9ca3af",
 };
+
+const serviceGridColumns =
+  "minmax(220px,1.35fr) minmax(150px,0.75fr) minmax(150px,0.75fr) minmax(150px,0.75fr) minmax(136px,0.62fr)";
+
+const formatNumberValue = (value: string, min: number, step: number) => {
+  const parsedValue = Number(value === "" ? min : value);
+  const nextValue = Number.isFinite(parsedValue) ? parsedValue + step : min;
+
+  return String(Math.max(min, nextValue));
+};
+
+const NumberField = ({
+  label,
+  value,
+  min,
+  step,
+  onChange,
+}: {
+  label: string;
+  value: string;
+  min: number;
+  step: number;
+  onChange: (value: string) => void;
+}) => (
+  <label style={{ display: "grid", gap: 8 }}>
+    <span style={headerTextStyle}>{label}</span>
+    <span style={{ position: "relative", display: "block", width: "100%" }}>
+      <input
+        className="admin-number-input"
+        type="number"
+        min={min}
+        step={step}
+        value={value}
+        onChange={(event) => onChange(event.target.value)}
+        style={{ ...inputStyle, paddingRight: 58, minHeight: 48 }}
+      />
+      <span
+        aria-hidden="true"
+        style={{
+          position: "absolute",
+          top: 1,
+          right: 1,
+          bottom: 1,
+          width: 44,
+          display: "grid",
+          gridTemplateRows: "1fr 1fr",
+          borderLeft: "1px solid rgba(255,255,255,0.1)",
+          background: "rgba(255,255,255,0.045)",
+        }}
+      >
+        <button
+          type="button"
+          tabIndex={-1}
+          onClick={() => onChange(formatNumberValue(value, min, step))}
+          style={{
+            border: "none",
+            borderBottom: "1px solid rgba(255,255,255,0.1)",
+            background: "transparent",
+            color: "#d4d4d8",
+            cursor: "pointer",
+            lineHeight: 1,
+          }}
+        >
+          ▲
+        </button>
+        <button
+          type="button"
+          tabIndex={-1}
+          onClick={() => onChange(formatNumberValue(value, min, -step))}
+          style={{
+            border: "none",
+            background: "transparent",
+            color: "#d4d4d8",
+            cursor: "pointer",
+            lineHeight: 1,
+          }}
+        >
+          ▼
+        </button>
+      </span>
+    </span>
+  </label>
+);
 
 const ServicesEditor = ({ services }: { services: ServiceItem[] }) => {
   const router = useRouter();
@@ -97,7 +172,7 @@ const ServicesEditor = ({ services }: { services: ServiceItem[] }) => {
         sortOrder: Number(item.sortOrder),
       }));
 
-      const response = await adminFetch("/api/services", {
+      const response = await fetch("/api/services", {
         method: "PATCH",
         headers: {
           "Content-Type": "application/json",
@@ -131,7 +206,7 @@ const ServicesEditor = ({ services }: { services: ServiceItem[] }) => {
       <div
         style={{
           display: "grid",
-          gridTemplateColumns: "minmax(220px,1.4fr) minmax(120px,0.7fr) minmax(120px,0.7fr) minmax(120px,0.7fr) minmax(140px,0.8fr)",
+          gridTemplateColumns: serviceGridColumns,
           gap: 16,
           padding: 16,
           borderBottom: "1px solid rgba(255,255,255,0.08)",
@@ -153,7 +228,7 @@ const ServicesEditor = ({ services }: { services: ServiceItem[] }) => {
           key={item.id}
           style={{
             display: "grid",
-            gridTemplateColumns: "minmax(220px,1.4fr) minmax(120px,0.7fr) minmax(120px,0.7fr) minmax(120px,0.7fr) minmax(140px,0.8fr)",
+            gridTemplateColumns: serviceGridColumns,
             gap: 16,
             padding: 16,
             borderBottom: "1px solid rgba(255,255,255,0.06)",
@@ -171,56 +246,60 @@ const ServicesEditor = ({ services }: { services: ServiceItem[] }) => {
             {item.isDawnHunt ? <span style={{ color: "#d4d4d8" }}>Рассветная охота</span> : null}
           </div>
 
-          <label style={{ display: "grid", gap: 8 }}>
-            <span style={headerTextStyle}>Цена</span>
-            <input
-              type="number"
-              min="0"
-              step="100"
-              value={item.price}
-              onChange={(event) => updateItem(item.id, { price: event.target.value })}
-              style={inputStyle}
-            />
-          </label>
+          <NumberField
+            label="Цена"
+            value={item.price}
+            min={0}
+            step={100}
+            onChange={(value) => updateItem(item.id, { price: value })}
+          />
 
-          <label style={{ display: "grid", gap: 8 }}>
-            <span style={headerTextStyle}>Минуты</span>
-            <input
-              type="number"
-              min="1"
-              step="5"
-              value={item.durationMin}
-              onChange={(event) => updateItem(item.id, { durationMin: event.target.value })}
-              style={inputStyle}
-            />
-          </label>
+          <NumberField
+            label="Минуты"
+            value={item.durationMin}
+            min={1}
+            step={5}
+            onChange={(value) => updateItem(item.id, { durationMin: value })}
+          />
 
-          <label style={{ display: "grid", gap: 8 }}>
-            <span style={headerTextStyle}>Порядок</span>
-            <input
-              type="number"
-              step="1"
-              value={item.sortOrder}
-              onChange={(event) => updateItem(item.id, { sortOrder: event.target.value })}
-              style={inputStyle}
-            />
-          </label>
+          <NumberField
+            label="Порядок"
+            value={item.sortOrder}
+            min={1}
+            step={1}
+            onChange={(value) => updateItem(item.id, { sortOrder: value })}
+          />
 
           <label
             style={{
-              display: "flex",
+              display: "inline-grid",
+              gridTemplateColumns: "18px max-content",
               alignItems: "center",
+              justifySelf: "start",
               gap: 10,
               color: "#d4d4d8",
-              fontSize: 14,
+              fontSize: 15,
               minHeight: 48,
               marginTop: 30,
+              border: "1px solid rgba(255,255,255,0.12)",
+              background: item.isActive ? "rgba(245,245,245,0.1)" : "rgba(10,10,10,0.9)",
+              padding: "0 14px",
+              cursor: "pointer",
+              userSelect: "none",
+              whiteSpace: "nowrap",
             }}
           >
             <input
               type="checkbox"
               checked={item.isActive}
               onChange={(event) => updateItem(item.id, { isActive: event.target.checked })}
+              style={{
+                width: 14,
+                height: 14,
+                accentColor: "#f5f5f5",
+                cursor: "pointer",
+                margin: 0,
+              }}
             />
             Активна
           </label>
@@ -233,9 +312,13 @@ const ServicesEditor = ({ services }: { services: ServiceItem[] }) => {
           gap: 16,
           alignItems: "center",
           flexWrap: "wrap",
+          justifyContent: "flex-end",
           padding: 20,
         }}
       >
+        {error ? <span style={{ color: "#fca5a5" }}>{error}</span> : null}
+        {success ? <span style={{ color: "#86efac" }}>{success}</span> : null}
+
         <button
           type="button"
           onClick={save}
@@ -254,10 +337,19 @@ const ServicesEditor = ({ services }: { services: ServiceItem[] }) => {
         >
           {isSaving ? "Сохраняем..." : "Сохранить изменения"}
         </button>
-
-        {error ? <span style={{ color: "#fca5a5" }}>{error}</span> : null}
-        {success ? <span style={{ color: "#86efac" }}>{success}</span> : null}
       </div>
+      <style jsx global>{`
+        .admin-number-input::-webkit-outer-spin-button,
+        .admin-number-input::-webkit-inner-spin-button {
+          -webkit-appearance: none;
+          margin: 0;
+        }
+
+        .admin-number-input {
+          appearance: textfield;
+          -moz-appearance: textfield;
+        }
+      `}</style>
     </section>
   );
 };

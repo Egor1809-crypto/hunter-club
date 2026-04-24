@@ -1,9 +1,11 @@
 import { redirect } from "next/navigation";
-import AdminLogoutButton from "@/app/admin/AdminLogoutButton";
+import AdminDevNotice from "@/app/admin/AdminDevNotice";
 import AdminNav from "@/app/admin/AdminNav";
+import AdminPageTop from "@/app/admin/AdminPageTop";
 import ServicesEditor from "@/app/admin/services/ServicesEditor";
 import { getCurrentAdminSession } from "@/lib/auth";
 import { prisma } from "@/lib/db";
+import { isDatabaseUnavailableError } from "@/lib/dev-admin";
 
 const AdminServicesPage = async () => {
   const admin = await getCurrentAdminSession();
@@ -12,9 +14,20 @@ const AdminServicesPage = async () => {
     redirect("/admin/login");
   }
 
-  const services = await prisma.services.findMany({
-    orderBy: [{ sort_order: "asc" }, { name: "asc" }],
-  });
+  let services: Awaited<ReturnType<typeof prisma.services.findMany>> = [];
+  let isDevFallback = false;
+
+  try {
+    services = await prisma.services.findMany({
+      orderBy: [{ sort_order: "asc" }, { name: "asc" }],
+    });
+  } catch (error) {
+    if (!isDatabaseUnavailableError(error)) {
+      throw error;
+    }
+
+    isDevFallback = true;
+  }
 
   const normalizedServices = services.map((service) => ({
     ...service,
@@ -23,31 +36,12 @@ const AdminServicesPage = async () => {
 
   return (
     <main style={{ maxWidth: 1180, margin: "0 auto", padding: "40px 24px 72px" }}>
-      <div
-        style={{
-          display: "flex",
-          justifyContent: "space-between",
-          alignItems: "flex-start",
-          gap: 24,
-          marginBottom: 24,
-          flexWrap: "wrap",
-        }}
-      >
-        <div>
-          <p style={{ fontSize: 12, letterSpacing: "0.22em", textTransform: "uppercase", color: "#9ca3af" }}>
-            Hunter CRM
-          </p>
-          <h1 style={{ fontSize: 40, fontWeight: 300, margin: "10px 0 8px" }}>Услуги</h1>
-          <p style={{ color: "#a1a1aa", maxWidth: 720, lineHeight: 1.7 }}>
-            Управляйте прайсом, длительностью, порядком и активностью услуг. Сайт сразу подхватывает
-            эти изменения через backend.
-          </p>
-        </div>
-
-        <AdminLogoutButton />
-      </div>
-
+      <AdminPageTop />
       <AdminNav />
+
+      {isDevFallback ? (
+        <AdminDevNotice message="Услуги открыты в dev-режиме без базы данных. Реальный прайс появится после запуска PostgreSQL." />
+      ) : null}
 
       <section
         style={{

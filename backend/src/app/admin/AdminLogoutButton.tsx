@@ -2,7 +2,7 @@
 
 import { useRouter } from "next/navigation";
 import { useState } from "react";
-import { adminFetch } from "./adminFetch";
+import { adminTypography } from "@/app/admin/adminTheme";
 
 const AdminLogoutButton = () => {
   const router = useRouter();
@@ -12,7 +12,7 @@ const AdminLogoutButton = () => {
     setIsSubmitting(true);
 
     try {
-      await adminFetch("/api/admin/logout", {
+      await fetch("/api/admin/logout", {
         method: "POST",
       });
       router.push("/admin/login");
@@ -27,14 +27,16 @@ const AdminLogoutButton = () => {
       onClick={handleLogout}
       disabled={isSubmitting}
       style={{
-        border: "1px solid rgba(255,255,255,0.14)",
+        border: "none",
         background: "transparent",
-        color: "#f5f5f5",
-        padding: "12px 16px",
-        fontSize: 12,
-        letterSpacing: "0.16em",
-        textTransform: "uppercase",
+        color: "rgba(245,245,245,0.52)",
+        padding: 0,
+        fontSize: adminTypography.nav.fontSize,
+        letterSpacing: adminTypography.nav.letterSpacing,
+        textTransform: adminTypography.nav.textTransform,
+        fontWeight: adminTypography.nav.fontWeight,
         cursor: isSubmitting ? "not-allowed" : "pointer",
+        whiteSpace: "nowrap",
       }}
     >
       {isSubmitting ? "Выходим..." : "Выйти"}

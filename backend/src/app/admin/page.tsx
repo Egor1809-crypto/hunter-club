@@ -1,9 +1,18 @@
+import { Prisma } from "@prisma/client";
 import { redirect } from "next/navigation";
-import AdminBrand from "@/app/admin/AdminBrand";
-import AdminLogoutButton from "@/app/admin/AdminLogoutButton";
 import AdminNav from "@/app/admin/AdminNav";
+import AdminDevNotice from "@/app/admin/AdminDevNotice";
+import AdminPageTop from "@/app/admin/AdminPageTop";
 import { getCurrentAdminSession } from "@/lib/auth";
 import { prisma } from "@/lib/db";
+import { isDatabaseUnavailableError } from "@/lib/dev-admin";
+
+type UpcomingBookingItem = Prisma.bookingsGetPayload<{
+  include: {
+    client: true;
+    service: true;
+  };
+}>;
 
 const AdminPage = async () => {
   const admin = await getCurrentAdminSession();
@@ -12,53 +21,50 @@ const AdminPage = async () => {
     redirect("/admin/login");
   }
 
-  const [clientsCount, bookingsCount, upcomingBookings, loyaltyRulesCount] = await Promise.all([
-    prisma.clients.count(),
-    prisma.bookings.count(),
-    prisma.bookings.findMany({
-      where: {
-        scheduled_at: {
-          gte: new Date(),
+  let clientsCount = 0;
+  let bookingsCount = 0;
+  let loyaltyRulesCount = 0;
+  let upcomingBookings: UpcomingBookingItem[] = [];
+  let isDevFallback = false;
+
+  try {
+    [clientsCount, bookingsCount, upcomingBookings, loyaltyRulesCount] = await Promise.all([
+      prisma.clients.count(),
+      prisma.bookings.count(),
+      prisma.bookings.findMany({
+        where: {
+          scheduled_at: {
+            gte: new Date(),
+          },
+          status: {
+            in: ["scheduled", "confirmed", "in_progress"],
+          },
         },
-        status: {
-          in: ["scheduled", "confirmed", "in_progress"],
+        orderBy: { scheduled_at: "asc" },
+        take: 5,
+        include: {
+          client: true,
+          service: true,
         },
-      },
-      orderBy: { scheduled_at: "asc" },
-      take: 5,
-      include: {
-        client: true,
-        service: true,
-      },
-    }),
-    prisma.loyalty_rules.count(),
-  ]);
+      }),
+      prisma.loyalty_rules.count(),
+    ]);
+  } catch (error) {
+    if (!isDatabaseUnavailableError(error)) {
+      throw error;
+    }
+
+    isDevFallback = true;
+  }
 
   return (
     <main style={{ maxWidth: 1180, margin: "0 auto", padding: "40px 24px 72px" }}>
-      <div
-        style={{
-          display: "flex",
-          justifyContent: "space-between",
-          alignItems: "flex-start",
-          gap: 24,
-          marginBottom: 32,
-          flexWrap: "wrap",
-        }}
-      >
-        <div>
-          <div style={{ marginBottom: 16 }}>
-            <AdminBrand />
-          </div>
-          <h1 style={{ fontSize: 44, fontWeight: 300, margin: "10px 0 8px" }}>
-            Здравствуйте, {admin.displayName}
-          </h1>
-        </div>
-
-        <AdminLogoutButton />
-      </div>
-
+      <AdminPageTop />
       <AdminNav />
+
+      {isDevFallback ? (
+        <AdminDevNotice message="CRM запущена в dev-режиме без PostgreSQL. Поэтому сейчас отображаются пустые данные и отключена реальная работа с клиентами, записями и услугами." />
+      ) : null}
 
       <section
         style={{
