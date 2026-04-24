@@ -1,11 +1,14 @@
-import { useEffect, useMemo, useState } from "react";
-import { useSearchParams } from "react-router-dom";
-import { ArrowLeft, CalendarClock, Crown, History, LogOut, ShieldCheck, UserRound } from "lucide-react";
-import { InputOTP, InputOTPGroup, InputOTPSlot } from "@/components/ui/input-otp";
-import { useLanguage } from "@/context/LanguageContext";
-import { cn } from "@/lib/utils";
+import { useCallback, useEffect, useMemo, useState } from "react";
+import { Link, useSearchParams } from "react-router-dom";
+import { ArrowLeft, Chrome, LogOut, UserRound } from "lucide-react";
 
-type AccountProfile = {
+type VisitorHistoryItem = {
+  date: string;
+  service: string;
+  result: string;
+};
+
+type VisitorAccount = {
   id: string;
   name: string;
   phone: string;
@@ -16,779 +19,369 @@ type AccountProfile = {
     service: string;
     barber: string;
   };
-  history: Array<{
-    date: string;
-    service: string;
-    result: string;
-  }>;
+  history: VisitorHistoryItem[];
 };
 
-const Account = () => {
-  const { language } = useLanguage();
+type VisitorSessionResponse = {
+  authenticated: boolean;
+  provider: "google" | "phone" | null;
+  account: VisitorAccount | null;
+  needsPhoneLink?: boolean;
+};
+
+const panelClassName =
+  "border border-border bg-card/70 p-6 md:p-8 shadow-[0_20px_60px_rgba(0,0,0,0.25)] backdrop-blur-sm";
+const labelClassName = "font-body text-[11px] uppercase tracking-[0.24em] text-muted-foreground";
+const primaryButtonClassName =
+  "inline-flex min-h-14 items-center justify-center border border-foreground bg-foreground px-6 text-sm uppercase tracking-[0.28em] text-background transition-colors hover:bg-transparent hover:text-foreground disabled:cursor-not-allowed disabled:opacity-50";
+const secondaryButtonClassName =
+  "inline-flex min-h-14 items-center justify-center border border-border bg-transparent px-6 text-sm uppercase tracking-[0.28em] text-foreground transition-colors hover:border-foreground disabled:cursor-not-allowed disabled:opacity-50";
+
+const formatVisitDate = (value: string | null) => {
+  if (!value) {
+    return "Пока без записи";
+  }
+
+  return new Intl.DateTimeFormat("ru-RU", {
+    day: "2-digit",
+    month: "long",
+    year: "numeric",
+    hour: "2-digit",
+    minute: "2-digit",
+  }).format(new Date(value));
+};
+
+const getProductionApiBase = () => {
+  if (typeof window === "undefined") {
+    return "";
+  }
+
+  return window.location.origin;
+};
+
+const unwrapResponse = async <T,>(response: Response) => {
+  const payload = (await response.json()) as {
+    success: boolean;
+    data: T;
+    error: string | null;
+  };
+
+  if (!response.ok || !payload.success) {
+    throw new Error(payload.error || "Не удалось выполнить запрос");
+  }
+
+  return payload.data;
+};
+
+const AccountPage = () => {
   const [searchParams] = useSearchParams();
-  const requestedMethod = searchParams.get("method");
-  const [googleAccount, setGoogleAccount] = useState<AccountProfile | null>(null);
-  const [phoneAccount, setPhoneAccount] = useState<AccountProfile | null>(null);
-  const [needsPhoneLink, setNeedsPhoneLink] = useState(false);
-  const [phone, setPhone] = useState("");
-  const [otpCode, setOtpCode] = useState("");
-  const [phoneStep, setPhoneStep] = useState<"phone" | "otp">("phone");
-  const [otpError, setOtpError] = useState("");
-  const [otpHint, setOtpHint] = useState("");
-  const [isSendingCode, setIsSendingCode] = useState(false);
-  const [isVerifyingCode, setIsVerifyingCode] = useState(false);
-  const [linkPhone, setLinkPhone] = useState("");
-  const [linkOtpCode, setLinkOtpCode] = useState("");
-  const [linkStep, setLinkStep] = useState<"phone" | "otp">("phone");
-  const [linkError, setLinkError] = useState("");
-  const [linkHint, setLinkHint] = useState("");
-  const [isLinkSending, setIsLinkSending] = useState(false);
-  const [isLinkVerifying, setIsLinkVerifying] = useState(false);
+  const [apiBase, setApiBase] = useState(() => getProductionApiBase());
+  const [session, setSession] = useState<VisitorSessionResponse | null>(null);
+  const [isLoading, setIsLoading] = useState(true);
+  const [statusMessage, setStatusMessage] = useState<string | null>(null);
+  const [statusTone, setStatusTone] = useState<"default" | "error" | "success">("default");
+  const [isLoggingOut, setIsLoggingOut] = useState(false);
 
-  const crmLoginHref =
-    typeof window !== "undefined"
-      ? `${window.location.protocol}//${window.location.hostname}:3000/admin/login`
-      : "/admin/login";
+  const method = searchParams.get("method");
+  const error = searchParams.get("error");
 
   useEffect(() => {
-    const fetchSession = async () => {
-      try {
-        const response = await fetch("/api/public/account/session");
-        const result = await response.json();
-
-        if (!response.ok || !result.success || !result.data?.authenticated || !result.data.account) {
-          return;
-        }
-
-        if (result.data.provider === "google") {
-          setGoogleAccount(result.data.account as AccountProfile);
-          setNeedsPhoneLink(Boolean(result.data.needsPhoneLink));
-        }
-
-        if (result.data.provider === "phone") {
-          setPhoneAccount(result.data.account as AccountProfile);
-          setNeedsPhoneLink(false);
-        }
-      } catch {
-        return;
-      }
-    };
-
-    void fetchSession();
-  }, [requestedMethod]);
-
-  useEffect(() => {
-    if (requestedMethod !== "phone") {
-      setOtpError("");
-      setOtpHint("");
-      return;
-    }
-  }, [requestedMethod]);
-
-  const activeAccount = googleAccount ?? phoneAccount;
-  const isPhoneFlow = requestedMethod === "phone";
-  const isGoogleFlow = requestedMethod === "google";
-
-  const handleGoBack = () => {
     if (typeof window === "undefined") {
       return;
     }
 
-    if (window.history.length > 1) {
-      window.history.back();
+    const { hostname, origin } = window.location;
+
+    if (hostname !== "localhost" && hostname !== "127.0.0.1") {
+      setApiBase(origin);
       return;
     }
 
-    window.location.href = "/";
-  };
+    let isCancelled = false;
 
-  const formatVisitDate = (value: string | null) => {
-    if (!value) {
-      return language === "ru" ? "После первой записи появится здесь" : "It will appear after the first booking";
-    }
+    const discoverApiBase = async () => {
+      const candidates = [`http://${hostname}:3000`, `http://${hostname}:3001`];
 
-    const date = new Date(value);
+      for (const candidate of candidates) {
+        try {
+          const response = await fetch(`${candidate}/api/public/account/session`, {
+            credentials: "include",
+          });
 
-    if (Number.isNaN(date.getTime())) {
-      return value;
-    }
-
-    return new Intl.DateTimeFormat(language === "ru" ? "ru-RU" : "en-US", {
-      day: "numeric",
-      month: "long",
-      hour: "2-digit",
-      minute: "2-digit",
-    }).format(date);
-  };
-
-  const handleRequestPhoneCode = async () => {
-    setOtpError("");
-    setOtpHint("");
-    setIsSendingCode(true);
-
-    try {
-      const response = await fetch("/api/public/account/phone/request-otp", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          phone,
-        }),
-      });
-
-      const result = await response.json();
-
-      if (!response.ok || !result.success) {
-        setOtpError(result.error ?? (language === "ru" ? "Не удалось отправить код." : "Failed to send code."));
-        return;
+          if (response.ok) {
+            if (!isCancelled) {
+              setApiBase(candidate);
+            }
+            return;
+          }
+        } catch {
+          continue;
+        }
       }
 
-      setPhone(result.data.phone);
-      setOtpCode("");
-      setPhoneStep("otp");
-      setOtpHint(
-        language === "ru"
-          ? `Код отправлен на ${result.data.maskedPhone}.`
-          : `The code was sent to ${result.data.maskedPhone}.`,
-      );
-    } catch (error) {
-      setOtpError(
-        error instanceof Error
-          ? error.message
-          : language === "ru"
-            ? "Не удалось отправить код."
-            : "Failed to send code.",
-      );
-    } finally {
-      setIsSendingCode(false);
-    }
-  };
+      if (!isCancelled) {
+        setApiBase(candidates[0]);
+      }
+    };
 
-  const handleVerifyPhoneCode = async () => {
-    setOtpError("");
-    setIsVerifyingCode(true);
+    void discoverApiBase();
+
+    return () => {
+      isCancelled = true;
+    };
+  }, []);
+
+  const loadSession = useCallback(async () => {
+    if (!apiBase) {
+      return;
+    }
+
+    setIsLoading(true);
 
     try {
-      const response = await fetch("/api/public/account/phone/verify-otp", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          phone,
-          code: otpCode,
-        }),
-      });
-
-      const result = await response.json();
-
-      if (!response.ok || !result.success) {
-        setOtpError(result.error ?? (language === "ru" ? "Код подтверждения неверный." : "Invalid verification code."));
-        return;
-      }
-
-      setGoogleAccount(null);
-      setPhoneAccount(result.data as AccountProfile);
-      setOtpCode("");
-      setOtpHint("");
-    } catch (error) {
-      setOtpError(
-        error instanceof Error
-          ? error.message
-          : language === "ru"
-            ? "Не удалось подтвердить код."
-            : "Failed to verify code.",
+      const data = await unwrapResponse<VisitorSessionResponse>(
+        await fetch(`${apiBase}/api/public/account/session`, { credentials: "include" }),
       );
+      setSession(data);
+    } catch (loadError) {
+      setSession({
+        authenticated: false,
+        provider: null,
+        account: null,
+      });
+      setStatusTone("error");
+      setStatusMessage(loadError instanceof Error ? loadError.message : "Не удалось загрузить кабинет");
     } finally {
-      setIsVerifyingCode(false);
+      setIsLoading(false);
     }
+  }, [apiBase]);
+
+  useEffect(() => {
+    void loadSession();
+  }, [loadSession]);
+
+  useEffect(() => {
+    if (!method && !error) {
+      return;
+    }
+
+    if (error) {
+      const errorsMap: Record<string, string> = {
+        google_state: "Сессия входа Google истекла. Попробуйте ещё раз.",
+        google_config: "Google-вход пока не настроен до конца.",
+        google_token: "Google не выдал токен входа.",
+        google_userinfo: "Не удалось получить профиль Google.",
+        google_account: "Не удалось создать профиль посетителя.",
+        google_profile: "Не удалось собрать кабинет посетителя.",
+        google_callback: "Во время возврата из Google произошла ошибка.",
+      };
+
+      setStatusTone("error");
+      setStatusMessage(errorsMap[error] ?? "Не удалось завершить вход через Google.");
+      return;
+    }
+
+    if (method === "google") {
+      setStatusTone("success");
+      setStatusMessage("Google-вход завершён. Проверяем кабинет.");
+    }
+  }, [method, error]);
+
+  const account = session?.account ?? null;
+  const history = useMemo(() => account?.history ?? [], [account]);
+
+  const startGoogleLogin = () => {
+    window.location.assign(`${apiBase}/api/public/account/google/start?returnTo=${encodeURIComponent(window.location.origin)}`);
   };
 
-  const resetPhoneFlow = () => {
-    setPhoneStep("phone");
-    setOtpCode("");
-    setOtpError("");
-    setOtpHint("");
-  };
-
-  const handleLogout = () => {
-    void fetch("/api/public/account/logout", {
-      method: "POST",
-    });
-    setGoogleAccount(null);
-    setPhoneAccount(null);
-    setNeedsPhoneLink(false);
-    resetPhoneFlow();
-    resetLinkPhoneFlow();
-  };
-
-  const handleGoogleLogin = () => {
-    window.location.href = "/api/public/account/google/start";
-  };
-
-  const resetLinkPhoneFlow = () => {
-    setLinkStep("phone");
-    setLinkPhone("");
-    setLinkOtpCode("");
-    setLinkError("");
-    setLinkHint("");
-  };
-
-  const handleRequestLinkPhoneCode = async () => {
-    setLinkError("");
-    setLinkHint("");
-    setIsLinkSending(true);
+  const logout = async () => {
+    setIsLoggingOut(true);
+    setStatusMessage(null);
 
     try {
-      const response = await fetch("/api/public/account/phone/request-otp", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          phone: linkPhone,
+      await unwrapResponse<{ loggedOut: true }>(
+        await fetch(`${apiBase}/api/public/account/logout`, {
+          method: "POST",
+          credentials: "include",
         }),
+      );
+
+      setSession({
+        authenticated: false,
+        provider: null,
+        account: null,
       });
-
-      const result = await response.json();
-
-      if (!response.ok || !result.success) {
-        setLinkError(result.error ?? (language === "ru" ? "Не удалось отправить код." : "Failed to send code."));
-        return;
-      }
-
-      setLinkPhone(result.data.phone);
-      setLinkOtpCode("");
-      setLinkStep("otp");
-      setLinkHint(
-        language === "ru"
-          ? `Код отправлен на ${result.data.maskedPhone}.`
-          : `The code was sent to ${result.data.maskedPhone}.`,
-      );
-    } catch (error) {
-      setLinkError(
-        error instanceof Error
-          ? error.message
-          : language === "ru"
-            ? "Не удалось отправить код."
-            : "Failed to send code.",
-      );
+      setStatusTone("success");
+      setStatusMessage("Вы вышли из кабинета.");
+    } catch (logoutError) {
+      setStatusTone("error");
+      setStatusMessage(logoutError instanceof Error ? logoutError.message : "Не удалось выйти из кабинета");
     } finally {
-      setIsLinkSending(false);
+      setIsLoggingOut(false);
     }
   };
-
-  const handleVerifyLinkedPhone = async () => {
-    setLinkError("");
-    setIsLinkVerifying(true);
-
-    try {
-      const response = await fetch("/api/public/account/google/link-phone", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          phone: linkPhone,
-          code: linkOtpCode,
-        }),
-      });
-
-      const result = await response.json();
-
-      if (!response.ok || !result.success) {
-        setLinkError(result.error ?? (language === "ru" ? "Не удалось подтвердить номер." : "Failed to verify phone."));
-        return;
-      }
-
-      setGoogleAccount(result.data as AccountProfile);
-      setNeedsPhoneLink(false);
-      resetLinkPhoneFlow();
-    } catch (error) {
-      setLinkError(
-        error instanceof Error
-          ? error.message
-          : language === "ru"
-            ? "Не удалось подтвердить номер."
-            : "Failed to verify phone.",
-      );
-    } finally {
-      setIsLinkVerifying(false);
-    }
-  };
-
-  const copy = {
-    ru: {
-      eyebrow: "Личный кабинет",
-      title: "Вход в личный кабинет",
-      description:
-        "Войдите в личный кабинет, чтобы посмотреть будущие записи, историю визитов и персональные условия.",
-      phoneTitle: "Вход по номеру",
-      phoneDescription: "Введите номер телефона. Мы отправим 4-значный код подтверждения, чтобы открыть личный кабинет.",
-      googleTitle: "Вход через Google",
-      googleDescription: "Откройте вход через Google, чтобы сразу попасть в личный кабинет без временных логинов и паролей.",
-      linkPhoneTitle: "Подтвердите номер телефона",
-      linkPhoneDescription:
-        "Один раз подтвердите свой номер, чтобы связать Google-вход с вашим клиентским профилем и открыть историю визитов, записи и бонусы.",
-      linkPhoneButton: "Связать номер",
-      linkPhoneLater: "Сделать позже",
-      username: "Логин",
-      password: "Пароль",
-      phoneLabel: "Номер телефона",
-      phonePlaceholder: "+7 (___) ___-__-__",
-      sendCode: "Получить код",
-      otpTitle: "Подтвердите номер",
-      otpDescription: "Введите 4-значный код, который мы отправили на ваш телефон.",
-      verifyCode: "Подтвердить код",
-      resendCode: "Отправить код ещё раз",
-      changePhone: "Изменить номер",
-      noHistoryYet: "После первого визита история появится здесь.",
-      continueWithGoogle: "Продолжить через Google",
-      signIn: "Войти в кабинет",
-      signedAs: "Активный профиль",
-      back: "Назад",
-      nextVisit: "Следующий визит",
-      history: "История посещений",
-      bonuses: "Бонусы и статус",
-      switchAccount: "Сменить аккаунт",
-      logout: "Выйти",
-      crmEntry: "CRM для мастера",
-      crmDesc: "Если нужно посмотреть административную часть, открой вход в CRM отдельно.",
-      bonusLabel: "бонусных баллов",
-      barber: "Барбер",
-      visitorMode: "Режим посетителя",
-      level: "Статус",
-      noAccounts: "Выберите способ входа, чтобы открыть личный кабинет.",
-    },
-    en: {
-      eyebrow: "Client account",
-      title: "Account sign in",
-      description:
-        "Sign in to the account to view upcoming bookings, visit history and personal conditions.",
-      phoneTitle: "Phone sign in",
-      phoneDescription: "Enter your phone number. We will send a 4-digit verification code to open your account.",
-      googleTitle: "Continue with Google",
-      googleDescription: "Use real Google sign-in to open your account without temporary demo credentials.",
-      linkPhoneTitle: "Verify your phone number",
-      linkPhoneDescription:
-        "Confirm your phone once to connect Google sign-in with your client profile and unlock visit history, bookings and bonuses.",
-      linkPhoneButton: "Link phone",
-      linkPhoneLater: "Later",
-      username: "Login",
-      password: "Password",
-      phoneLabel: "Phone number",
-      phonePlaceholder: "+7 (___) ___-__-__",
-      sendCode: "Send code",
-      otpTitle: "Verify your number",
-      otpDescription: "Enter the 4-digit code that we sent to your phone.",
-      verifyCode: "Verify code",
-      resendCode: "Send code again",
-      changePhone: "Change number",
-      noHistoryYet: "Your visit history will appear after the first booking.",
-      continueWithGoogle: "Continue with Google",
-      signIn: "Sign in",
-      signedAs: "Active profile",
-      back: "Back",
-      nextVisit: "Next visit",
-      history: "Visit history",
-      bonuses: "Bonuses and status",
-      switchAccount: "Switch account",
-      logout: "Log out",
-      crmEntry: "CRM for barber",
-      crmDesc: "If you need the admin side, open the CRM login separately.",
-      bonusLabel: "bonus points",
-      barber: "Barber",
-      visitorMode: "Visitor mode",
-      level: "Level",
-      noAccounts: "Choose a sign-in method to open your account.",
-    },
-  }[language];
-
-  if (!activeAccount) {
-    return (
-      <main className="section-grid section-grid-strong min-h-screen bg-background text-foreground px-6 py-32">
-        <div className="mx-auto max-w-[56rem] border border-border bg-card/70 p-8 md:p-9">
-          <button
-            type="button"
-            onClick={handleGoBack}
-            className="mb-6 inline-flex items-center gap-2 border border-border bg-background/70 px-4 py-3 text-foreground transition-colors duration-300 hover:bg-card"
-          >
-            <ArrowLeft className="h-4 w-4" />
-            <span className="font-body text-xs uppercase tracking-[0.16em]">{copy.back}</span>
-          </button>
-          <p className="font-body text-xs tracking-[0.22em] uppercase text-muted-foreground mb-4">
-            {copy.eyebrow}
-          </p>
-          <h1 className="font-display text-4xl md:text-6xl font-light leading-[0.94] mb-6">
-            {isPhoneFlow ? copy.phoneTitle : isGoogleFlow ? copy.googleTitle : copy.title}
-          </h1>
-          <p className="max-w-[38rem] font-body text-sm md:text-base leading-relaxed text-muted-foreground mb-8">
-            {isPhoneFlow ? copy.phoneDescription : isGoogleFlow ? copy.googleDescription : copy.description}
-          </p>
-
-          {isPhoneFlow ? (
-            <div className="max-w-[34rem] border border-border bg-background/60 p-5 md:p-6">
-              {phoneStep === "phone" ? (
-                <div className="grid gap-4">
-                  <p className="font-body text-xs tracking-[0.18em] uppercase text-muted-foreground">
-                    {copy.phoneLabel}
-                  </p>
-                  <input
-                    value={phone}
-                    onChange={(event) => setPhone(event.target.value)}
-                    placeholder={copy.phonePlaceholder}
-                    className="h-12 border border-border bg-background px-4 font-body text-sm text-foreground outline-none"
-                  />
-                  {otpError ? <p className="font-body text-xs text-destructive">{otpError}</p> : null}
-                  <button
-                    type="button"
-                    onClick={handleRequestPhoneCode}
-                    disabled={!phone.trim() || isSendingCode}
-                    className={cn(
-                      "inline-flex items-center justify-center border px-5 py-4 transition-colors duration-300",
-                      !phone.trim() || isSendingCode
-                        ? "border-border bg-foreground text-background/55 cursor-not-allowed"
-                        : "border-border bg-foreground text-background hover:bg-accent hover:text-foreground",
-                    )}
-                  >
-                    <span className="font-body text-xs uppercase tracking-[0.16em]">
-                      {isSendingCode ? `${copy.sendCode}...` : copy.sendCode}
-                    </span>
-                  </button>
-                </div>
-              ) : (
-                <div className="grid gap-5">
-                  <div>
-                    <p className="font-display text-2xl font-light text-foreground mb-2">{copy.otpTitle}</p>
-                    <p className="font-body text-sm leading-relaxed text-muted-foreground">{copy.otpDescription}</p>
-                  </div>
-
-                  <div className="flex justify-center">
-                    <InputOTP
-                      maxLength={4}
-                      value={otpCode}
-                      onChange={setOtpCode}
-                      containerClassName="justify-center gap-3"
-                    >
-                      <InputOTPGroup className="gap-3">
-                        <InputOTPSlot
-                          index={0}
-                          className="h-12 w-12 rounded-md border border-border bg-background text-lg font-semibold first:rounded-md first:border last:rounded-md"
-                        />
-                        <InputOTPSlot
-                          index={1}
-                          className="h-12 w-12 rounded-md border border-border bg-background text-lg font-semibold first:rounded-md first:border last:rounded-md"
-                        />
-                        <InputOTPSlot
-                          index={2}
-                          className="h-12 w-12 rounded-md border border-border bg-background text-lg font-semibold first:rounded-md first:border last:rounded-md"
-                        />
-                        <InputOTPSlot
-                          index={3}
-                          className="h-12 w-12 rounded-md border border-border bg-background text-lg font-semibold first:rounded-md first:border last:rounded-md"
-                        />
-                      </InputOTPGroup>
-                    </InputOTP>
-                  </div>
-
-                  {otpHint ? <p className="font-body text-sm text-muted-foreground text-center">{otpHint}</p> : null}
-                  {otpError ? <p className="font-body text-xs text-destructive text-center">{otpError}</p> : null}
-
-                  <button
-                    type="button"
-                    onClick={handleVerifyPhoneCode}
-                    disabled={otpCode.length !== 4 || isVerifyingCode}
-                    className={cn(
-                      "inline-flex items-center justify-center border px-5 py-4 transition-colors duration-300",
-                      otpCode.length !== 4 || isVerifyingCode
-                        ? "border-border bg-foreground text-background/55 cursor-not-allowed"
-                        : "border-border bg-foreground text-background hover:bg-accent hover:text-foreground",
-                    )}
-                  >
-                    <span className="font-body text-xs uppercase tracking-[0.16em]">
-                      {isVerifyingCode ? `${copy.verifyCode}...` : copy.verifyCode}
-                    </span>
-                  </button>
-
-                  <div className="flex flex-wrap items-center justify-center gap-3">
-                    <button
-                      type="button"
-                      onClick={handleRequestPhoneCode}
-                      className="font-body text-xs uppercase tracking-[0.16em] text-muted-foreground transition-colors duration-300 hover:text-foreground"
-                    >
-                      {copy.resendCode}
-                    </button>
-                    <button
-                      type="button"
-                      onClick={resetPhoneFlow}
-                      className="font-body text-xs uppercase tracking-[0.16em] text-muted-foreground transition-colors duration-300 hover:text-foreground"
-                    >
-                      {copy.changePhone}
-                    </button>
-                  </div>
-                </div>
-              )}
-            </div>
-          ) : isGoogleFlow ? (
-            <div className="max-w-[34rem] border border-border bg-background/60 p-5 md:p-6">
-              <button
-                type="button"
-                onClick={handleGoogleLogin}
-                className="inline-flex w-full items-center justify-center border border-border bg-foreground px-5 py-4 text-background transition-colors duration-300 hover:bg-accent hover:text-foreground"
-              >
-                <span className="font-body text-xs uppercase tracking-[0.16em]">{copy.continueWithGoogle}</span>
-              </button>
-            </div>
-          ) : (
-            <p className="font-body text-sm text-muted-foreground">{copy.noAccounts}</p>
-          )}
-
-          <a
-            href={crmLoginHref}
-            className="mt-8 inline-flex items-center gap-3 border border-border bg-foreground px-5 py-4 text-background transition-colors duration-300 hover:bg-accent hover:text-foreground"
-          >
-            <ShieldCheck className="h-4 w-4" />
-            <span className="font-body text-xs uppercase tracking-[0.16em]">{copy.crmEntry}</span>
-          </a>
-        </div>
-      </main>
-    );
-  }
 
   return (
-    <main className="min-h-screen bg-background text-foreground px-6 py-24">
-      <div className="mx-auto max-w-6xl grid gap-6">
-        <div>
-          <button
-            type="button"
-            onClick={handleGoBack}
-            className="inline-flex items-center gap-2 border border-border bg-background/70 px-4 py-3 text-foreground transition-colors duration-300 hover:bg-card"
+    <main className="min-h-screen bg-background px-4 pb-16 pt-28 text-foreground md:px-8 md:pt-36">
+      <div className="mx-auto flex w-full max-w-6xl flex-col gap-8">
+        <div className="flex flex-wrap items-center justify-between gap-4">
+          <div>
+            <p className="mb-4 font-body text-[11px] uppercase tracking-[0.32em] text-muted-foreground">Личный кабинет</p>
+            <h1 className="font-display text-5xl font-light leading-none md:text-7xl">Hunter Account</h1>
+          </div>
+          <Link
+            to="/"
+            className="inline-flex min-h-12 items-center gap-3 border border-border px-5 font-body text-xs uppercase tracking-[0.25em] text-muted-foreground transition-colors hover:border-foreground hover:text-foreground"
           >
             <ArrowLeft className="h-4 w-4" />
-            <span className="font-body text-xs uppercase tracking-[0.16em]">{copy.back}</span>
-          </button>
+            На сайт
+          </Link>
         </div>
 
-        <section className="border border-border bg-card/70 p-8 md:p-10">
-          <div className="flex flex-col gap-8 lg:flex-row lg:items-start lg:justify-between">
-            <div>
-              <p className="font-body text-xs tracking-[0.22em] uppercase text-muted-foreground mb-4">
-                {copy.signedAs}
-              </p>
-              <h1 className="font-display text-4xl md:text-6xl font-light leading-[0.94] mb-3">
-                {activeAccount.name}
-              </h1>
-              <p className="font-body text-sm md:text-base text-muted-foreground leading-relaxed max-w-2xl">
-                {copy.visitorMode}. {copy.crmDesc}
-              </p>
-            </div>
-
-            <div className="flex flex-wrap gap-3">
-              <button
-                type="button"
-                onClick={handleLogout}
-                className="inline-flex items-center gap-2 border border-border bg-background/70 px-5 py-4 text-foreground transition-colors duration-300 hover:bg-card"
-              >
-                <UserRound className="h-4 w-4" />
-                <span className="font-body text-xs uppercase tracking-[0.16em]">{copy.switchAccount}</span>
-              </button>
-              <button
-                type="button"
-                onClick={handleLogout}
-                className="inline-flex items-center gap-2 border border-border bg-background/70 px-5 py-4 text-foreground transition-colors duration-300 hover:bg-card"
-              >
-                <LogOut className="h-4 w-4" />
-                <span className="font-body text-xs uppercase tracking-[0.16em]">{copy.logout}</span>
-              </button>
-              <a
-                href={crmLoginHref}
-                className="inline-flex items-center gap-2 border border-border bg-foreground px-5 py-4 text-background transition-colors duration-300 hover:bg-accent hover:text-foreground"
-              >
-                <ShieldCheck className="h-4 w-4" />
-                <span className="font-body text-xs uppercase tracking-[0.16em]">{copy.crmEntry}</span>
-              </a>
-            </div>
+        {statusMessage ? (
+          <div
+            className={`border px-5 py-4 font-body text-sm ${
+              statusTone === "error"
+                ? "border-red-500/40 bg-red-500/10 text-red-100"
+                : statusTone === "success"
+                  ? "border-emerald-500/40 bg-emerald-500/10 text-emerald-100"
+                  : "border-border bg-card/60 text-foreground"
+            }`}
+          >
+            {statusMessage}
           </div>
-        </section>
-
-        {googleAccount && needsPhoneLink ? (
-          <section className="border border-border bg-card/70 p-8 md:p-10">
-            <div className="max-w-3xl grid gap-6">
-              <div>
-                <p className="font-body text-xs tracking-[0.18em] uppercase text-muted-foreground mb-3">
-                  {copy.phoneTitle}
-                </p>
-                <h2 className="font-display text-3xl md:text-5xl font-light leading-[0.96] mb-4">{copy.linkPhoneTitle}</h2>
-                <p className="font-body text-sm md:text-base leading-relaxed text-muted-foreground">
-                  {copy.linkPhoneDescription}
-                </p>
-              </div>
-
-              <div className="max-w-[34rem] border border-border bg-background/60 p-5 md:p-6">
-                {linkStep === "phone" ? (
-                  <div className="grid gap-4">
-                    <p className="font-body text-xs tracking-[0.18em] uppercase text-muted-foreground">
-                      {copy.phoneLabel}
-                    </p>
-                    <input
-                      value={linkPhone}
-                      onChange={(event) => setLinkPhone(event.target.value)}
-                      placeholder={copy.phonePlaceholder}
-                      className="h-12 border border-border bg-background px-4 font-body text-sm text-foreground outline-none"
-                    />
-                    {linkError ? <p className="font-body text-xs text-destructive">{linkError}</p> : null}
-                    <div className="flex flex-wrap gap-3">
-                      <button
-                        type="button"
-                        onClick={handleRequestLinkPhoneCode}
-                        disabled={!linkPhone.trim() || isLinkSending}
-                        className={cn(
-                          "inline-flex items-center justify-center border px-5 py-4 transition-colors duration-300",
-                          !linkPhone.trim() || isLinkSending
-                            ? "border-border bg-foreground text-background/55 cursor-not-allowed"
-                            : "border-border bg-foreground text-background hover:bg-accent hover:text-foreground",
-                        )}
-                      >
-                        <span className="font-body text-xs uppercase tracking-[0.16em]">
-                          {isLinkSending ? `${copy.sendCode}...` : copy.linkPhoneButton}
-                        </span>
-                      </button>
-                      <button
-                        type="button"
-                        onClick={() => setNeedsPhoneLink(false)}
-                        className="inline-flex items-center justify-center border border-border bg-background/70 px-5 py-4 text-foreground transition-colors duration-300 hover:bg-card"
-                      >
-                        <span className="font-body text-xs uppercase tracking-[0.16em]">{copy.linkPhoneLater}</span>
-                      </button>
-                    </div>
-                  </div>
-                ) : (
-                  <div className="grid gap-5">
-                    <div>
-                      <p className="font-display text-2xl font-light text-foreground mb-2">{copy.otpTitle}</p>
-                      <p className="font-body text-sm leading-relaxed text-muted-foreground">{copy.otpDescription}</p>
-                    </div>
-
-                    <div className="flex justify-center">
-                      <InputOTP
-                        maxLength={4}
-                        value={linkOtpCode}
-                        onChange={setLinkOtpCode}
-                        containerClassName="justify-center gap-3"
-                      >
-                        <InputOTPGroup className="gap-3">
-                          <InputOTPSlot index={0} className="h-12 w-12 rounded-md border border-border bg-background text-lg font-semibold first:rounded-md first:border last:rounded-md" />
-                          <InputOTPSlot index={1} className="h-12 w-12 rounded-md border border-border bg-background text-lg font-semibold first:rounded-md first:border last:rounded-md" />
-                          <InputOTPSlot index={2} className="h-12 w-12 rounded-md border border-border bg-background text-lg font-semibold first:rounded-md first:border last:rounded-md" />
-                          <InputOTPSlot index={3} className="h-12 w-12 rounded-md border border-border bg-background text-lg font-semibold first:rounded-md first:border last:rounded-md" />
-                        </InputOTPGroup>
-                      </InputOTP>
-                    </div>
-
-                    {linkHint ? <p className="font-body text-sm text-muted-foreground text-center">{linkHint}</p> : null}
-                    {linkError ? <p className="font-body text-xs text-destructive text-center">{linkError}</p> : null}
-
-                    <button
-                      type="button"
-                      onClick={handleVerifyLinkedPhone}
-                      disabled={linkOtpCode.length !== 4 || isLinkVerifying}
-                      className={cn(
-                        "inline-flex items-center justify-center border px-5 py-4 transition-colors duration-300",
-                        linkOtpCode.length !== 4 || isLinkVerifying
-                          ? "border-border bg-foreground text-background/55 cursor-not-allowed"
-                          : "border-border bg-foreground text-background hover:bg-accent hover:text-foreground",
-                      )}
-                    >
-                      <span className="font-body text-xs uppercase tracking-[0.16em]">
-                        {isLinkVerifying ? `${copy.verifyCode}...` : copy.verifyCode}
-                      </span>
-                    </button>
-
-                    <div className="flex flex-wrap items-center justify-center gap-3">
-                      <button
-                        type="button"
-                        onClick={handleRequestLinkPhoneCode}
-                        className="font-body text-xs uppercase tracking-[0.16em] text-muted-foreground transition-colors duration-300 hover:text-foreground"
-                      >
-                        {copy.resendCode}
-                      </button>
-                      <button
-                        type="button"
-                        onClick={resetLinkPhoneFlow}
-                        className="font-body text-xs uppercase tracking-[0.16em] text-muted-foreground transition-colors duration-300 hover:text-foreground"
-                      >
-                        {copy.changePhone}
-                      </button>
-                    </div>
-                  </div>
-                )}
-              </div>
-            </div>
-          </section>
         ) : null}
 
-        <section className="grid gap-6 lg:grid-cols-[1.15fr_0.85fr]">
-          <div className="border border-border bg-card/70 p-8 md:p-10">
-            <div className="flex items-center gap-3 mb-5">
-              <CalendarClock className="h-5 w-5 text-foreground" />
-              <p className="font-body text-xs tracking-[0.18em] uppercase text-muted-foreground">{copy.nextVisit}</p>
-            </div>
-            <p className="font-display text-3xl md:text-5xl font-light text-foreground mb-3">
-              {activeAccount.nextVisit.service}
-            </p>
-            <p className="font-body text-base text-muted-foreground mb-2">
-              {formatVisitDate(activeAccount.nextVisit.scheduledAt)}
-            </p>
-            <p className="font-body text-sm text-foreground/80">
-              {copy.barber}: {activeAccount.nextVisit.barber}
-            </p>
-          </div>
-
-          <div className="border border-border bg-card/70 p-8 md:p-10">
-            <div className="flex items-center gap-3 mb-5">
-              <Crown className="h-5 w-5 text-foreground" />
-              <p className="font-body text-xs tracking-[0.18em] uppercase text-muted-foreground">{copy.bonuses}</p>
-            </div>
-            <p className="font-display text-3xl md:text-5xl font-light text-foreground mb-3">
-              {activeAccount.bonusPoints}
-            </p>
-            <p className="font-body text-sm text-muted-foreground mb-4">{copy.bonusLabel}</p>
-            <div className="border border-border bg-background/50 px-4 py-3">
-              <p className="font-body text-xs uppercase tracking-[0.16em] text-muted-foreground mb-1">{copy.level}</p>
-              <p className="font-display text-2xl font-light text-foreground">{activeAccount.level}</p>
-            </div>
-          </div>
-        </section>
-
-        <section className="border border-border bg-card/70 p-8 md:p-10">
-          <div className="flex items-center gap-3 mb-6">
-            <History className="h-5 w-5 text-foreground" />
-            <p className="font-body text-xs tracking-[0.18em] uppercase text-muted-foreground">{copy.history}</p>
-          </div>
-
-          <div className="grid gap-4">
-            {activeAccount.history.length ? (
-              activeAccount.history.map((item, index) => (
-                <div
-                  key={`${item.date}-${item.service}-${index}`}
-                  className={cn(
-                    "grid gap-3 border border-border bg-background/50 p-5 md:grid-cols-[160px_minmax(0,1fr)_minmax(0,1.1fr)] md:items-start",
-                  )}
-                >
-                  <p className="font-body text-sm text-muted-foreground">{formatVisitDate(item.date)}</p>
-                  <p className="font-display text-2xl font-light text-foreground">{item.service}</p>
-                  <p className="font-body text-sm leading-relaxed text-foreground/80">{item.result}</p>
+        {isLoading ? (
+          <section className={panelClassName}>
+            <p className="font-body text-sm uppercase tracking-[0.25em] text-muted-foreground">Загружаем кабинет</p>
+          </section>
+        ) : session?.authenticated && account ? (
+          <div className="grid gap-6 lg:grid-cols-[1.05fr_0.95fr]">
+            <section className={`${panelClassName} flex flex-col gap-8`}>
+              <div className="flex flex-wrap items-start justify-between gap-4">
+                <div>
+                  <p className="mb-3 font-body text-[11px] uppercase tracking-[0.24em] text-muted-foreground">
+                    {session.provider === "google" ? "Google-кабинет" : "Кабинет по номеру"}
+                  </p>
+                  <h2 className="font-display text-4xl font-light md:text-5xl">{account.name}</h2>
                 </div>
-              ))
-            ) : (
-              <p className="font-body text-sm text-muted-foreground">{copy.noHistoryYet}</p>
-            )}
+                <button type="button" onClick={logout} disabled={isLoggingOut} className={secondaryButtonClassName}>
+                  <LogOut className="mr-3 h-4 w-4" />
+                  Выйти
+                </button>
+              </div>
+
+              <div className="grid gap-4 md:grid-cols-3">
+                <div className="border border-border bg-background/70 p-5">
+                  <p className={labelClassName}>Телефон</p>
+                  <p className="mt-3 font-body text-lg text-foreground">{account.phone || "Не указан"}</p>
+                </div>
+                <div className="border border-border bg-background/70 p-5">
+                  <p className={labelClassName}>Статус</p>
+                  <p className="mt-3 font-body text-lg text-foreground">{account.level}</p>
+                </div>
+                <div className="border border-border bg-background/70 p-5">
+                  <p className={labelClassName}>Бонусы</p>
+                  <p className="mt-3 font-body text-lg text-foreground">{account.bonusPoints}</p>
+                </div>
+              </div>
+
+              <div className="border border-border bg-background/70 p-6">
+                <p className={labelClassName}>Следующий визит</p>
+                <div className="mt-5 grid gap-3 md:grid-cols-[1.1fr_0.9fr]">
+                  <div>
+                    <p className="font-display text-3xl font-light text-foreground">{account.nextVisit.service}</p>
+                    <p className="mt-2 font-body text-base text-muted-foreground">{formatVisitDate(account.nextVisit.scheduledAt)}</p>
+                  </div>
+                  <div className="md:text-right">
+                    <p className={labelClassName}>Мастер</p>
+                    <p className="mt-3 font-body text-lg text-foreground">{account.nextVisit.barber}</p>
+                  </div>
+                </div>
+              </div>
+
+            </section>
+
+            <section className={`${panelClassName} flex flex-col gap-6`}>
+              <div>
+                <p className="mb-3 font-body text-[11px] uppercase tracking-[0.24em] text-muted-foreground">История визитов</p>
+                <h2 className="font-display text-4xl font-light md:text-5xl">Ваши визиты</h2>
+              </div>
+
+              {history.length > 0 ? (
+                <div className="flex flex-col gap-4">
+                  {history.map((item, index) => (
+                    <article key={`${item.date}-${item.service}-${index}`} className="border border-border bg-background/70 p-5">
+                      <div className="flex flex-wrap items-start justify-between gap-3">
+                        <div>
+                          <p className={labelClassName}>{formatVisitDate(item.date)}</p>
+                          <p className="mt-3 font-display text-3xl font-light text-foreground">{item.service}</p>
+                        </div>
+                      </div>
+                      <p className="mt-4 font-body text-sm leading-relaxed text-muted-foreground">{item.result}</p>
+                    </article>
+                  ))}
+                </div>
+              ) : (
+                <div className="border border-border bg-background/70 p-6">
+                  <p className="font-body text-sm leading-relaxed text-muted-foreground">
+                    После первого визита в Hunter здесь появятся завершённые записи и заметки по обслуживанию.
+                  </p>
+                </div>
+              )}
+            </section>
           </div>
-        </section>
+        ) : (
+          <div className="grid gap-6 lg:grid-cols-[1.05fr_0.95fr]">
+            <section className={`${panelClassName} flex flex-col gap-6`}>
+              <div>
+                <p className="mb-4 font-body text-[11px] uppercase tracking-[0.24em] text-muted-foreground">Вход и регистрация</p>
+                <h2 className="font-display text-4xl font-light md:text-5xl">Войдите в кабинет</h2>
+                <p className="mt-4 max-w-2xl font-body text-base leading-relaxed text-muted-foreground">
+                  После входа вы сможете видеть будущие записи, историю визитов и персональные условия в Hunter.
+                </p>
+              </div>
+
+              <button type="button" onClick={startGoogleLogin} className={`${primaryButtonClassName} w-full justify-center`}>
+                <Chrome className="mr-3 h-4 w-4" />
+                Продолжить через Google
+              </button>
+            </section>
+
+            <section className={`${panelClassName} flex flex-col gap-5`}>
+              <div className="flex items-center gap-4">
+                <div className="flex h-16 w-16 items-center justify-center rounded-full border border-border bg-background/70">
+                  <UserRound className="h-7 w-7 text-foreground" />
+                </div>
+                <div>
+                  <p className={labelClassName}>Hunter Account</p>
+                  <p className="mt-2 font-display text-3xl font-light text-foreground">Премиальный кабинет клиента</p>
+                </div>
+              </div>
+
+              <div className="border border-border bg-background/70 p-5">
+                <p className={labelClassName}>Что будет внутри</p>
+                <ul className="mt-4 space-y-3 font-body text-sm leading-relaxed text-muted-foreground">
+                  <li>Будущие записи и даты следующего визита.</li>
+                  <li>История обслуживания и собранный профиль клиента.</li>
+                  <li>Статус, бонусы и персональные предложения Hunter.</li>
+                </ul>
+              </div>
+
+              <div className="border border-border bg-background/70 p-5">
+                <p className={labelClassName}>Как работает Google-вход</p>
+                <p className="mt-4 font-body text-sm leading-relaxed text-muted-foreground">
+                  Вход и регистрация на сайте выполняются только через Google-аккаунт. После первого входа Hunter
+                  запомнит ваш кабинет и в следующий раз повторная регистрация уже не понадобится.
+                </p>
+              </div>
+            </section>
+          </div>
+        )}
       </div>
     </main>
   );
 };
 
-export default Account;
+export default AccountPage;
