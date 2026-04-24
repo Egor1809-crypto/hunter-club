@@ -1,7 +1,35 @@
 import { randomUUID } from "node:crypto";
 import { NextResponse } from "next/server";
+import { getAppUrl, getFrontendUrl, isProduction } from "@/lib/env";
 import { checkRateLimit } from "@/lib/rate-limit";
-import { setGoogleOauthStateCookie } from "@/lib/visitor-auth";
+import { setGoogleOauthReturnToCookie, setGoogleOauthStateCookie } from "@/lib/visitor-auth";
+
+const getSafeReturnTo = (request: Request) => {
+  const url = new URL(request.url);
+  const returnTo = url.searchParams.get("returnTo");
+
+  if (!returnTo) {
+    return getFrontendUrl();
+  }
+
+  try {
+    const parsed = new URL(returnTo);
+    const allowedOrigins = new Set([new URL(getFrontendUrl()).origin, new URL(getAppUrl()).origin]);
+
+    if (!isProduction) {
+      allowedOrigins.add("http://localhost:8080");
+      allowedOrigins.add("http://127.0.0.1:8080");
+    }
+
+    if (allowedOrigins.has(parsed.origin)) {
+      return parsed.origin;
+    }
+  } catch {
+    return getFrontendUrl();
+  }
+
+  return getFrontendUrl();
+};
 
 export const dynamic = "force-dynamic";
 
@@ -27,9 +55,9 @@ export const GET = async (request: Request) => {
   }
 
   const clientId = process.env.GOOGLE_CLIENT_ID;
-  const appUrl = process.env.NEXTAUTH_URL;
+  const backendUrl = new URL(request.url).origin;
 
-  if (!clientId || !appUrl) {
+  if (!clientId) {
     return NextResponse.json(
       { success: false, data: null, error: "Google OAuth is not configured", meta: null },
       { status: 500 },
@@ -37,9 +65,11 @@ export const GET = async (request: Request) => {
   }
 
   const state = randomUUID();
+  const returnTo = getSafeReturnTo(request);
   await setGoogleOauthStateCookie(state);
+  await setGoogleOauthReturnToCookie(returnTo);
 
-  const redirectUri = `${appUrl}/api/public/account/google/callback`;
+  const redirectUri = `${backendUrl}/api/public/account/google/callback`;
   const params = new URLSearchParams({
     client_id: clientId,
     redirect_uri: redirectUri,

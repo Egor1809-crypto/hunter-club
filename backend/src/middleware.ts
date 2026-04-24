@@ -1,8 +1,38 @@
-import { NextResponse } from "next/server";
+import { NextResponse, type NextFetchEvent } from "next/server";
 import type { NextRequest } from "next/server";
-import { isProduction } from "@/lib/env";
+import { getAppUrl, getFrontendUrl, isProduction } from "@/lib/env";
 
-export const middleware = (request: NextRequest) => {
+const applyPublicCors = (request: NextRequest, response: NextResponse) => {
+  const origin = request.headers.get("origin");
+
+  if (!origin) {
+    return response;
+  }
+
+  const allowedOrigins = new Set([getFrontendUrl(), getAppUrl()]);
+
+  if (!isProduction) {
+    allowedOrigins.add("http://localhost:8080");
+    allowedOrigins.add("http://127.0.0.1:8080");
+  }
+
+  if (!allowedOrigins.has(origin)) {
+    return response;
+  }
+
+  response.headers.set("Access-Control-Allow-Origin", origin);
+  response.headers.set("Access-Control-Allow-Credentials", "true");
+  response.headers.set("Access-Control-Allow-Methods", "GET,POST,OPTIONS");
+  response.headers.set("Access-Control-Allow-Headers", "Content-Type");
+  response.headers.set("Vary", "Origin");
+  return response;
+};
+
+export const middleware = (request: NextRequest, _event: NextFetchEvent) => {
+  if (request.nextUrl.pathname.startsWith("/api/public/") && request.method === "OPTIONS") {
+    return applyPublicCors(request, new NextResponse(null, { status: 204 }));
+  }
+
   const response = NextResponse.next();
 
   response.headers.set("X-Frame-Options", "DENY");
@@ -35,7 +65,7 @@ export const middleware = (request: NextRequest) => {
 
   response.headers.set("Content-Security-Policy", csp);
 
-  return response;
+  return request.nextUrl.pathname.startsWith("/api/public/") ? applyPublicCors(request, response) : response;
 };
 
 export const config = {

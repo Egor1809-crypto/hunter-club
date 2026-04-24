@@ -5,6 +5,7 @@ import { getSessionSecret, isProduction } from "@/lib/env";
 
 const VISITOR_SESSION_COOKIE_NAME = "hunter_visitor_session";
 const GOOGLE_STATE_COOKIE_NAME = "hunter_google_oauth_state";
+const GOOGLE_RETURN_TO_COOKIE_NAME = "hunter_google_oauth_return_to";
 const VISITOR_SESSION_MAX_AGE = 60 * 60 * 24 * 30;
 
 type VisitorSessionPayload = {
@@ -183,6 +184,33 @@ export const getGoogleOauthStateCookie = async () => {
 export const clearGoogleOauthStateCookie = async () => {
   const cookieStore = await cookies();
   cookieStore.set(GOOGLE_STATE_COOKIE_NAME, "", {
+    httpOnly: true,
+    sameSite: "lax",
+    secure: isProduction,
+    path: "/",
+    expires: new Date(0),
+  });
+};
+
+export const setGoogleOauthReturnToCookie = async (returnTo: string) => {
+  const cookieStore = await cookies();
+  cookieStore.set(GOOGLE_RETURN_TO_COOKIE_NAME, returnTo, {
+    httpOnly: true,
+    sameSite: "lax",
+    secure: isProduction,
+    path: "/",
+    maxAge: 60 * 10,
+  });
+};
+
+export const getGoogleOauthReturnToCookie = async () => {
+  const cookieStore = await cookies();
+  return cookieStore.get(GOOGLE_RETURN_TO_COOKIE_NAME)?.value ?? null;
+};
+
+export const clearGoogleOauthReturnToCookie = async () => {
+  const cookieStore = await cookies();
+  cookieStore.set(GOOGLE_RETURN_TO_COOKIE_NAME, "", {
     httpOnly: true,
     sameSite: "lax",
     secure: isProduction,

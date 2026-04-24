@@ -29,3 +29,5 @@ export const getSessionSecret = () => {
 };
 
 export const getAppUrl = () => required(process.env.NEXTAUTH_URL, "NEXTAUTH_URL");
+
+export const getFrontendUrl = () => process.env.FRONTEND_URL?.trim() || getAppUrl();

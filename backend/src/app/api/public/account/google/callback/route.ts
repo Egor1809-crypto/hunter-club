@@ -1,6 +1,14 @@
 import { NextResponse } from "next/server";
+import { getFrontendUrl } from "@/lib/env";
 import { getRequestId, logError } from "@/lib/logger";
-import { clearGoogleOauthStateCookie, createVisitorSessionToken, getGoogleOauthStateCookie, setVisitorSessionCookie } from "@/lib/visitor-auth";
+import {
+  clearGoogleOauthReturnToCookie,
+  clearGoogleOauthStateCookie,
+  createVisitorSessionToken,
+  getGoogleOauthReturnToCookie,
+  getGoogleOauthStateCookie,
+  setVisitorSessionCookie,
+} from "@/lib/visitor-auth";
 import { buildGoogleVisitorProfile, upsertGoogleVisitorAccount } from "@/lib/visitor-accounts";
 
 type GoogleTokenResponse = {
@@ -22,12 +30,14 @@ export const GET = async (request: Request) => {
   const url = new URL(request.url);
   const code = url.searchParams.get("code");
   const state = url.searchParams.get("state");
+  const backendUrl = url.origin;
 
-  const appUrl = process.env.NEXTAUTH_URL;
-  const frontendUrl = `${appUrl ?? `${url.protocol}//${url.host}`}/account?method=google`;
+  const returnTo = (await getGoogleOauthReturnToCookie()) || getFrontendUrl();
+  const frontendUrl = `${returnTo}/account?method=google`;
 
   const expectedState = await getGoogleOauthStateCookie();
   await clearGoogleOauthStateCookie();
+  await clearGoogleOauthReturnToCookie();
 
   if (!code || !state || !expectedState || state !== expectedState) {
     return NextResponse.redirect(`${frontendUrl}&error=google_state`);
@@ -35,7 +45,7 @@ export const GET = async (request: Request) => {
 
   const clientId = process.env.GOOGLE_CLIENT_ID;
   const clientSecret = process.env.GOOGLE_CLIENT_SECRET;
-  if (!clientId || !clientSecret || !appUrl) {
+  if (!clientId || !clientSecret) {
     return NextResponse.redirect(`${frontendUrl}&error=google_config`);
   }
 
@@ -49,7 +59,7 @@ export const GET = async (request: Request) => {
         code,
         client_id: clientId,
         client_secret: clientSecret,
-        redirect_uri: `${appUrl}/api/public/account/google/callback`,
+        redirect_uri: `${backendUrl}/api/public/account/google/callback`,
         grant_type: "authorization_code",
       }),
     });
