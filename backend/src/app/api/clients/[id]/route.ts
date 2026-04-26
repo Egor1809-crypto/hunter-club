@@ -75,6 +75,14 @@ export const PATCH = async (request: Request, { params }: Params) => {
 
     return apiSuccess(client);
   } catch (error) {
+    if (error instanceof Prisma.PrismaClientKnownRequestError && error.code === "P2025") {
+      return apiError("Клиент не найден", 404);
+    }
+
+    if (error instanceof Prisma.PrismaClientKnownRequestError && error.code === "P2002") {
+      return apiError("Клиент с таким телефоном уже существует", 409);
+    }
+
     return apiException({
       request,
       error,

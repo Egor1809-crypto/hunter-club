@@ -8,9 +8,11 @@ const forbiddenValues = new Set([
   "change-me",
   "change-me-in-production",
   "replace-me",
+  "https://your-production-domain.example",
   "your-google-client-id.apps.googleusercontent.com",
   "your-google-client-secret",
   "replace-with-a-long-random-secret-at-least-32-characters",
+  "replace-with-private-master-code",
   "CHANGE_THIS_TO_A_LONG_RANDOM_SECRET_WITH_32_PLUS_CHARACTERS",
 ]);
 
@@ -21,6 +23,8 @@ const requiredKeys = [
   "DATABASE_URL",
   "NEXTAUTH_SECRET",
   "NEXTAUTH_URL",
+  "FRONTEND_URL",
+  "ADMIN_MFA_CODE",
   "GOOGLE_CLIENT_ID",
   "GOOGLE_CLIENT_SECRET",
   "SMS_PROVIDER",
@@ -79,8 +83,50 @@ if (postgresPassword.length < 16 || postgresPassword === "hunter_secret_2024") {
 }
 
 const nextAuthUrl = env.get("NEXTAUTH_URL") ?? "";
-if (nextAuthUrl.startsWith("http://localhost")) {
-  errors.push("NEXTAUTH_URL must point to the production domain, not localhost");
+const frontendUrl = env.get("FRONTEND_URL") ?? "";
+
+let parsedNextAuthUrl = null;
+let parsedFrontendUrl = null;
+
+try {
+  parsedNextAuthUrl = new URL(nextAuthUrl);
+} catch {
+  errors.push("NEXTAUTH_URL must be a valid absolute URL");
+}
+
+try {
+  parsedFrontendUrl = new URL(frontendUrl);
+} catch {
+  errors.push("FRONTEND_URL must be a valid absolute URL");
+}
+
+if (parsedNextAuthUrl) {
+  if (parsedNextAuthUrl.protocol !== "https:") {
+    errors.push("NEXTAUTH_URL must use https in production");
+  }
+
+  if (parsedNextAuthUrl.hostname === "localhost" || parsedNextAuthUrl.hostname === "127.0.0.1") {
+    errors.push("NEXTAUTH_URL must point to the production domain, not localhost");
+  }
+}
+
+if (parsedFrontendUrl) {
+  if (parsedFrontendUrl.protocol !== "https:") {
+    errors.push("FRONTEND_URL must use https in production");
+  }
+
+  if (parsedFrontendUrl.hostname === "localhost" || parsedFrontendUrl.hostname === "127.0.0.1") {
+    errors.push("FRONTEND_URL must point to the production domain, not localhost");
+  }
+}
+
+if (parsedNextAuthUrl && parsedFrontendUrl && parsedNextAuthUrl.origin !== parsedFrontendUrl.origin) {
+  errors.push("NEXTAUTH_URL and FRONTEND_URL must use the same origin for same-site Google/session cookies");
+}
+
+const adminMfaCode = env.get("ADMIN_MFA_CODE") ?? "";
+if (!/^\d{4,12}$/.test(adminMfaCode) || adminMfaCode === "2468") {
+  errors.push("ADMIN_MFA_CODE must be a private 4-12 digit code and not the local fallback");
 }
 
 const smsProvider = env.get("SMS_PROVIDER") ?? "none";
@@ -101,3 +147,6 @@ if (errors.length > 0) {
 }
 
 console.log(`Production env looks ready: ${envPath}`);
+if (parsedNextAuthUrl) {
+  console.log(`Google OAuth callback: ${new URL("/api/public/account/google/callback", parsedNextAuthUrl).toString()}`);
+}

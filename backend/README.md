@@ -4,7 +4,7 @@ Backend-проект для CRM и API барбершопа Hunter.
 
 ## Стек
 
-- Next.js 14 App Router
+- Next.js 15 App Router
 - Prisma ORM
 - PostgreSQL
 - Docker Compose для локальной базы
@@ -44,11 +44,27 @@ npm run prisma:migrate:status
 
 ```bash
 cp .env.production.example .env.production
-npm run env:check
+nano .env.production
+npm run env:check -- .env.production
 npm run verify
 ```
 
 Docker-образ перед стартом выполняет `prisma migrate deploy`, поэтому новая база поднимается через миграции без ручного запуска SQL.
+
+Для production Docker Compose используйте только production-файл и production env:
+
+```bash
+docker compose --env-file .env.production -f docker-compose.prod.yml up -d --build
+docker compose --env-file .env.production -f docker-compose.prod.yml exec -T app npm run prisma:migrate:status
+```
+
+Google OAuth callback, который должен быть добавлен в Google Cloud:
+
+```text
+https://slava-hunter.ru/api/public/account/google/callback
+```
+
+Перед выкладкой на сервер обязательно задайте приватный `ADMIN_MFA_CODE`; локальный код `2468` в production запрещён.
 
 ## Основные API
 

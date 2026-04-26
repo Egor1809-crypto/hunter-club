@@ -1,3 +1,4 @@
+import { timingSafeEqual } from "node:crypto";
 import { apiError, apiException, apiSuccess, formatZodError } from "@/lib/api";
 import {
   createAdminCsrfToken,
@@ -7,8 +8,26 @@ import {
   verifyAdminPassword,
 } from "@/lib/auth";
 import { prisma } from "@/lib/db";
+import { isProduction } from "@/lib/env";
 import { checkRateLimit } from "@/lib/rate-limit";
 import { adminLoginSchema } from "@/lib/validations";
+
+const getExpectedMfaCode = () => {
+  const configuredCode = process.env.ADMIN_MFA_CODE?.trim();
+
+  if (configuredCode) {
+    return configuredCode;
+  }
+
+  return isProduction ? null : "2468";
+};
+
+const isMfaCodeValid = (submittedCode: string, expectedCode: string) => {
+  const submitted = Buffer.from(submittedCode);
+  const expected = Buffer.from(expectedCode);
+
+  return submitted.length === expected.length && timingSafeEqual(submitted, expected);
+};
 
 export const POST = async (request: Request) => {
   try {
@@ -49,6 +68,16 @@ export const POST = async (request: Request) => {
 
     if (!isValidPassword) {
       return apiError("Неверный логин или пароль", 401);
+    }
+
+    const expectedMfaCode = getExpectedMfaCode();
+
+    if (!expectedMfaCode) {
+      return apiError("Двухфакторный код CRM не настроен", 503);
+    }
+
+    if (!isMfaCodeValid(parsed.data.mfaCode.trim(), expectedMfaCode)) {
+      return apiError("Неверный код подтверждения", 401);
     }
 
     await prisma.admin_users.update({

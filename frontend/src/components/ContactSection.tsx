@@ -3,9 +3,9 @@ import { useLanguage } from "@/context/LanguageContext";
 
 const contactLogoUrl = `/${encodeURIComponent("Хантер Лого.png")}`;
 const mapsQuery = encodeURIComponent("Саратов, Сакко и Ванцетти, 14 корпус 1");
-const openStreetMapEmbedUrl =
-  "https://www.openstreetmap.org/export/embed.html?bbox=46.0175%2C51.5290%2C46.0255%2C51.5335&layer=mapnik&marker=51.5312%2C46.0215";
-const openStreetMapUrl = `https://www.openstreetmap.org/search?query=${mapsQuery}`;
+const mapEmbedUrl =
+  "https://yandex.ru/map-widget/v1/?ll=46.0215%2C51.5312&mode=search&ol=geo&ouri=ymapsbm1%3A%2F%2Fgeo%3Fdata%3DCgg1MzEwNTM5NBJH0KDQvtGB0YHQuNGPLCDQodCw0YDQsNGC0L7Qsiwg0KHQsNC60LrQviDQuCDQktCw0L3RhtC10YLRgtGLLCAxNCIKDfEwOUIVaoVQQg%2C%2C&z=17";
+const mapUrl = `https://yandex.ru/maps/?text=${mapsQuery}`;
 
 const ContactSection = () => {
   const { language } = useLanguage();
@@ -91,17 +91,17 @@ const ContactSection = () => {
               <p className="font-body text-sm text-muted-foreground mt-1">
                 {language === "ru" ? "Саратов" : "Saratov"}
               </p>
-              <div className="mt-6 w-full max-w-md border border-border overflow-hidden bg-background">
+              <div className="mt-6 w-full max-w-md overflow-hidden border border-border bg-background">
                 <iframe
                   title={language === "ru" ? "Карта барбершопа Hunter" : "Hunter barbershop map"}
-                  src={openStreetMapEmbedUrl}
-                  className="h-52 w-full"
-                  loading="lazy"
+                  src={mapEmbedUrl}
+                  className="h-64 w-full md:h-72"
+                  loading="eager"
                   referrerPolicy="no-referrer-when-downgrade"
                 />
               </div>
               <a
-                href={openStreetMapUrl}
+                href={mapUrl}
                 target="_blank"
                 rel="noreferrer"
                 className="inline-block mt-4 font-body text-xs tracking-[0.15em] uppercase text-foreground hover:text-accent transition-colors duration-300"

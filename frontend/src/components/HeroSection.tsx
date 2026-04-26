@@ -57,16 +57,16 @@ const HeroSection = () => {
   }[language];
 
   return (
-    <section className="relative min-h-screen flex items-start overflow-hidden">
+    <section className="relative min-h-[100svh] flex items-start overflow-hidden">
       {/* Pure black background — no image */}
       <div className="absolute inset-0 bg-background z-0" />
       {/* Solid patch behind the logo to keep the hero backdrop clean */}
       <div
-        className="absolute left-[63%] top-[9rem] -translate-x-1/2 z-[2] w-[15rem] sm:w-[17rem] md:left-[68%] md:top-[24%] md:w-[31rem] aspect-square rounded-full bg-background pointer-events-none select-none"
+        className="absolute left-[69%] top-[10rem] -translate-x-1/2 z-[2] w-[12rem] sm:top-[12rem] sm:w-[17rem] md:left-[68%] md:top-[24%] md:w-[31rem] aspect-square rounded-full bg-background pointer-events-none select-none"
       />
       {/* Logo placed under the text */}
       <div
-        className="absolute left-[63%] top-[9rem] -translate-x-1/2 z-[3] w-[13.75rem] sm:w-[15.5rem] md:left-[68%] md:top-[24%] md:w-[28rem] aspect-square rounded-full bg-white/90 overflow-hidden shadow-[0_0_80px_rgba(255,255,255,0.12)] opacity-60 md:opacity-70 pointer-events-none select-none"
+        className="absolute left-[69%] top-[10rem] -translate-x-1/2 z-[3] w-[11rem] sm:top-[12rem] sm:w-[15.5rem] md:left-[68%] md:top-[24%] md:w-[28rem] aspect-square rounded-full bg-white/90 overflow-hidden shadow-[0_0_80px_rgba(255,255,255,0.12)] opacity-55 md:opacity-70 pointer-events-none select-none"
       >
         <img
           src={heroLogoUrl}
@@ -78,14 +78,14 @@ const HeroSection = () => {
       </div>
 
       {/* Content */}
-      <div className="relative z-10 w-full max-w-7xl mx-auto px-5 sm:px-6 md:px-12 pt-[15rem] sm:pt-[17rem] md:pt-[12.25rem] pb-24 sm:pb-28 md:pb-40">
+      <div className="relative z-10 w-full max-w-7xl mx-auto px-5 sm:px-6 md:px-12 pt-[15.5rem] sm:pt-[19rem] md:pt-[12.25rem] pb-8 sm:pb-28 md:pb-40">
         <motion.div
           initial={{ opacity: 0, y: 40 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 1, delay: 0.3, ease: "easeOut" }}
           className="md:ml-10 lg:ml-24"
         >
-          <h1 className="font-display text-[2.75rem] sm:text-5xl md:text-7xl lg:text-8xl font-light leading-[0.92] sm:leading-[0.95] text-foreground mb-5 md:mb-[55px] max-w-[11ch]">
+          <h1 className="font-display text-[2.55rem] sm:text-5xl md:text-7xl lg:text-8xl font-light leading-[0.92] sm:leading-[0.95] text-foreground mb-5 md:mb-[55px] max-w-[11ch]">
             {copy.titleMain}
             <br />
             <span className="italic">{copy.titleAccent}</span>

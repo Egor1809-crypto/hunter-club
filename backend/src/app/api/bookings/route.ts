@@ -1,50 +1,11 @@
 import { Prisma } from "@prisma/client";
 import { apiError, apiException, apiSuccess, formatZodError, parsePagination } from "@/lib/api";
 import { requireAdminCsrf, requireAdminSession } from "@/lib/auth";
+import { hasBookingOverlap, lockBookingDay } from "@/lib/booking-overlap";
 import { prisma } from "@/lib/db";
 import { createBookingSchema } from "@/lib/validations";
 
 export const dynamic = "force-dynamic";
-
-type BookingOverlapClient = Pick<typeof prisma, "bookings">;
-
-const getBookingLockKey = (scheduledAt: Date) => {
-  const day = scheduledAt.toISOString().slice(0, 10);
-  return `hunter-bookings:${day}`;
-};
-
-const lockBookingDay = async (db: Pick<typeof prisma, "$executeRaw">, scheduledAt: Date) => {
-  await db.$executeRaw`SELECT pg_advisory_xact_lock(hashtextextended(${getBookingLockKey(scheduledAt)}, 0))`;
-};
-
-const hasBookingOverlap = async (
-  db: BookingOverlapClient,
-  scheduledAt: Date,
-  durationMin: number,
-  ignoreId?: string,
-) => {
-  const start = scheduledAt;
-  const end = new Date(start.getTime() + durationMin * 60_000);
-
-  const bookings = await db.bookings.findMany({
-    where: {
-      ...(ignoreId ? { NOT: { id: ignoreId } } : {}),
-      status: { in: ["scheduled", "confirmed", "in_progress"] },
-    },
-    select: {
-      id: true,
-      scheduled_at: true,
-      duration_min: true,
-    },
-  });
-
-  return bookings.some((booking) => {
-    const bookingStart = booking.scheduled_at;
-    const bookingEnd = new Date(bookingStart.getTime() + booking.duration_min * 60_000);
-
-    return start < bookingEnd && end > bookingStart;
-  });
-};
 
 export const GET = async (request: Request) => {
   const { response } = await requireAdminSession();

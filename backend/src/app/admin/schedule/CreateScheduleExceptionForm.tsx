@@ -2,6 +2,7 @@
 
 import { useRouter } from "next/navigation";
 import { useState } from "react";
+import { adminFetch } from "@/app/admin/adminFetch";
 import {
   adminControlStyle,
   adminFormGridStyle,
@@ -32,7 +33,7 @@ const CreateScheduleExceptionForm = () => {
     };
 
     try {
-      const response = await fetch("/api/schedule", {
+      const response = await adminFetch("/api/schedule", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",

@@ -35,18 +35,19 @@ const bookingActionButtonWidth = 236;
 const AdminBookingsPage = async ({
   searchParams,
 }: {
-  searchParams?: Record<string, string | string[] | undefined>;
+  searchParams?: Promise<Record<string, string | string[] | undefined>>;
 }) => {
+  const resolvedSearchParams = (await searchParams) ?? {};
   const admin = await getCurrentAdminSession();
 
   if (!admin) {
     redirect("/admin/login");
   }
 
-  const search = getSearchParam(searchParams?.search)?.trim() ?? "";
-  const status = getSearchParam(searchParams?.status) ?? "all";
-  const dateFrom = getSearchParam(searchParams?.dateFrom) ?? "";
-  const dateTo = getSearchParam(searchParams?.dateTo) ?? "";
+  const search = getSearchParam(resolvedSearchParams.search)?.trim() ?? "";
+  const status = getSearchParam(resolvedSearchParams.status) ?? "all";
+  const dateFrom = getSearchParam(resolvedSearchParams.dateFrom) ?? "";
+  const dateTo = getSearchParam(resolvedSearchParams.dateTo) ?? "";
 
   const bookingWhere = {
     ...(status !== "all" ? { status: status as never } : {}),
@@ -71,8 +72,17 @@ const AdminBookingsPage = async ({
   };
 
   let bookings: BookingListItem[] = [];
-  let clients: Awaited<ReturnType<typeof prisma.clients.findMany>> = [];
-  let services: Awaited<ReturnType<typeof prisma.services.findMany>> = [];
+  let clients: {
+    id: string;
+    first_name: string;
+    last_name: string | null;
+    phone: string;
+  }[] = [];
+  let services: {
+    id: string;
+    name: string;
+    duration_min: number;
+  }[] = [];
   let isDevFallback = false;
 
   try {
@@ -89,10 +99,21 @@ const AdminBookingsPage = async ({
       prisma.clients.findMany({
         orderBy: [{ last_visit_at: "desc" }, { created_at: "desc" }],
         take: 100,
+        select: {
+          id: true,
+          first_name: true,
+          last_name: true,
+          phone: true,
+        },
       }),
       prisma.services.findMany({
         where: { is_active: true },
         orderBy: [{ sort_order: "asc" }, { name: "asc" }],
+        select: {
+          id: true,
+          name: true,
+          duration_min: true,
+        },
       }),
     ]);
   } catch (error) {

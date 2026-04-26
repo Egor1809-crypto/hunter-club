@@ -2,6 +2,7 @@
 
 import { useRouter } from "next/navigation";
 import { useState } from "react";
+import { adminFetch } from "@/app/admin/adminFetch";
 import AdminFilterSelect from "@/app/admin/AdminFilterSelect";
 import {
   adminControlStyle,
@@ -23,7 +24,6 @@ type ServiceOption = {
   id: string;
   name: string;
   duration_min: number;
-  price: unknown;
 };
 
 const bookingButtonWidth = 236;
@@ -57,7 +57,7 @@ const CreateBookingForm = ({
     };
 
     try {
-      const response = await fetch("/api/bookings", {
+      const response = await adminFetch("/api/bookings", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",

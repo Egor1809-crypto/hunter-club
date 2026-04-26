@@ -17,8 +17,9 @@ const statusLabels: Record<string, string> = {
 const AdminBookingDetailsPage = async ({
   params,
 }: {
-  params: { id: string };
+  params: Promise<{ id: string }>;
 }) => {
+  const { id } = await params;
   const admin = await getCurrentAdminSession();
 
   if (!admin) {
@@ -26,7 +27,7 @@ const AdminBookingDetailsPage = async ({
   }
 
   const booking = await prisma.bookings.findUnique({
-    where: { id: params.id },
+    where: { id },
     include: {
       client: true,
       service: true,

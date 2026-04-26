@@ -1,5 +1,5 @@
 import { apiSuccess } from "@/lib/api";
-import { buildGoogleVisitorProfile, getGoogleVisitorNeedsPhoneLink } from "@/lib/visitor-accounts";
+import { buildGoogleVisitorProfile } from "@/lib/visitor-accounts";
 import { createVisitorSessionToken, getCurrentVisitorSession, setVisitorSessionCookie } from "@/lib/visitor-auth";
 
 export const dynamic = "force-dynamic";
@@ -16,7 +16,6 @@ export const GET = async () => {
   }
 
   let account = session.account;
-  let needsPhoneLink = false;
 
   if (session.provider === "google" && session.subjectId) {
     const persistedAccount = await buildGoogleVisitorProfile(session.subjectId);
@@ -30,7 +29,6 @@ export const GET = async () => {
     }
 
     account = persistedAccount;
-    needsPhoneLink = await getGoogleVisitorNeedsPhoneLink(session.subjectId);
   }
 
   const refreshedToken = createVisitorSessionToken({
@@ -45,6 +43,6 @@ export const GET = async () => {
     authenticated: true,
     provider: session.provider,
     account,
-    needsPhoneLink,
+    needsPhoneLink: false,
   });
 };

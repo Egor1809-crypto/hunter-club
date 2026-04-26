@@ -9,6 +9,7 @@
     "typecheck": "next typegen && tsc --noEmit",
     "verify": "npm run typecheck && npm run prisma:migrate:status && npm run build",
     "env:check": "node scripts/validate-production-env.mjs",
+    "smoke:api": "node scripts/smoke-api.mjs",
     "lint": "next lint",
     "prisma:generate": "prisma generate --schema ./src/prisma/schema.prisma",
     "prisma:push": "prisma db push --schema ./src/prisma/schema.prisma",

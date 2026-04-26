@@ -1,3 +1,4 @@
+import { Prisma } from "@prisma/client";
 import { apiError, apiException, apiSuccess, formatZodError, parsePagination } from "@/lib/api";
 import { requireAdminCsrf, requireAdminSession } from "@/lib/auth";
 import { prisma } from "@/lib/db";
@@ -74,6 +75,10 @@ export const POST = async (request: Request) => {
 
     return apiSuccess(client);
   } catch (error) {
+    if (error instanceof Prisma.PrismaClientKnownRequestError && error.code === "P2002") {
+      return apiError("Клиент с таким телефоном уже существует", 409);
+    }
+
     return apiException({
       request,
       error,

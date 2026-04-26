@@ -1,6 +1,7 @@
 import { Prisma } from "@prisma/client";
 import { apiError, apiException, apiSuccess, formatZodError } from "@/lib/api";
 import { requireAdminCsrf, requireAdminSession } from "@/lib/auth";
+import { hasBookingOverlap, lockBookingDay } from "@/lib/booking-overlap";
 import { prisma } from "@/lib/db";
 import { updateBookingSchema } from "@/lib/validations";
 
@@ -56,24 +57,67 @@ export const PATCH = async (request: Request, { params }: Params) => {
       return apiError(formatZodError(parsed.error), 422);
     }
 
-    const booking = await prisma.bookings.update({
-      where: { id },
-      data: {
-        ...(parsed.data.scheduledAt ? { scheduled_at: new Date(parsed.data.scheduledAt) } : {}),
-        ...(parsed.data.status ? { status: parsed.data.status } : {}),
-        ...(parsed.data.notes !== undefined ? { notes: parsed.data.notes } : {}),
-        ...(parsed.data.endedAt !== undefined
-          ? { ended_at: parsed.data.endedAt ? new Date(parsed.data.endedAt) : null }
-          : {}),
-      },
-      include: {
-        client: true,
-        service: true,
-      },
-    });
+    const data = {
+      ...(parsed.data.scheduledAt ? { scheduled_at: new Date(parsed.data.scheduledAt) } : {}),
+      ...(parsed.data.status ? { status: parsed.data.status } : {}),
+      ...(parsed.data.notes !== undefined ? { notes: parsed.data.notes } : {}),
+      ...(parsed.data.endedAt !== undefined
+        ? { ended_at: parsed.data.endedAt ? new Date(parsed.data.endedAt) : null }
+        : {}),
+    };
+
+    const booking = parsed.data.scheduledAt
+      ? await prisma.$transaction(async (tx) => {
+          const scheduledAt = new Date(parsed.data.scheduledAt as string);
+          await lockBookingDay(tx, scheduledAt);
+
+          const existing = await tx.bookings.findUnique({
+            where: { id },
+            select: { duration_min: true },
+          });
+
+          if (!existing) {
+            return "not-found" as const;
+          }
+
+          const hasOverlap = await hasBookingOverlap(tx, scheduledAt, existing.duration_min, id);
+
+          if (hasOverlap) {
+            return "overlap" as const;
+          }
+
+          return tx.bookings.update({
+            where: { id },
+            data,
+            include: {
+              client: true,
+              service: true,
+            },
+          });
+        })
+      : await prisma.bookings.update({
+          where: { id },
+          data,
+          include: {
+            client: true,
+            service: true,
+          },
+        });
+
+    if (booking === "not-found") {
+      return apiError("Запись не найдена", 404);
+    }
+
+    if (booking === "overlap") {
+      return apiError("Запись пересекается с уже существующим визитом", 409);
+    }
 
     return apiSuccess(booking);
   } catch (error) {
+    if (error instanceof Prisma.PrismaClientKnownRequestError && error.code === "P2025") {
+      return apiError("Запись не найдена", 404);
+    }
+
     return apiException({
       request,
       error,

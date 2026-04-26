@@ -2,6 +2,7 @@
 
 import { useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
+import { adminFetch } from "@/app/admin/adminFetch";
 import { adminControlStyle, adminLabelTextStyle } from "@/app/admin/adminFormStyles";
 
 type ServiceItem = {
@@ -172,7 +173,7 @@ const ServicesEditor = ({ services }: { services: ServiceItem[] }) => {
         sortOrder: Number(item.sortOrder),
       }));
 
-      const response = await fetch("/api/services", {
+      const response = await adminFetch("/api/services", {
         method: "PATCH",
         headers: {
           "Content-Type": "application/json",

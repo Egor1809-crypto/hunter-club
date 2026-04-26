@@ -21,15 +21,21 @@ services:
       dockerfile: Dockerfile
     container_name: hunter-backend-app
     restart: unless-stopped
-    env_file:
-      - .env.production
     environment:
       DATABASE_URL: ${DATABASE_URL}
       NEXTAUTH_SECRET: ${NEXTAUTH_SECRET}
       NEXTAUTH_URL: ${NEXTAUTH_URL}
+      FRONTEND_URL: ${FRONTEND_URL}
+      ADMIN_MFA_CODE: ${ADMIN_MFA_CODE}
+      GOOGLE_CLIENT_ID: ${GOOGLE_CLIENT_ID}
+      GOOGLE_CLIENT_SECRET: ${GOOGLE_CLIENT_SECRET}
       NODE_ENV: production
       SMS_PROVIDER: ${SMS_PROVIDER}
       SMS_API_KEY: ${SMS_API_KEY}
+      SMS_RU_FROM: ${SMS_RU_FROM}
+      TWILIO_ACCOUNT_SID: ${TWILIO_ACCOUNT_SID}
+      TWILIO_AUTH_TOKEN: ${TWILIO_AUTH_TOKEN}
+      TWILIO_FROM_NUMBER: ${TWILIO_FROM_NUMBER}
     expose:
       - "3000"
     depends_on:

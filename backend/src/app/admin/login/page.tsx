@@ -3,14 +3,12 @@
 import { FormEvent, useState } from "react";
 import { useRouter } from "next/navigation";
 import AdminBrand from "@/app/admin/AdminBrand";
-import { getDevAdminUser } from "@/lib/dev-admin";
-
-const devAdmin = getDevAdminUser();
 
 const AdminLoginPage = () => {
   const router = useRouter();
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
+  const [mfaCode, setMfaCode] = useState("");
   const [error, setError] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
@@ -28,6 +26,7 @@ const AdminLoginPage = () => {
         body: JSON.stringify({
           username,
           password,
+          mfaCode,
         }),
       });
 
@@ -77,21 +76,6 @@ const AdminLoginPage = () => {
           Войдите, чтобы управлять клиентами, записями, расписанием и показателями барбершопа.
         </p>
 
-        {devAdmin ? (
-          <div
-            style={{
-              marginBottom: 20,
-              border: "1px solid rgba(250, 204, 21, 0.24)",
-              background: "rgba(113, 63, 18, 0.18)",
-              color: "#fef3c7",
-              padding: 14,
-              lineHeight: 1.6,
-            }}
-          >
-            Если PostgreSQL не запущен, используйте dev-вход: {devAdmin.username} / {devAdmin.password}
-          </div>
-        ) : null}
-
         <form onSubmit={handleSubmit} style={{ display: "grid", gap: 16 }}>
           <label style={{ display: "grid", gap: 8 }}>
             <span style={{ fontSize: 12, textTransform: "uppercase", letterSpacing: "0.16em", color: "#9ca3af" }}>
@@ -120,6 +104,25 @@ const AdminLoginPage = () => {
               value={password}
               onChange={(event) => setPassword(event.target.value)}
               autoComplete="current-password"
+              style={{
+                background: "#0f0f10",
+                border: "1px solid rgba(255,255,255,0.12)",
+                color: "#f5f5f5",
+                padding: "14px 16px",
+                fontSize: 16,
+              }}
+            />
+          </label>
+
+          <label style={{ display: "grid", gap: 8 }}>
+            <span style={{ fontSize: 12, textTransform: "uppercase", letterSpacing: "0.16em", color: "#9ca3af" }}>
+              Код мастера
+            </span>
+            <input
+              value={mfaCode}
+              onChange={(event) => setMfaCode(event.target.value)}
+              autoComplete="one-time-code"
+              inputMode="numeric"
               style={{
                 background: "#0f0f10",
                 border: "1px solid rgba(255,255,255,0.12)",

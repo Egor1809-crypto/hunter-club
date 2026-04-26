@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
-import { Link, useSearchParams } from "react-router-dom";
-import { ArrowLeft, Chrome, LogOut, UserRound } from "lucide-react";
+import { Link, useNavigate, useSearchParams } from "react-router-dom";
+import { ArrowLeft, Chrome, LogOut, ShieldCheck, UserRound } from "lucide-react";
 
 type VisitorHistoryItem = {
   date: string;
@@ -73,7 +73,16 @@ const unwrapResponse = async <T,>(response: Response) => {
   return payload.data;
 };
 
+const getAccountErrorMessage = (error: unknown) => {
+  if (error instanceof TypeError && error.message === "Failed to fetch") {
+    return "Не удалось подключиться к кабинету Hunter. Проверьте, что локальный API запущен.";
+  }
+
+  return error instanceof Error ? error.message : "Не удалось выполнить запрос";
+};
+
 const AccountPage = () => {
+  const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const [apiBase, setApiBase] = useState(() => getProductionApiBase());
   const [session, setSession] = useState<VisitorSessionResponse | null>(null);
@@ -150,7 +159,7 @@ const AccountPage = () => {
         account: null,
       });
       setStatusTone("error");
-      setStatusMessage(loadError instanceof Error ? loadError.message : "Не удалось загрузить кабинет");
+      setStatusMessage(getAccountErrorMessage(loadError));
     } finally {
       setIsLoading(false);
     }
@@ -162,6 +171,17 @@ const AccountPage = () => {
 
   useEffect(() => {
     if (!method && !error) {
+      return;
+    }
+
+    if (session?.authenticated) {
+      setStatusTone("default");
+      setStatusMessage(null);
+      navigate("/account", { replace: true });
+      return;
+    }
+
+    if (isLoading || session === null) {
       return;
     }
 
@@ -185,10 +205,11 @@ const AccountPage = () => {
       setStatusTone("success");
       setStatusMessage("Google-вход завершён. Проверяем кабинет.");
     }
-  }, [method, error]);
+  }, [method, error, isLoading, navigate, session]);
 
   const account = session?.account ?? null;
   const history = useMemo(() => account?.history ?? [], [account]);
+  const adminLoginUrl = useMemo(() => `${apiBase}/admin/login`, [apiBase]);
 
   const startGoogleLogin = () => {
     window.location.assign(`${apiBase}/api/public/account/google/start?returnTo=${encodeURIComponent(window.location.origin)}`);
@@ -215,18 +236,18 @@ const AccountPage = () => {
       setStatusMessage("Вы вышли из кабинета.");
     } catch (logoutError) {
       setStatusTone("error");
-      setStatusMessage(logoutError instanceof Error ? logoutError.message : "Не удалось выйти из кабинета");
+      setStatusMessage(getAccountErrorMessage(logoutError));
     } finally {
       setIsLoggingOut(false);
     }
   };
 
   return (
-    <main className="min-h-screen bg-background px-4 pb-16 pt-28 text-foreground md:px-8 md:pt-36">
-      <div className="mx-auto flex w-full max-w-6xl flex-col gap-8">
+    <main className="min-h-screen bg-background px-4 pb-16 pt-20 text-foreground md:px-8 md:pt-24">
+      <div className="mx-auto flex w-full max-w-6xl flex-col gap-6">
         <div className="flex flex-wrap items-center justify-between gap-4">
           <div>
-            <p className="mb-4 font-body text-[11px] uppercase tracking-[0.32em] text-muted-foreground">Личный кабинет</p>
+            <p className="mb-3 font-body text-[11px] uppercase tracking-[0.32em] text-muted-foreground">Личный кабинет</p>
             <h1 className="font-display text-5xl font-light leading-none md:text-7xl">Hunter Account</h1>
           </div>
           <Link
@@ -236,6 +257,13 @@ const AccountPage = () => {
             <ArrowLeft className="h-4 w-4" />
             На сайт
           </Link>
+          <a
+            href={adminLoginUrl}
+            className="inline-flex min-h-12 items-center gap-3 border border-border px-5 font-body text-xs uppercase tracking-[0.25em] text-muted-foreground transition-colors hover:border-foreground hover:text-foreground"
+          >
+            <ShieldCheck className="h-4 w-4" />
+            CRM для мастера
+          </a>
         </div>
 
         {statusMessage ? (
@@ -273,17 +301,19 @@ const AccountPage = () => {
               </div>
 
               <div className="grid gap-4 md:grid-cols-3">
-                <div className="border border-border bg-background/70 p-5">
-                  <p className={labelClassName}>Телефон</p>
-                  <p className="mt-3 font-body text-lg text-foreground">{account.phone || "Не указан"}</p>
+                <div className="min-w-0 border border-border bg-background/70 p-5">
+                  <p className={labelClassName}>{session.provider === "google" ? "Google" : "Телефон"}</p>
+                  <p className="mt-3 break-words font-body text-base leading-snug text-foreground">
+                    {account.phone || "Не указан"}
+                  </p>
                 </div>
-                <div className="border border-border bg-background/70 p-5">
+                <div className="min-w-0 border border-border bg-background/70 p-5">
                   <p className={labelClassName}>Статус</p>
-                  <p className="mt-3 font-body text-lg text-foreground">{account.level}</p>
+                  <p className="mt-3 break-words font-body text-base leading-snug text-foreground">{account.level}</p>
                 </div>
-                <div className="border border-border bg-background/70 p-5">
+                <div className="min-w-0 border border-border bg-background/70 p-5">
                   <p className={labelClassName}>Бонусы</p>
-                  <p className="mt-3 font-body text-lg text-foreground">{account.bonusPoints}</p>
+                  <p className="mt-3 break-words font-body text-base leading-snug text-foreground">{account.bonusPoints}</p>
                 </div>
               </div>
 

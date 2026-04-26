@@ -2,6 +2,7 @@
 
 import { useRouter } from "next/navigation";
 import { useState } from "react";
+import { adminFetch } from "@/app/admin/adminFetch";
 import {
   adminControlStyle,
   adminFormGridStyle,
@@ -33,7 +34,7 @@ const CreateClientForm = () => {
     };
 
     try {
-      const response = await fetch("/api/clients", {
+      const response = await adminFetch("/api/clients", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",

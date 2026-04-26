@@ -95,6 +95,7 @@ export const linkGooglePhoneSchema = z.object({
 export const adminLoginSchema = z.object({
   username: z.string().min(1).max(50),
   password: z.string().min(1).max(255),
+  mfaCode: z.string().min(4).max(12),
 });
 
 export const createPublicReviewSchema = z.object({
@@ -107,3 +108,5 @@ export const createPublicReviewSchema = z.object({
 export const updateReviewSchema = z.object({
   status: z.enum(["new", "published", "archived"]).optional(),
 });
+
+export const uuidParamSchema = z.string().uuid();

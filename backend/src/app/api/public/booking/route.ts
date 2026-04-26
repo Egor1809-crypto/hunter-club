@@ -2,6 +2,7 @@ import { Prisma } from "@prisma/client";
 import { z } from "zod";
 import { apiError, apiException, apiSuccess, formatZodError } from "@/lib/api";
 import { getDayAvailability } from "@/lib/availability";
+import { hasBookingOverlap, lockBookingDay } from "@/lib/booking-overlap";
 import { prisma } from "@/lib/db";
 import { checkRateLimit } from "@/lib/rate-limit";
 
@@ -13,39 +14,6 @@ const publicBookingSchema = z.object({
   scheduledAt: z.string().datetime(),
   notes: z.string().optional().nullable(),
 });
-
-type BookingOverlapClient = Pick<typeof prisma, "bookings">;
-
-const getBookingLockKey = (scheduledAt: Date) => {
-  const day = scheduledAt.toISOString().slice(0, 10);
-  return `hunter-bookings:${day}`;
-};
-
-const lockBookingDay = async (db: Pick<typeof prisma, "$executeRaw">, scheduledAt: Date) => {
-  await db.$executeRaw`SELECT pg_advisory_xact_lock(hashtextextended(${getBookingLockKey(scheduledAt)}, 0))`;
-};
-
-const hasBookingOverlap = async (db: BookingOverlapClient, scheduledAt: Date, durationMin: number) => {
-  const start = scheduledAt;
-  const end = new Date(start.getTime() + durationMin * 60_000);
-
-  const bookings = await db.bookings.findMany({
-    where: {
-      status: { in: ["scheduled", "confirmed", "in_progress"] },
-    },
-    select: {
-      scheduled_at: true,
-      duration_min: true,
-    },
-  });
-
-  return bookings.some((booking) => {
-    const bookingStart = booking.scheduled_at;
-    const bookingEnd = new Date(bookingStart.getTime() + booking.duration_min * 60_000);
-
-    return start < bookingEnd && end > bookingStart;
-  });
-};
 
 export const POST = async (request: Request) => {
   try {

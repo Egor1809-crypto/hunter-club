@@ -52,6 +52,10 @@ export const PATCH = async (request: Request) => {
 
     return apiSuccess(result);
   } catch (error) {
+    if (error instanceof Prisma.PrismaClientKnownRequestError && error.code === "P2025") {
+      return apiError("Услуга не найдена", 404);
+    }
+
     return apiException({
       request,
       error,

@@ -1,7 +1,7 @@
 import { apiError, apiException, apiSuccess, formatZodError } from "@/lib/api";
 import { requireAdminCsrf, requireAdminSession } from "@/lib/auth";
 import { updateReviewStatus } from "@/lib/reviews-store";
-import { updateReviewSchema } from "@/lib/validations";
+import { updateReviewSchema, uuidParamSchema } from "@/lib/validations";
 
 type Params = {
   params: Promise<{ id: string }>;
@@ -13,6 +13,12 @@ export const PATCH = async (request: Request, { params }: Params) => {
   const { id } = await params;
 
   try {
+    const parsedId = uuidParamSchema.safeParse(id);
+
+    if (!parsedId.success) {
+      return apiError("Некорректный id отзыва", 422);
+    }
+
     const { response } = await requireAdminSession();
 
     if (response) {

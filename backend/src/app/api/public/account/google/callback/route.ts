@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { getFrontendUrl } from "@/lib/env";
+import { getFrontendUrl, getGoogleRedirectUri } from "@/lib/env";
 import { getRequestId, logError } from "@/lib/logger";
 import {
   clearGoogleOauthReturnToCookie,
@@ -30,7 +30,6 @@ export const GET = async (request: Request) => {
   const url = new URL(request.url);
   const code = url.searchParams.get("code");
   const state = url.searchParams.get("state");
-  const backendUrl = url.origin;
 
   const returnTo = (await getGoogleOauthReturnToCookie()) || getFrontendUrl();
   const frontendUrl = `${returnTo}/account?method=google`;
@@ -59,7 +58,7 @@ export const GET = async (request: Request) => {
         code,
         client_id: clientId,
         client_secret: clientSecret,
-        redirect_uri: `${backendUrl}/api/public/account/google/callback`,
+        redirect_uri: getGoogleRedirectUri(),
         grant_type: "authorization_code",
       }),
     });

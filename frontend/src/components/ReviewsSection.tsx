@@ -93,7 +93,7 @@ const ReviewCard = ({
   language: "ru" | "en";
   guestLabel: string;
 }) => (
-  <div className="flex-shrink-0 w-full min-h-[25rem] md:h-[26rem] border border-white/20 bg-card backdrop-blur-md p-5 md:p-6 flex flex-col justify-between overflow-hidden">
+  <div className="flex-shrink-0 w-full min-h-[22rem] md:h-[26rem] border border-white/20 bg-card backdrop-blur-md p-5 md:p-6 flex flex-col justify-between overflow-hidden">
     <div className="flex min-h-0 flex-1 flex-col">
       <div className="flex min-h-[2.75rem] items-start justify-between gap-4">
         <span className="font-body text-[11px] tracking-[0.18em] uppercase text-muted-foreground">
@@ -103,12 +103,12 @@ const ReviewCard = ({
       </div>
       <div className="mt-4 flex min-h-0 flex-1 flex-col">
         <p className="font-display text-4xl leading-none text-white/18">"</p>
-        <p className="mt-3 max-w-[680px] font-display text-[24px] md:text-[28px] lg:text-[32px] leading-[1.52] text-foreground">
+        <p className="mt-3 max-w-[680px] font-display text-[20px] md:text-[28px] lg:text-[32px] leading-[1.45] md:leading-[1.52] text-foreground">
           {language === "ru" ? review.quote : review.quoteEn}
         </p>
       </div>
     </div>
-    <div className="flex min-h-[6.5rem] flex-col justify-end pt-8 space-y-2">
+    <div className="flex min-h-[5.75rem] flex-col justify-end pt-6 md:min-h-[6.5rem] md:pt-8 space-y-2">
       <div className="h-px w-10 bg-white/20" />
       <p className="font-display text-2xl font-light text-foreground">
         {language === "ru" ? review.name : review.nameEn}
@@ -278,7 +278,7 @@ const ReviewsSection = () => {
           </button>
 
           <div
-            className="mx-14 overflow-hidden sm:mx-16 md:mx-20 lg:mx-24"
+            className="mx-0 overflow-hidden sm:mx-8 md:mx-20 lg:mx-24"
             onTouchStart={handleTouchStart}
             onTouchEnd={handleTouchEnd}
           >
@@ -313,7 +313,7 @@ const ReviewsSection = () => {
           whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true, margin: "-80px" }}
           transition={{ duration: 0.7, delay: 0.1 }}
-          className="mt-12 md:mt-16 mx-14 sm:mx-16 md:mx-20 lg:mx-24"
+          className="mt-10 md:mt-16 mx-0 sm:mx-8 md:mx-20 lg:mx-24"
         >
           <div className="mx-auto max-w-3xl border border-border bg-card/80 backdrop-blur-md p-5 md:p-8">
             <div className="flex flex-col gap-6 md:flex-row md:items-end md:justify-between">

@@ -1,6 +1,6 @@
 import { randomUUID } from "node:crypto";
 import { NextResponse } from "next/server";
-import { getAppUrl, getFrontendUrl, isProduction } from "@/lib/env";
+import { getAppUrl, getFrontendUrl, getGoogleRedirectUri, isProduction } from "@/lib/env";
 import { checkRateLimit } from "@/lib/rate-limit";
 import { setGoogleOauthReturnToCookie, setGoogleOauthStateCookie } from "@/lib/visitor-auth";
 
@@ -55,8 +55,6 @@ export const GET = async (request: Request) => {
   }
 
   const clientId = process.env.GOOGLE_CLIENT_ID;
-  const backendUrl = new URL(request.url).origin;
-
   if (!clientId) {
     return NextResponse.json(
       { success: false, data: null, error: "Google OAuth is not configured", meta: null },
@@ -69,7 +67,7 @@ export const GET = async (request: Request) => {
   await setGoogleOauthStateCookie(state);
   await setGoogleOauthReturnToCookie(returnTo);
 
-  const redirectUri = `${backendUrl}/api/public/account/google/callback`;
+  const redirectUri = getGoogleRedirectUri();
   const params = new URLSearchParams({
     client_id: clientId,
     redirect_uri: redirectUri,

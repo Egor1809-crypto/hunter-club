@@ -2,6 +2,7 @@
 
 import { useRouter } from "next/navigation";
 import { useState } from "react";
+import { adminFetch } from "@/app/admin/adminFetch";
 import { adminTypography } from "@/app/admin/adminTheme";
 
 const AdminLogoutButton = () => {
@@ -12,7 +13,7 @@ const AdminLogoutButton = () => {
     setIsSubmitting(true);
 
     try {
-      await fetch("/api/admin/logout", {
+      await adminFetch("/api/admin/logout", {
         method: "POST",
       });
       router.push("/admin/login");

@@ -30,4 +30,8 @@ export const getSessionSecret = () => {
 
 export const getAppUrl = () => required(process.env.NEXTAUTH_URL, "NEXTAUTH_URL");
 
-export const getFrontendUrl = () => process.env.FRONTEND_URL?.trim() || getAppUrl();
+const trimTrailingSlash = (value: string) => value.trim().replace(/\/+$/, "");
+
+export const getFrontendUrl = () => trimTrailingSlash(process.env.FRONTEND_URL?.trim() || getAppUrl());
+
+export const getGoogleRedirectUri = () => new URL("/api/public/account/google/callback", getAppUrl()).toString();

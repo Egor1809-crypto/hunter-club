@@ -29,9 +29,17 @@ services:
       DATABASE_URL: postgresql://${POSTGRES_USER:-hunter_admin}:${POSTGRES_PASSWORD:-hunter_secret_2024}@db:5432/${POSTGRES_DB:-hunter}
       NEXTAUTH_SECRET: ${NEXTAUTH_SECRET:-change-me-in-production}
       NEXTAUTH_URL: ${NEXTAUTH_URL:-http://localhost:3000}
+      FRONTEND_URL: ${FRONTEND_URL:-http://localhost:8080}
+      ADMIN_MFA_CODE: ${ADMIN_MFA_CODE:-2468}
+      GOOGLE_CLIENT_ID: ${GOOGLE_CLIENT_ID:-}
+      GOOGLE_CLIENT_SECRET: ${GOOGLE_CLIENT_SECRET:-}
       NODE_ENV: ${NODE_ENV:-development}
       SMS_PROVIDER: ${SMS_PROVIDER:-none}
       SMS_API_KEY: ${SMS_API_KEY:-}
+      SMS_RU_FROM: ${SMS_RU_FROM:-}
+      TWILIO_ACCOUNT_SID: ${TWILIO_ACCOUNT_SID:-}
+      TWILIO_AUTH_TOKEN: ${TWILIO_AUTH_TOKEN:-}
+      TWILIO_FROM_NUMBER: ${TWILIO_FROM_NUMBER:-}
     ports:
       - "${APP_PORT:-3000}:3000"
     depends_on:
