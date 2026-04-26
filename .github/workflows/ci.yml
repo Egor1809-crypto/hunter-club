@@ -14,6 +14,20 @@ jobs:
   backend:
     name: Backend
     runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:16-alpine
+        env:
+          POSTGRES_DB: hunter
+          POSTGRES_USER: hunter_admin
+          POSTGRES_PASSWORD: hunter_secret
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U hunter_admin -d hunter"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 10
     defaults:
       run:
         working-directory: backend
@@ -46,11 +60,29 @@ jobs:
       - name: Validate Prisma schema
         run: npx prisma validate --schema ./src/prisma/schema.prisma
 
+      - name: Apply migrations
+        run: npm run prisma:migrate:deploy
+
       - name: Typecheck
         run: npm run typecheck
 
       - name: Build
         run: npm run build
+
+      - name: Start backend
+        run: |
+          nohup npm run start > /tmp/hunter-backend.log 2>&1 &
+          for attempt in {1..30}; do
+            if curl -fsS http://127.0.0.1:3000/api/public/account/session >/dev/null; then
+              exit 0
+            fi
+            sleep 1
+          done
+          cat /tmp/hunter-backend.log
+          exit 1
+
+      - name: Smoke API
+        run: npm run smoke:api
 
   frontend:
     name: Frontend
