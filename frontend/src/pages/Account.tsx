@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
-import { Link, useNavigate, useSearchParams } from "react-router-dom";
+import { useNavigate, useSearchParams } from "react-router-dom";
 import { ArrowLeft, Chrome, LogOut, ShieldCheck, UserRound } from "lucide-react";
 
 type VisitorHistoryItem = {
@@ -250,13 +250,13 @@ const AccountPage = () => {
             <p className="mb-3 font-body text-[11px] uppercase tracking-[0.32em] text-muted-foreground">Личный кабинет</p>
             <h1 className="font-display text-5xl font-light leading-none md:text-7xl">Hunter Account</h1>
           </div>
-          <Link
-            to="/"
+          <a
+            href="/"
             className="inline-flex min-h-12 items-center gap-3 border border-border px-5 font-body text-xs uppercase tracking-[0.25em] text-muted-foreground transition-colors hover:border-foreground hover:text-foreground"
           >
             <ArrowLeft className="h-4 w-4" />
             На сайт
-          </Link>
+          </a>
           <a
             href={adminLoginUrl}
             className="inline-flex min-h-12 items-center gap-3 border border-border px-5 font-body text-xs uppercase tracking-[0.25em] text-muted-foreground transition-colors hover:border-foreground hover:text-foreground"
