@@ -9,7 +9,7 @@ cd "$SCRIPT_DIR"
 
 DOMAIN="${DOMAIN:-slava-hunter.ru}"
 BACKEND_URL="${BACKEND_URL:-https://${DOMAIN}}"
-FRONTEND_DIST_DIR="${FRONTEND_DIST_DIR:-/var/www/frontend}"
+FRONTEND_DIST_DIR="${FRONTEND_DIST_DIR:-/var/www/slava-hunter}"
 
 echo "=== 1. Updating repository ==="
 git pull origin main
